@@ -1,0 +1,66 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="AppTitle">Редактор персонажа</sys:String>
+    <sys:String x:Key="MenuTitle">Меню</sys:String>
+    <sys:String x:Key="MainPageBtn">Главная страница</sys:String>
+    <sys:String x:Key="SettingsBtn">Настройки</sys:String>
+    <sys:String x:Key="LanguageBtn">Выбор языка</sys:String>
+    <sys:String x:Key="ThemeBtn">Выбор темы</sys:String>
+
+    <sys:String x:Key="GroupPhotoHeader">Фото персонажа</sys:String>
+    <sys:String x:Key="BtnAddPhoto">➕</sys:String>
+    <sys:String x:Key="BtnViewPhoto">👁</sys:String>
+    <sys:String x:Key="BtnDeletePhoto">❌</sys:String>
+
+    <sys:String x:Key="GroupDataHeader">Данные персонажа</sys:String>
+    <sys:String x:Key="LblClass">Класс:</sys:String>
+    <sys:String x:Key="LblSubclass">Подкласс:</sys:String>
+
+    <sys:String x:Key="GroupStatsHeader">Основные характеристики</sys:String>
+    <sys:String x:Key="LblHits">Хиты:</sys:String>
+    <sys:String x:Key="LblDefense">Защита:</sys:String>
+    <sys:String x:Key="LblEvasion">Уклонение:</sys:String>
+    <sys:String x:Key="LblSuperHits">Сверх‑хиты:</sys:String>
+    <sys:String x:Key="LblSpeed">Скорость:</sys:String>
+    <sys:String x:Key="LblCarryCapacity">Грузоподъемность:</sys:String>
+    <sys:String x:Key="LblInitiative">Инициатива:</sys:String>
+    <sys:String x:Key="LblMastery">Мастерство:</sys:String>
+
+    <sys:String x:Key="GroupRatingHeader">Рейтинговые характеристики</sys:String>
+    <sys:String x:Key="LblExhaustion">Изнурение:</sys:String>
+    <sys:String x:Key="LblDeathSaves">Спасброски от смерти:</sys:String>
+    <sys:String x:Key="LblVision">Восприятие (Зрение):</sys:String>
+    <sys:String x:Key="LblHearing">Восприятие (Слух):</sys:String>
+    <sys:String x:Key="LblAura">Восприятие (Аура):</sys:String>
+    <sys:String x:Key="LblMana">Мана:</sys:String>
+    <sys:String x:Key="LblStamina">Выносливость:</sys:String>
+
+    <sys:String x:Key="GroupCustomFieldsHeader">Пользовательские поля</sys:String>
+    <sys:String x:Key="LblCustomField1">Пользовательское поле 1:</sys:String>
+    <sys:String x:Key="LblCustomField2">Пользовательское поле 2:</sys:String>
+    <sys:String x:Key="LblCustomField3">Пользовательское поле 3:</sys:String>
+    <sys:String x:Key="LblCustomField4">Пользовательское поле 4:</sys:String>
+    <!-- Заголовок страницы -->
+    <sys:String x:Key="DetailsPageTitle">Информация о персонаже</sys:String>
+
+    <!-- Поля новой страницы -->
+    <sys:String x:Key="LblBackstory">Предыстория:</sys:String>
+    <sys:String x:Key="LblWorldview">Мировоззрение:</sys:String>
+    <sys:String x:Key="LblPhysique">Телосложение:</sys:String>
+    <sys:String x:Key="LblHeightWeight">Рост / Вес:</sys:String>
+    <sys:String x:Key="LblBodySize">Размер тела:</sys:String>
+    <sys:String x:Key="LblAge">Возраст:</sys:String>
+    <sys:String x:Key="LblAppearance">Внешность:</sys:String>
+    <sys:String x:Key="LblStartBonuses">Стартовые бонусы:</sys:String>
+    <sys:String x:Key="LblStartBonus1">Старт-бонус (1):</sys:String>
+    <sys:String x:Key="LblStartBonus2">Старт-бонус (2):</sys:String>
+    <sys:String x:Key="LblStartBonus3">Старт-бонус (3):</sys:String>
+    <sys:String x:Key="LblProgress">Прогресс:</sys:String>
+    <sys:String x:Key="LblLevel">Уровень:</sys:String>
+    <sys:String x:Key="LblExperience">Опыт:</sys:String>
+    <sys:String x:Key="LblStates">Статы:</sys:String>
+    <sys:String x:Key="LblAwakening">Пробуждение:</sys:String>
+    <sys:String x:Key="LblBuff">Бафф:</sys:String>
+    <sys:String x:Key="LblDebuff">Дебафф:</sys:String>
+</ResourceDictionary>

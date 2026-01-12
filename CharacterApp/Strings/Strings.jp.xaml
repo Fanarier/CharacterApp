@@ -1,0 +1,66 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="AppTitle">キャラクターエディタ</sys:String>
+    <sys:String x:Key="MenuTitle">メニュー</sys:String>
+    <sys:String x:Key="MainPageBtn">メインページ</sys:String>
+    <sys:String x:Key="SettingsBtn">設定</sys:String>
+    <sys:String x:Key="LanguageBtn">言語選択</sys:String>
+    <sys:String x:Key="ThemeBtn">テーマ</sys:String>
+
+    <sys:String x:Key="GroupPhotoHeader">キャラクターフォト</sys:String>
+    <sys:String x:Key="BtnAddPhoto">➕</sys:String>
+    <sys:String x:Key="BtnViewPhoto">👁</sys:String>
+    <sys:String x:Key="BtnDeletePhoto">❌</sys:String>
+
+    <sys:String x:Key="GroupDataHeader">キャラクターデータ</sys:String>
+    <sys:String x:Key="LblClass">クラス:</sys:String>
+    <sys:String x:Key="LblSubclass">サブクラス:</sys:String>
+
+    <sys:String x:Key="GroupStatsHeader">基本ステータス</sys:String>
+    <sys:String x:Key="LblHits">ヒット:</sys:String>
+    <sys:String x:Key="LblDefense">防御:</sys:String>
+    <sys:String x:Key="LblEvasion">回避:</sys:String>
+    <sys:String x:Key="LblSuperHits">スーパー ヒット:</sys:String>
+    <sys:String x:Key="LblSpeed">速度:</sys:String>
+    <sys:String x:Key="LblCarryCapacity">積載量:</sys:String>
+    <sys:String x:Key="LblInitiative">イニシアチブ:</sys:String>
+    <sys:String x:Key="LblMastery">マスタリー:</sys:String>
+
+    <sys:String x:Key="GroupRatingHeader">評価ステータス</sys:String>
+    <sys:String x:Key="LblExhaustion">消耗:</sys:String>
+    <sys:String x:Key="LblDeathSaves">死のセーブ:</sys:String>
+    <sys:String x:Key="LblVision">知覚 (視覚):</sys:String>
+    <sys:String x:Key="LblHearing">知覚 (聴覚):</sys:String>
+    <sys:String x:Key="LblAura">知覚 (オーラ):</sys:String>
+    <sys:String x:Key="LblMana">マナ:</sys:String>
+    <sys:String x:Key="LblStamina">スタミナ:</sys:String>
+
+    <sys:String x:Key="GroupCustomFieldsHeader">カスタムフィールド</sys:String>
+    <sys:String x:Key="LblCustomField1">カスタムフィールド 1:</sys:String>
+    <sys:String x:Key="LblCustomField2">カスタムフィールド 2:</sys:String>
+    <sys:String x:Key="LblCustomField3">カスタムフィールド 3:</sys:String>
+    <sys:String x:Key="LblCustomField4">カスタムフィールド 4:</sys:String>
+    <!-- Заголовок страницы -->
+    <sys:String x:Key="DetailsPageTitle">キャラクター詳細</sys:String>
+
+    <!-- Поля новой страницы -->
+    <sys:String x:Key="LblBackstory">バックストーリー:</sys:String>
+    <sys:String x:Key="LblWorldview">世界観:</sys:String>
+    <sys:String x:Key="LblPhysique">体格:</sys:String>
+    <sys:String x:Key="LblHeightWeight">身長 ／ 体重:</sys:String>
+    <sys:String x:Key="LblBodySize">体格:</sys:String>
+    <sys:String x:Key="LblAge">年齢:</sys:String>
+    <sys:String x:Key="LblAppearance">外見:</sys:String>
+    <sys:String x:Key="LblStartBonuses">スタートボーナス:</sys:String>
+    <sys:String x:Key="LblStartBonus1">スタートボーナス (1):</sys:String>
+    <sys:String x:Key="LblStartBonus2">スタートボーナス (2):</sys:String>
+    <sys:String x:Key="LblStartBonus3">スタートボーナス (3):</sys:String>
+    <sys:String x:Key="LblProgress">進捗:</sys:String>
+    <sys:String x:Key="LblLevel">レベル:</sys:String>
+    <sys:String x:Key="LblExperience">経験値:</sys:String>
+    <sys:String x:Key="LblStates">ステータス:</sys:String>
+    <sys:String x:Key="LblAwakening">覚醒:</sys:String>
+    <sys:String x:Key="LblBuff">バフ:</sys:String>
+    <sys:String x:Key="LblDebuff">デバフ:</sys:String>
+</ResourceDictionary>

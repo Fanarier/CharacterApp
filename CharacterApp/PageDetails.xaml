@@ -1,0 +1,93 @@
+﻿<Page x:Class="CharacterApp.PageDetails"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="{DynamicResource DetailsPageTitle}">
+    <ScrollViewer Width="Auto">
+        <StackPanel Margin="20">
+            <GroupBox Header="{DynamicResource LblBackstory}" Margin="5" Padding="10">
+                <TextBox x:Name="BackstoryTextBox"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         Height="100" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Auto"/>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource LblWorldview}" Margin="5" Padding="10">
+                <TextBox x:Name="WorldviewTextBox"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         Height="60" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource LblPhysique}" Margin="5" Padding="10">
+                <UniformGrid Columns="2" Margin="5">
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblHeightWeight}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="HeightWeightTextBox" Width="120" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblBodySize}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="BodySizeTextBox" Width="120" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblAge}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="AgeTextBox" Width="60" Height="30"/>
+                    </StackPanel>
+                </UniformGrid>
+            </GroupBox>
+            <GroupBox Header="{DynamicResource LblAppearance}" Margin="5" Padding="10">
+                <TextBox x:Name="AppearanceTextBox"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         Height="60" VerticalScrollBarVisibility="Auto"/>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource LblStartBonuses}" Margin="5" Padding="10">
+                <UniformGrid Columns="1" Margin="5">
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <TextBlock Text="{DynamicResource LblStartBonus1}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="StartBonus1TextBox" Width="200" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <TextBlock Text="{DynamicResource LblStartBonus2}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="StartBonus2TextBox" Width="200" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <TextBlock Text="{DynamicResource LblStartBonus3}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="StartBonus3TextBox" Width="200" Height="30"/>
+                    </StackPanel>
+                </UniformGrid>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource LblProgress}" Margin="5" Padding="10">
+                <UniformGrid Columns="2" Margin="5">
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblLevel}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="LevelTextBox" Width="120" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblExperience}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="ExperienceTextBox" Width="120" Height="30"/>
+                    </StackPanel>
+                </UniformGrid>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource LblStates}" Margin="5" Padding="10">
+                <UniformGrid Columns="1" Margin="5">
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <TextBlock Text="{DynamicResource LblAwakening}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="AwakeningTextBox" Width="200" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <TextBlock Text="{DynamicResource LblBuff}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="BuffTextBox" Width="200" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <TextBlock Text="{DynamicResource LblDebuff}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="DebuffTextBox" Width="200" Height="30"/>
+                    </StackPanel>
+                </UniformGrid>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

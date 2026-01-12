@@ -1,0 +1,115 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Images\EspiresGames.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Images\aura_active_dark.png" />
+    <None Remove="Images\aura_active_light.png" />
+    <None Remove="Images\aura_inactive_dark.png" />
+    <None Remove="Images\aura_inactive_light.png" />
+    <None Remove="Images\Background_1.png" />
+    <None Remove="Images\block_active_dark.png" />
+    <None Remove="Images\block_active_light.png" />
+    <None Remove="Images\block_inactive_dark.png" />
+    <None Remove="Images\block_inactive_light.png" />
+    <None Remove="Images\blok_active.png" />
+    <None Remove="Images\blok_inactive.png" />
+    <None Remove="Images\diamond_active.png" />
+    <None Remove="Images\diamond_inactive.png" />
+    <None Remove="Images\die_active.png" />
+    <None Remove="Images\die_inactive.png" />
+    <None Remove="Images\ear_active_dark.png" />
+    <None Remove="Images\ear_active_light.png" />
+    <None Remove="Images\ear_inactive_dark.png" />
+    <None Remove="Images\ear_inactive_light.png" />
+    <None Remove="Images\EspiresGamesMini.ico" />
+    <None Remove="Images\eyes-0.png" />
+    <None Remove="Images\eyes-1.png" />
+    <None Remove="Images\eyes_active_dark.png" />
+    <None Remove="Images\eyes_active_light.png" />
+    <None Remove="Images\eyes_inactive_dark.png" />
+    <None Remove="Images\eyes_inactive_light.png" />
+    <None Remove="Images\hearts-0.png" />
+    <None Remove="Images\hearts-1.png" />
+    <None Remove="Images\heart_active_dark.png" />
+    <None Remove="Images\heart_active_light.png" />
+    <None Remove="Images\heart_inactive_dark.png" />
+    <None Remove="Images\heart_inactive_light.png" />
+    <None Remove="Images\lock.png" />
+    <None Remove="Images\lock_dark.png" />
+    <None Remove="Images\lock_light.png" />
+    <None Remove="Images\placeholder_slot.png" />
+    <None Remove="Images\placeholder_slot_dark.png" />
+    <None Remove="Images\placeholder_slot_light.png" />
+    <None Remove="Images\unlock.png" />
+    <None Remove="Images\unlock_dark.png" />
+    <None Remove="Images\unlock_light.png" />
+    <None Remove="Images\Без имени-1.png" />
+    <None Remove="Images\Без имени-2.png" />
+    <None Remove="Images\Без имени-3.png" />
+    <None Remove="Images\Без имени-4.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Remove="Strings\Strings.en.xaml" />
+    <Page Remove="Strings\Strings.jp.xaml" />
+    <Page Remove="Strings\Strings.ru.xaml" />
+    <Page Remove="Themes\DarkTheme.xaml" />
+    <Page Remove="Themes\LightTheme.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\aura_active_dark.png" />
+    <Resource Include="Images\aura_active_light.png" />
+    <Resource Include="Images\aura_inactive_dark.png" />
+    <Resource Include="Images\aura_inactive_light.png" />
+    <Resource Include="Images\Background_1.png" />
+    <Resource Include="Images\block_active_dark.png" />
+    <Resource Include="Images\block_active_light.png" />
+    <Resource Include="Images\block_inactive_dark.png" />
+    <Resource Include="Images\block_inactive_light.png" />
+    <Resource Include="Images\ear_active_dark.png" />
+    <Resource Include="Images\ear_active_light.png" />
+    <Resource Include="Images\ear_inactive_dark.png" />
+    <Resource Include="Images\ear_inactive_light.png" />
+    <Resource Include="Images\EspiresGames.ico" />
+    <Resource Include="Images\EspiresGamesMini.ico" />
+    <Resource Include="Images\eyes_active_dark.png" />
+    <Resource Include="Images\eyes_active_light.png" />
+    <Resource Include="Images\eyes_inactive_dark.png" />
+    <Resource Include="Images\eyes_inactive_light.png" />
+    <Resource Include="Images\heart_active_dark.png" />
+    <Resource Include="Images\heart_active_light.png" />
+    <Resource Include="Images\heart_inactive_dark.png" />
+    <Resource Include="Images\heart_inactive_light.png" />
+    <Resource Include="Images\lock_dark.png" />
+    <Resource Include="Images\lock_light.png" />
+    <Resource Include="Images\placeholder_slot_dark.png" />
+    <Resource Include="Images\placeholder_slot_light.png" />
+    <Resource Include="Images\unlock_dark.png" />
+    <Resource Include="Images\unlock_light.png" />
+    <Resource Include="Strings\Strings.ru.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Octokit" Version="14.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Strings\Strings.en.xaml" />
+    <Resource Include="Strings\Strings.jp.xaml" />
+    <Resource Include="Themes\DarkTheme.xaml" />
+    <Resource Include="Themes\LightTheme.xaml" />
+  </ItemGroup>
+
+</Project>

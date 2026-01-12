@@ -1,0 +1,136 @@
+﻿<Page x:Class="CharacterApp.PageMain"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:CharacterApp"
+      Title="{DynamicResource AppTitle}">
+    <ScrollViewer Width="auto">
+        <StackPanel Margin="20" Orientation="Vertical">
+
+            <GroupBox Header="{DynamicResource GroupPhotoHeader}" Margin="5" Padding="10">
+                <StackPanel>
+                    <Border BorderThickness="1" BorderBrush="Gray" Height="250" Background="LightGray" Margin="0,0,0,10">
+                        <Image x:Name="CharacterImage" Stretch="Uniform"/>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button x:Name="BtnAddPhoto" Click="AddPhoto_Click" Margin="5" FontSize="24" Content="{DynamicResource BtnAddPhoto}" Padding="10,5,10,5"/>
+                        <Button x:Name="BtnViewPhoto" Click="ViewPhoto_Click" FontSize="24" Content="{DynamicResource BtnViewPhoto}" Margin="5"/>
+                        <Button x:Name="BtnDeletePhoto" Click="DeletePhoto_Click" Margin="5" FontSize="24" Content="{DynamicResource BtnDeletePhoto}"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource GroupDataHeader}" Margin="5" Padding="10">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblClass}" VerticalAlignment="Center" Margin="5"/>
+                        <TextBox x:Name="ClassTextBox" Width="120" Margin="5" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblSubclass}" VerticalAlignment="Center" Margin="5"/>
+                        <TextBox x:Name="SubclassTextBox" Width="120" Margin="5" Height="30"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource GroupStatsHeader}" Margin="5" Padding="10">
+                <UniformGrid Columns="2" Rows="4" Margin="5">
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblHits}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="HitsTextBox" Width="100" TextChanged="HitsTextBox_TextChanged" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblDefense}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="DefenseTextBox" Width="100" TextChanged="DefenseTextBox_TextChanged" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblEvasion}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="EvasionTextBox" Width="100" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblSuperHits}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="SuperHitsTextBox" Width="100" TextChanged="SuperHitsTextBox_TextChanged" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblSpeed}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="SpeedTextBox" Width="100" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblCarryCapacity}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="CarryTextBox" Width="100" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblInitiative}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="InitiativeTextBox" Width="100" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblMastery}" Width="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="MasteryTextBox" Width="100" TextChanged="MasteryTextBox_TextChanged" Height="30"/>
+                    </StackPanel>
+                </UniformGrid>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource GroupRatingHeader}" Margin="5" Padding="10">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblExhaustion}" Width="150" VerticalAlignment="Center"/>
+                        <local:IconRatingControl x:Name="ExhaustionControl" MaxValue="5" Width="150"     ActiveIcon="{DynamicResource IconExhaustionActive}" InactiveIcon="{DynamicResource IconExhaustionInactive}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblDeathSaves}" Width="150" VerticalAlignment="Center"/>
+                        <local:IconRatingControl x:Name="DeathSavesControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconDeathSavesActive}" InactiveIcon="{DynamicResource IconDeathSavesInactive}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblVision}" Width="150" VerticalAlignment="Center"/>
+                        <local:IconRatingControl x:Name="VisionControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconVisionActive}" InactiveIcon="{DynamicResource IconVisionInactive}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblHearing}" Width="150" VerticalAlignment="Center"/>
+                        <local:IconRatingControl x:Name="HearingControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconHearingActive}" InactiveIcon="{DynamicResource IconHearingInactive}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblAura}" Width="150" VerticalAlignment="Center"/>
+                        <local:IconRatingControl x:Name="AuraControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconAuraActive}" InactiveIcon="{DynamicResource IconAuraInactive}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblMana}" Width="145" VerticalAlignment="Center"/>
+                        <TextBox x:Name="ManaTextBox" Width="150" TextChanged="ManaTextBox_TextChanged" Height="30"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblStamina}" Width="145" VerticalAlignment="Center"/>
+                        <TextBox x:Name="StaminaTextBox" Width="150" Height="30"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="{DynamicResource GroupCustomFieldsHeader}" Margin="5" Padding="10">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblCustomField1}" Width="150" VerticalAlignment="Center"/>
+                        <TextBox x:Name="CustomField1Label" Width="100" Margin="2,2,10,2" Height="30"/>
+                        <TextBox x:Name="CustomField1Value" Width="150" Margin="2"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblCustomField2}" Width="150" VerticalAlignment="Center"/>
+                        <TextBox x:Name="CustomField2Label" Width="100" Margin="2,2,10,2" Height="30"/>
+                        <TextBox x:Name="CustomField2Value" Width="150" Margin="2"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblCustomField3}" Width="150" VerticalAlignment="Center"/>
+                        <TextBox x:Name="CustomField3Label" Width="100" Margin="2,2,10,2" Height="30"/>
+                        <TextBox x:Name="CustomField3Value" Width="150" Margin="2"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="{DynamicResource LblCustomField4}" Width="150" VerticalAlignment="Center"/>
+                        <TextBox x:Name="CustomField4Label" Width="100" Margin="2,2,10,2" Height="30"/>
+                        <TextBox x:Name="CustomField4Value" Width="150" Margin="2"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

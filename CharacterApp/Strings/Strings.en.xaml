@@ -1,0 +1,67 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="AppTitle">Character Editor</sys:String>
+    <sys:String x:Key="MenuTitle">Menu</sys:String>
+    <sys:String x:Key="MainPageBtn">Main Page</sys:String>
+    <sys:String x:Key="SettingsBtn">Settings</sys:String>
+    <sys:String x:Key="LanguageBtn">Language</sys:String>
+    <sys:String x:Key="ThemeBtn">Theme</sys:String>
+
+    <sys:String x:Key="GroupPhotoHeader">Character Photo</sys:String>
+    <sys:String x:Key="BtnAddPhoto">➕</sys:String>
+    <sys:String x:Key="BtnViewPhoto">👁</sys:String>
+    <sys:String x:Key="BtnDeletePhoto">❌</sys:String>
+
+    <sys:String x:Key="GroupDataHeader">Character Data</sys:String>
+    <sys:String x:Key="LblClass">Class:</sys:String>
+    <sys:String x:Key="LblSubclass">Subclass:</sys:String>
+
+    <sys:String x:Key="GroupStatsHeader">Basic Stats</sys:String>
+    <sys:String x:Key="LblHits">Hits:</sys:String>
+    <sys:String x:Key="LblDefense">Defense:</sys:String>
+    <sys:String x:Key="LblEvasion">Evasion:</sys:String>
+    <sys:String x:Key="LblSuperHits">Super Hits:</sys:String>
+    <sys:String x:Key="LblSpeed">Speed:</sys:String>
+    <sys:String x:Key="LblCarryCapacity">Carry Capacity:</sys:String>
+    <sys:String x:Key="LblInitiative">Initiative:</sys:String>
+    <sys:String x:Key="LblMastery">Mastery:</sys:String>
+
+    <sys:String x:Key="GroupRatingHeader">Rating Stats</sys:String>
+    <sys:String x:Key="LblExhaustion">Exhaustion:</sys:String>
+    <sys:String x:Key="LblDeathSaves">Death Saves:</sys:String>
+    <sys:String x:Key="LblVision">Perception (Vision):</sys:String>
+    <sys:String x:Key="LblHearing">Perception (Hearing):</sys:String>
+    <sys:String x:Key="LblAura">Perception (Aura):</sys:String>
+    <sys:String x:Key="LblMana">Mana:</sys:String>
+    <sys:String x:Key="LblStamina">Stamina:</sys:String>
+
+    <sys:String x:Key="GroupCustomFieldsHeader">Custom Fields</sys:String>
+    <sys:String x:Key="LblCustomField1">Custom Field 1:</sys:String>
+    <sys:String x:Key="LblCustomField2">Custom Field 2:</sys:String>
+    <sys:String x:Key="LblCustomField3">Custom Field 3:</sys:String>
+    <sys:String x:Key="LblCustomField4">Custom Field 4:</sys:String>
+
+    <!-- Заголовок страницы -->
+    <sys:String x:Key="DetailsPageTitle">Character Details</sys:String>
+
+    <!-- Поля новой страницы -->
+    <sys:String x:Key="LblBackstory">Backstory:</sys:String>
+    <sys:String x:Key="LblWorldview">Worldview:</sys:String>
+    <sys:String x:Key="LblPhysique">Physique:</sys:String>
+    <sys:String x:Key="LblHeightWeight">Height / Weight:</sys:String>
+    <sys:String x:Key="LblBodySize">Body Size:</sys:String>
+    <sys:String x:Key="LblAge">Age:</sys:String>
+    <sys:String x:Key="LblAppearance">Appearance:</sys:String>
+    <sys:String x:Key="LblStartBonuses">Starting bonuses:</sys:String>
+    <sys:String x:Key="LblStartBonus1">Start Bonus (1):</sys:String>
+    <sys:String x:Key="LblStartBonus2">Start Bonus (2):</sys:String>
+    <sys:String x:Key="LblStartBonus3">Start Bonus (3):</sys:String>
+    <sys:String x:Key="LblProgress">Progress:</sys:String>
+    <sys:String x:Key="LblLevel">Level:</sys:String>
+    <sys:String x:Key="LblExperience">Experience:</sys:String>
+    <sys:String x:Key="LblStates">Stats:</sys:String>
+    <sys:String x:Key="LblAwakening">Awakening:</sys:String>
+    <sys:String x:Key="LblBuff">Buff:</sys:String>
+    <sys:String x:Key="LblDebuff">Debuff:</sys:String>
+</ResourceDictionary>

@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="CharacterApp.EquipSlotControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="160" Height="180">
+    <Border CornerRadius="8" Padding="6"
+            Background="{DynamicResource WindowBackgroundBrush}"
+            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+        <Grid>
+            <!-- Title (вверху, поверх границы) -->
+            <TextBlock x:Name="TitleText"
+                       Text="Слот"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Margin="0,-12,0,0"
+                       Background="{DynamicResource WindowBackgroundBrush}"
+                       Padding="6,2"
+                       Foreground="{DynamicResource TextBrush}"/>
+
+            <!-- Область изображения (фон отсутствует, картинка или плейсхолдер) -->
+            <Border CornerRadius="6" Background="Transparent" Height="110" VerticalAlignment="Top" >
+                <Grid>
+                    <Image x:Name="ImgItem" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <!-- плейсхолдер будет показываться когда ImgItem.Source == null; ставим отдельный Image,
+                         видимость будет контролироваться из кода при обновлении -->
+                    <Image x:Name="ImgPlaceholder" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.6"/>
+                </Grid>
+            </Border>
+
+            <!-- Имя предмета внизу -->
+            <TextBlock x:Name="TxtName"
+                       Text="—"
+                       FontSize="12"
+                       Margin="4"
+                       VerticalAlignment="Bottom"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextBrush}"/>
+
+            <!-- Иконка замка (без фоновой рамки). Используем два Image и переключаем видимость -->
+            <Grid HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-10,-10,0" Width="28" Height="28">
+                <Image x:Name="ImgLocked" Stretch="Uniform" Visibility="Collapsed"/>
+                <Image x:Name="ImgUnlocked" Stretch="Uniform" Visibility="Collapsed"/>
+            </Grid>
+
+            <!-- Кнопка выбора изображения (нижний левый угол) -->
+            <Button x:Name="BtnChoose" Width="28" Height="24" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="4"
+                    ToolTip="Выбрать изображение">
+                <TextBlock Text="..." FontWeight="Bold" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Button>
+
+            <!-- Бейдж "Опция" -->
+            <Border x:Name="OptionalBadge" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,-10,0,0" Padding="6,2" CornerRadius="4"
+                    Background="#22FFFFFF" Visibility="Collapsed">
+                <TextBlock Text="Опция" FontSize="10" Foreground="{DynamicResource TextBrush}"/>
+            </Border>
+
+            <!-- Невидимая ToggleButton-логика (внутренний state) -->
+            <ToggleButton x:Name="BtnLock" Visibility="Collapsed" />
+        </Grid>
+    </Border>
+</UserControl>

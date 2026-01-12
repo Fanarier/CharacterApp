@@ -1,0 +1,35 @@
+﻿<Page x:Class="CharacterApp.EquipmentPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:CharacterApp"
+      Title="Экипировка">
+    <ScrollViewer>
+        <StackPanel Margin="16">
+            <TextBlock Text="Экипировка" FontSize="22" FontWeight="Bold" Margin="0,0,0,12"
+                       Foreground="{DynamicResource TextBrush}"/>
+
+            <UniformGrid Columns="4" Rows="3" Margin="0,0,0,12" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <local:EquipSlotControl x:Name="Slot_Head" SlotKey="Head" Title="Голова" />
+                <local:EquipSlotControl x:Name="Slot_Body" SlotKey="Body" Title="Тело" />
+                <local:EquipSlotControl x:Name="Slot_Hands" SlotKey="Hands" Title="Руки" />
+                <local:EquipSlotControl x:Name="Slot_Waist" SlotKey="Waist" Title="Пояс" />
+
+                <local:EquipSlotControl x:Name="Slot_Legs" SlotKey="Legs" Title="Ноги" />
+                <local:EquipSlotControl x:Name="Slot_Ring1" SlotKey="Ring1" Title="Кольцо" />
+                <local:EquipSlotControl x:Name="Slot_Ring2" SlotKey="Ring2" Title="Кольцо" />
+                <local:EquipSlotControl x:Name="Slot_Amulet" SlotKey="Amulet" Title="Кулон" />
+
+                <local:EquipSlotControl x:Name="Slot_Trinket1" SlotKey="Trinket1" Title="Украшение (Опция)" IsOptional="True" />
+                <local:EquipSlotControl x:Name="Slot_Trinket2" SlotKey="Trinket2" Title="Украшение (Опция)" IsOptional="True" />
+                <local:EquipSlotControl x:Name="Slot_Artifact1" SlotKey="Artifact1" Title="Артефакт" />
+                <local:EquipSlotControl x:Name="Slot_Artifact2" SlotKey="Artifact2" Title="Артефакт (Опция)" IsOptional="True" />
+            </UniformGrid>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Content="Сохранить экипировку" Click="SaveEquip_Click" Margin="5"/>
+                <Button Content="Загрузить экипировку" Click="LoadEquip_Click" Margin="5"/>
+                <Button Content="Очистить все" Click="ClearAll_Click" Margin="5"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
