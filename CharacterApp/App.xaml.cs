@@ -14,19 +14,22 @@ namespace CharacterApp
         {
             base.OnStartup(e);
 
-            // 1) Загружаем тему
+            // Попытка загрузить тему (заменяем ТОЛЬКО словарь из Themes/)
             string theme = "Light";
             if (File.Exists(ThemeConfigFile))
             {
                 var t = File.ReadAllText(ThemeConfigFile).Trim();
                 if (!string.IsNullOrEmpty(t)) theme = t;
             }
-            var themeUri = new Uri($"Themes/{theme}Theme.xaml", UriKind.Relative);
-            Resources.MergedDictionaries.Clear();
-            Resources.MergedDictionaries.Add(new ResourceDictionary { Source = themeUri });
+            try
+            {
+                var themeUri = new Uri($"Themes/{theme}Theme.xaml", UriKind.Relative);
+                ReplaceMergedDictionaryByFolder("Themes/", themeUri);
+            }
+            catch { }
 
-            // 2) Загружаем язык
-            string lang = "ru";  
+            // Язык
+            string lang = "ru";
             if (File.Exists(LanguageConfigFile))
             {
                 var l = File.ReadAllText(LanguageConfigFile).Trim();
@@ -34,20 +37,47 @@ namespace CharacterApp
             }
             LoadLanguage(lang);
 
+            // Если по какой-то причине CoreResources не загрузился - добавим его (защита)
+            EnsureCoreResources();
+
             var main = new MainWindow();
             main.Show();
         }
 
+        private void ReplaceMergedDictionaryByFolder(string folderMarker, Uri newDictUri)
+        {
+            var dicts = Resources.MergedDictionaries;
+            var old = dicts.FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains(folderMarker, StringComparison.OrdinalIgnoreCase));
+            if (old != null) dicts.Remove(old);
+            dicts.Add(new ResourceDictionary { Source = newDictUri });
+        }
+
         public static void LoadLanguage(string langCode)
         {
-         
-            var dicts = Current.Resources.MergedDictionaries;
-            var old = dicts.FirstOrDefault(d =>
-                d.Source != null && d.Source.OriginalString.Contains("Strings/Strings."));
-            if (old != null) dicts.Remove(old);
+            try
+            {
+                var dicts = Current.Resources.MergedDictionaries;
+                var old = dicts.FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains("Strings/Strings.", StringComparison.OrdinalIgnoreCase));
+                if (old != null) dicts.Remove(old);
+                var uri = new Uri($"Strings/Strings.{langCode}.xaml", UriKind.Relative);
+                dicts.Add(new ResourceDictionary { Source = uri });
+            }
+            catch { }
+        }
 
-            var uri = new Uri($"Strings/Strings.{langCode}.xaml", UriKind.Relative);
-            dicts.Add(new ResourceDictionary { Source = uri });
+        private void EnsureCoreResources()
+        {
+            try
+            {
+                var dicts = Resources.MergedDictionaries;
+                bool hasCore = dicts.Any(d => d.Source != null && d.Source.OriginalString.EndsWith("CoreResources.xaml", StringComparison.OrdinalIgnoreCase));
+                if (!hasCore)
+                {
+                    try { dicts.Insert(0, new ResourceDictionary { Source = new Uri("Resources/CoreResources.xaml", UriKind.Relative) }); }
+                    catch { /* ignore */ }
+                }
+            }
+            catch { }
         }
     }
 }

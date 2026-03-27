@@ -1,53 +1,70 @@
-﻿using Octokit;
-using Newtonsoft.Json;
+﻿using CharacterApp.Models; // <- важно
+using CharacterApp.Pages;
 using Microsoft.Win32;
-using System;
+using Newtonsoft.Json;
+using Octokit;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
-using System.Windows.Threading;
-using System.Windows.Media.Animation;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
+
 
 namespace CharacterApp
 {
-
     public partial class MainWindow : Window
     {
+        public static MainWindow Instance { get; private set; }
+
         private const string Owner = "your-github-username";
         private const string Repo = "your-repo-name";
 
         private readonly PageMain _mainPage;
         private readonly PageDetails _detailsPage;
         private readonly EquipmentPage _equipmentPage;
+        private readonly ActiveSkillsPage _activeskills_Page;
         private string _lastJsonFilePath = string.Empty;
 
         private AutoSaveConfig _autoSaveConfig = new AutoSaveConfig();
-        private System.Windows.Threading.DispatcherTimer _autoSaveTimer;
+        private DispatcherTimer _autoSaveTimer;
 
         private bool _sidebarOpen = true;
         private const double SidebarOpenWidth = 250;
         private const double SidebarClosedWidth = 60;
         private const int AnimDurationMs = 220;
 
-
-
         public MainWindow()
         {
+            Instance = this;
+
             InitializeComponent();
+
+            // создаём единственные экземпляры страниц
             _mainPage = new PageMain();
             _detailsPage = new PageDetails();
             _equipmentPage = new EquipmentPage();
+            _activeskills_Page = new ActiveSkillsPage();
+
+            // По умолчанию показываем главную страницу
             MainFrame.Navigate(_mainPage);
 
             LoadAutoSaveConfig();
-            _autoSaveTimer = new System.Windows.Threading.DispatcherTimer();
+            _autoSaveTimer = new DispatcherTimer();
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
             ApplyAutoSaveSettings();
+        }
+
+        // ---- helper: вернуть текущий отображаемый экземпляр EquipmentPage (если есть) ----
+        private EquipmentPage GetShownEquipmentPage()
+        {
+            // Попробуем взять из фрейма (если там EquipmentPage)
+            if (MainFrame?.Content is EquipmentPage shown) return shown;
+
+            // fallback: используем поле _equipmentPage
+            return _equipmentPage;
         }
 
         public void LoadAutoSaveConfig()
@@ -73,7 +90,6 @@ namespace CharacterApp
             }
         }
 
-
         public void ApplyAutoSaveSettings()
         {
             _autoSaveTimer.Stop();
@@ -90,18 +106,21 @@ namespace CharacterApp
         {
             try
             {
-                // Собираем модель
+                // Собираем модель со всех страниц: main, details, equipment (из отображаемого экземпляра)
                 var character = new Character();
                 _mainPage.FillCharacter(character);
                 _detailsPage.FillCharacter(character);
+
+                var shownEquip = GetShownEquipmentPage();
+                if (shownEquip != null) shownEquip.FillCharacter(character);
+                else _equipmentPage.FillCharacter(character);
+
                 var json = JsonConvert.SerializeObject(character, Formatting.Indented);
 
-                // Сохраняем в новую версию
                 var filename = string.Format(_autoSaveConfig.FilePattern, DateTime.Now);
                 var path = Path.Combine(_autoSaveConfig.Folder, filename);
                 File.WriteAllText(path, json);
 
-                // Удаляем старые, оставляем только 5 последних
                 var files = new DirectoryInfo(_autoSaveConfig.Folder)
                     .GetFiles("*.json")
                     .OrderByDescending(f => f.CreationTimeUtc)
@@ -116,37 +135,22 @@ namespace CharacterApp
             }
         }
 
-
-        // Перетаскивание
+        // UI handlers (не менял логику анимаций)
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ButtonState == MouseButtonState.Pressed)
                 DragMove();
         }
+        private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-        // Свернуть окно
-        private void Minimize_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
-
-        // Закрыть окно
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        // Показ уведомления
         public async void ShowNotification(string message, NotificationType type = NotificationType.Info)
         {
             var control = new NotificationControl(message, type);
             await control.ShowAsync(NotificationHost.Children);
         }
 
-        private async void BtnToggleMenu_Click(object sender, RoutedEventArgs e)
-        {
-            await ToggleSidebarAsync(!_sidebarOpen);
-        }
+        private async void BtnToggleMenu_Click(object sender, RoutedEventArgs e) => await ToggleSidebarAsync(!_sidebarOpen);
 
         private async Task ToggleSidebarAsync(bool open)
         {
@@ -158,22 +162,17 @@ namespace CharacterApp
 
             if (!open)
             {
-                // Собираем задачи: одновременно анимируем opacity всех видимых частей + ширину
                 var tasks = new List<Task>();
-
-                // main containers
                 tasks.Add(AnimateOpacityAsync(MenuStack, MenuStack.Opacity, 0, fadeMs));
                 tasks.Add(AnimateOpacityAsync(BottomButtonsPanel, BottomButtonsPanel.Opacity, 0, fadeMs));
                 tasks.Add(AnimateOpacityAsync(TbMenuSearch, TbMenuSearch.Opacity, 0, fadeMs));
 
-                // все TextBlock внутри кнопок (анимируем их исчезновение плавно)
                 foreach (var child in MenuStack.Children)
                 {
                     if (child is Button btn && btn.Content is StackPanel sp)
                     {
                         foreach (var textPart in sp.Children.OfType<TextBlock>())
                         {
-                            // убедимся что текст видим перед анимацией
                             if (textPart.Visibility != Visibility.Visible)
                             {
                                 textPart.Visibility = Visibility.Visible;
@@ -183,14 +182,9 @@ namespace CharacterApp
                         }
                     }
                 }
-
-                // анимируем ширину сайдбара параллельно
                 tasks.Add(AnimateWidthAsync(Sidebar, SidebarClosedWidth, AnimDurationMs));
-
-                // дождёмся всех анимаций
                 await Task.WhenAll(tasks);
 
-                // после анимации – скрываем элементы (visibility), оставив иконки
                 foreach (var child in MenuStack.Children)
                 {
                     if (child is Button btn && btn.Content is StackPanel sp)
@@ -198,7 +192,7 @@ namespace CharacterApp
                         foreach (var textPart in sp.Children.OfType<TextBlock>())
                         {
                             textPart.Visibility = Visibility.Collapsed;
-                            textPart.Opacity = 1; // сброс на случай повторного открытия
+                            textPart.Opacity = 1;
                         }
                     }
                 }
@@ -209,12 +203,10 @@ namespace CharacterApp
             }
             else
             {
-                // Перед открытием: выставляем видимость контейнеров и готовим тексты к анимации
                 MenuStack.Visibility = Visibility.Visible;
                 BottomButtonsPanel.Visibility = Visibility.Visible;
                 TbMenuSearch.Visibility = Visibility.Visible;
 
-                // Подготовим все текстовые части: сделаем их видимыми, но с opacity = 0
                 foreach (var child in MenuStack.Children)
                 {
                     if (child is Button btn && btn.Content is StackPanel sp)
@@ -227,19 +219,17 @@ namespace CharacterApp
                     }
                 }
 
-                // Подготовим контейнеры к анимации (начальное значение opacity = 0)
                 MenuStack.Opacity = 0;
                 BottomButtonsPanel.Opacity = 0;
                 TbMenuSearch.Opacity = 0;
 
-                // Одновременно запускаем анимацию ширины и плавный fade-in для всех частей + текстов
                 var tasks = new List<Task>
-        {
-            AnimateWidthAsync(Sidebar, SidebarOpenWidth, AnimDurationMs),
-            AnimateOpacityAsync(MenuStack, 0, 1, fadeInMs),
-            AnimateOpacityAsync(BottomButtonsPanel, 0, 1, fadeInMs),
-            AnimateOpacityAsync(TbMenuSearch, 0, 1, fadeInMs)
-        };
+                {
+                    AnimateWidthAsync(Sidebar, SidebarOpenWidth, AnimDurationMs),
+                    AnimateOpacityAsync(MenuStack, 0, 1, fadeInMs),
+                    AnimateOpacityAsync(BottomButtonsPanel, 0, 1, fadeInMs),
+                    AnimateOpacityAsync(TbMenuSearch, 0, 1, fadeInMs)
+                };
 
                 foreach (var child in MenuStack.Children)
                 {
@@ -247,7 +237,6 @@ namespace CharacterApp
                     {
                         foreach (var textPart in sp.Children.OfType<TextBlock>())
                         {
-                            // анимация текста из 0 -> 1
                             tasks.Add(AnimateOpacityAsync(textPart, 0, 1, fadeInMs));
                         }
                     }
@@ -255,7 +244,6 @@ namespace CharacterApp
 
                 await Task.WhenAll(tasks);
 
-                // Убедимся, что все opacity возвращены в 1 (безопасный сброс)
                 MenuStack.Opacity = 1;
                 BottomButtonsPanel.Opacity = 1;
                 TbMenuSearch.Opacity = 1;
@@ -295,12 +283,10 @@ namespace CharacterApp
         private void TbMenuSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             var query = TbMenuSearch.Text?.Trim().ToLowerInvariant() ?? string.Empty;
-            // show/hide buttons (keep first TextBlock headers visible when no query)
             foreach (var child in MenuStack.Children)
             {
                 if (child is Button btn)
                 {
-                    // button content might be StackPanel(Image + TextBlock)
                     string contentText = btn.Tag?.ToString() ?? string.Empty;
                     if (string.IsNullOrEmpty(contentText) && btn.Content is StackPanel sp)
                     {
@@ -314,15 +300,11 @@ namespace CharacterApp
                 }
                 else if (child is TextBlock tb)
                 {
-                    // keep header visible when no query
                     tb.Visibility = string.IsNullOrEmpty(query) ? Visibility.Visible : Visibility.Collapsed;
                 }
             }
         }
 
-
-
-        // Проверка обновлений (не робит пока, поменять)
         private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -371,42 +353,32 @@ namespace CharacterApp
                 ShowNotification("Ошибка при проверке обновлений:\n" + ex.Message, NotificationType.Error);
             }
         }
-        // Навигация
-        private void MainPage_Click(object sender, RoutedEventArgs e)
-            => MainFrame.Navigate(_mainPage);
 
-        private void Details_Click(object sender, RoutedEventArgs e)
-            => MainFrame.Navigate(_detailsPage);
+        // Navigation
+        private void MainPage_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_mainPage);
+        private void Details_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_detailsPage);
+        private void Equipment_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_equipmentPage);
 
-        private void Equipment_Click(object sender, RoutedEventArgs e)
-    => MainFrame.Navigate(_equipmentPage);
+        private void ActiveSkills_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_activeskills_Page);
+        private void Settings_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(new SettingsPage());
 
-        private void Settings_Click(object sender, RoutedEventArgs e)
-            => MainFrame.Navigate(new SettingsPage());
-
-        private void QuickSave_Click(object sender, RoutedEventArgs e)
-        {
-            SaveAll();
-        }
+        // Quick actions — приводим к глобальным сохранениям/загрузкам, чтобы избежать "локальных" загрузок страниц
+        private void QuickSave_Click(object sender, RoutedEventArgs e) => SaveAll();
 
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
-            if (MainFrame.Content is ISaveLoad saveLoad)
-                saveLoad.SaveAs();
-            else
-                ShowNotification("Текущая страница не поддерживает сохранение данных", NotificationType.Info);
+            // Вместо вызова SaveAs у текущей страницы — выполняем глобальное SaveAs
+            SaveAllAs();
         }
 
         private void LoadJSON_Click(object sender, RoutedEventArgs e)
         {
-            if (MainFrame.Content is ISaveLoad saveLoad)
-                saveLoad.LoadJSON();
-            else
-                ShowNotification("Текущая страница не поддерживает загрузку данных", NotificationType.Info);
+            // Вместо вызова LoadJSON у текущей страницы — выполняем глобальную загрузку,
+            // чтобы обновить все страницы сразу (PageMain + PageDetails + EquipmentPage)
+            LoadAll();
         }
 
         // Сохранение/загрузка всех данных
-
         public void SaveAll()
         {
             if (!string.IsNullOrEmpty(_lastJsonFilePath) && File.Exists(_lastJsonFilePath))
@@ -434,6 +406,7 @@ namespace CharacterApp
                 ShowNotification("Данные сохранены!", NotificationType.Success);
             }
         }
+
         public void LoadAll()
         {
             var dlg = new OpenFileDialog { Filter = "JSON файлы (*.json)|*.json" };
@@ -444,8 +417,20 @@ namespace CharacterApp
                 {
                     var json = File.ReadAllText(_lastJsonFilePath);
                     var character = JsonConvert.DeserializeObject<Character>(json) ?? new Character();
+
+                    // Нормализуем legacy-данные в полноценные EquipmentItem (если нужно)
+                    character.NormalizeItemsFromLegacy();
+
+                    // Применяем данные к всем страницам (и к отображаемому EquipmentPage)
                     _mainPage.ApplyCharacter(character);
                     _detailsPage.ApplyCharacter(character);
+
+                    var shownEquip = GetShownEquipmentPage();
+                    if (shownEquip != null)
+                        shownEquip.ApplyCharacter(character);
+                    else
+                        _equipmentPage.ApplyCharacter(character);
+
                     ShowNotification("Данные загружены!", NotificationType.Success);
                 }
                 catch (Exception ex)
@@ -460,11 +445,18 @@ namespace CharacterApp
             var character = new Character();
             _mainPage.FillCharacter(character);
             _detailsPage.FillCharacter(character);
+
+            // используем отображаемый EquipmentPage (если есть), иначе экземпляр _equipmentPage
+            var shownEquip = GetShownEquipmentPage();
+            if (shownEquip != null)
+                shownEquip.FillCharacter(character);
+            else
+                _equipmentPage.FillCharacter(character);
+
             var json = JsonConvert.SerializeObject(character, Formatting.Indented);
             File.WriteAllText(path, json);
         }
     }
-}
 
     public interface ISaveLoad
     {
@@ -472,3 +464,4 @@ namespace CharacterApp
         void SaveAs();
         void LoadJSON();
     }
+}

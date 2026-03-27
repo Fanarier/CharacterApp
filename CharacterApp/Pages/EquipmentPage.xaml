@@ -1,0 +1,19 @@
+﻿<Page x:Class="CharacterApp.Pages.EquipmentPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:controls="clr-namespace:CharacterApp.Controls"
+      Title="Equipment">
+    <ScrollViewer>
+        <StackPanel Margin="16">
+            <TextBlock Text="Экипировка" FontSize="22" FontWeight="Bold" Margin="0,0,0,12"/>
+
+            <ItemsControl x:Name="SlotsHost">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel IsItemsHost="True" Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using CharacterApp.Models;
 using Microsoft.Win32;
 
 namespace CharacterApp
@@ -20,9 +21,11 @@ namespace CharacterApp
         }
 
         // Делегирую
+        // Вместо локальной реализации — делегируем MainWindow
         public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
         public void SaveAs() => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
         public void LoadJSON() => (Application.Current.MainWindow as MainWindow)?.LoadAll();
+
         public void ApplyCharacter(Character c)
         {
             HitsTextBox.Text = c.Hits;

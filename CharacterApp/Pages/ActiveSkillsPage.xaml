@@ -1,0 +1,158 @@
+﻿<Page x:Class="CharacterApp.Pages.ActiveSkillsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:CharacterApp.Pages"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      Title="Активные навыки">
+
+    <Page.Resources>
+        <sys:String x:Key="LblHeader">Активные навыки</sys:String>
+        <sys:String x:Key="BtnAdd">Добавить</sys:String>
+        <sys:String x:Key="BtnRemove">Удалить</sys:String>
+        <sys:String x:Key="BtnReset">Сбросить</sys:String>
+
+        <x:Array Type="{x:Type sys:String}" x:Key="Categories">
+            <sys:String>Классовый (К)</sys:String>
+            <sys:String>Расовый (P)</sys:String>
+        </x:Array>
+
+        <Style TargetType="DataGrid" x:Key="SkillsGridStyle">
+            <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
+            <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource WindowBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#33000000"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#22000000"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="CellTextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <ControlTemplate x:Key="StatusToggleTemplate" TargetType="ToggleButton">
+            <Grid Width="32" Height="32">
+                <Ellipse x:Name="Circle" Stroke="{DynamicResource AccentBrush}" StrokeThickness="4" Fill="Transparent"/>
+                <Path x:Name="Cross" Visibility="Collapsed" Data="M6,6 L26,26 M26,6 L6,26" Stroke="{DynamicResource AccentBrush}" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Circle" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Cross" Property="Visibility" Value="Collapsed"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="False">
+                    <Setter TargetName="Circle" Property="Visibility" Value="Collapsed"/>
+                    <Setter TargetName="Cross" Property="Visibility" Value="Visible"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Page.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{StaticResource LblHeader}"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource TextBrush}"
+                   Margin="4"/>
+
+        <!-- IMPORTANT: ItemsSource задаётся через привязку к DataContext.Skills.
+             Не добавляй вручную <DataGrid.Items> в XAML — приведёт к ошибке. -->
+        <DataGrid x:Name="SkillsGrid"
+                  Grid.Row="1"
+                  Style="{StaticResource SkillsGridStyle}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserResizeRows="False"
+                  HeadersVisibility="Column"
+                  RowHeaderWidth="0"
+                  ItemsSource="{Binding Skills}"
+                  Margin="0,8,0,8"
+                  Background="Transparent"
+                  GridLinesVisibility="Horizontal"
+                  SelectionMode="Single"
+                  IsReadOnly="False">
+
+            <DataGrid.Columns>
+                <!-- Column 1: статичный текст "Активный навык" -->
+                <DataGridTemplateColumn Header=" " Width="170" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Padding="6" CornerRadius="4" Background="{DynamicResource WindowBackgroundBrush}">
+                                <TextBlock Text="Активный навык" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Column 2: выбор категории -->
+                <DataGridTemplateColumn Header="Категория" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CategoryDisplay}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{StaticResource Categories}"
+                                      SelectedIndex="{Binding CategoryIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      Background="Transparent"
+                                      Foreground="{DynamicResource TextBrush}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Column 3: описание/название -->
+                <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="240">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Padding="6,4"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CellTextBox}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Column 4: символ (круг или крест) -->
+                <DataGridTemplateColumn Header=" " Width="72" IsReadOnly="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ToggleButton IsChecked="{Binding IsActiveSymbol, Mode=TwoWay}" IsHitTestVisible="False" Template="{StaticResource StatusToggleTemplate}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ToggleButton IsChecked="{Binding IsActiveSymbol, Mode=TwoWay}" Template="{StaticResource StatusToggleTemplate}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button x:Name="BtnAdd" Content="{StaticResource BtnAdd}" Click="BtnAdd_Click" Margin="6" Padding="10,6" />
+            <Button x:Name="BtnRemove" Content="{StaticResource BtnRemove}" Click="BtnRemove_Click" Margin="6" Padding="10,6" />
+            <Button x:Name="BtnReset" Content="{StaticResource BtnReset}" Click="BtnReset_Click" Margin="6" Padding="10,6" />
+        </StackPanel>
+    </Grid>
+</Page>

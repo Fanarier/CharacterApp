@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using CharacterApp;
+using CharacterApp.Models;
 
 namespace CharacterApp
 {
@@ -12,9 +12,11 @@ namespace CharacterApp
         }
 
         // Делегирую
+        // Вместо локальной реализации — делегируем MainWindow
         public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
         public void SaveAs() => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
         public void LoadJSON() => (Application.Current.MainWindow as MainWindow)?.LoadAll();
+
 
         // Применить данные
         public void ApplyCharacter(Character c)

@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="CharacterApp.Controls.IconRatingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:CharacterApp.Controls" xmlns:сonverters="clr-namespace:CharacterApp.Converters"
+             MinHeight="30" MinWidth="30">
+    <!-- Регистрируем конвертер локально, чтобы StaticResource его точно нашёл.
+         Если у вас конвертер объявлен глобально (App.xaml), можно убрать. -->
+    <UserControl.Resources>
+        <сonverters:RatingIconMultiConverter x:Key="RatingIconMultiConverter" />
+    </UserControl.Resources>
+
+    <!-- Корневой Grid с Background="Transparent" — гарантируем, что элемент принимает hit-test'ы -->
+    <Grid Background="Transparent">
+        <StackPanel Orientation="Horizontal" Background="Transparent">
+            <ItemsControl x:Name="ItemsHost">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!-- Добавил обработчик клика и курсор "ручка" для UX -->
+                        <Image Width="24" Height="24" Margin="2" Cursor="Hand"
+                               MouseLeftButtonDown="Icon_MouseLeftButtonDown">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource RatingIconMultiConverter}">
+                                    <Binding />
+                                    <!-- item (index) -->
+                                    <Binding RelativeSource="{RelativeSource AncestorType=UserControl}" Path="Value"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=UserControl}" Path="ActiveIcon"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=UserControl}" Path="InactiveIcon"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Grid>
+</UserControl>

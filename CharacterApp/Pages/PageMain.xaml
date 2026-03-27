@@ -1,7 +1,7 @@
 ﻿<Page x:Class="CharacterApp.PageMain"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:local="clr-namespace:CharacterApp"
+      xmlns:controls="clr-namespace:CharacterApp.Controls"
       Title="{DynamicResource AppTitle}">
     <ScrollViewer Width="auto">
         <StackPanel Margin="20" Orientation="Vertical">
@@ -27,7 +27,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblSubclass}" VerticalAlignment="Center" Margin="5"/>
-                        <TextBox x:Name="SubclassTextBox" Width="120" Margin="5" Height="30"/>
+                        <TextBox x:Name="SubclassTextBox" Width="120" Margin="5" Height="25"/>
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
@@ -73,27 +73,27 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblExhaustion}" Width="150" VerticalAlignment="Center"/>
-                        <local:IconRatingControl x:Name="ExhaustionControl" MaxValue="5" Width="150"     ActiveIcon="{DynamicResource IconExhaustionActive}" InactiveIcon="{DynamicResource IconExhaustionInactive}"/>
+                        <controls:IconRatingControl x:Name="ExhaustionControl" MaxValue="5" Width="150"     ActiveIcon="{DynamicResource IconExhaustionActive}" InactiveIcon="{DynamicResource IconExhaustionInactive}"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblDeathSaves}" Width="150" VerticalAlignment="Center"/>
-                        <local:IconRatingControl x:Name="DeathSavesControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconDeathSavesActive}" InactiveIcon="{DynamicResource IconDeathSavesInactive}"/>
+                        <controls:IconRatingControl x:Name="DeathSavesControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconDeathSavesActive}" InactiveIcon="{DynamicResource IconDeathSavesInactive}"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblVision}" Width="150" VerticalAlignment="Center"/>
-                        <local:IconRatingControl x:Name="VisionControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconVisionActive}" InactiveIcon="{DynamicResource IconVisionInactive}"/>
+                        <controls:IconRatingControl x:Name="VisionControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconVisionActive}" InactiveIcon="{DynamicResource IconVisionInactive}"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblHearing}" Width="150" VerticalAlignment="Center"/>
-                        <local:IconRatingControl x:Name="HearingControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconHearingActive}" InactiveIcon="{DynamicResource IconHearingInactive}"/>
+                        <controls:IconRatingControl x:Name="HearingControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconHearingActive}" InactiveIcon="{DynamicResource IconHearingInactive}"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblAura}" Width="150" VerticalAlignment="Center"/>
-                        <local:IconRatingControl x:Name="AuraControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconAuraActive}" InactiveIcon="{DynamicResource IconAuraInactive}"/>
+                        <controls:IconRatingControl x:Name="AuraControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconAuraActive}" InactiveIcon="{DynamicResource IconAuraInactive}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblMana}" Width="145" VerticalAlignment="Center"/>

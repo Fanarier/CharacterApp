@@ -1,0 +1,39 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:CharacterApp.Converters">
+
+    <!-- Цвета и кисти -->
+    <SolidColorBrush x:Key="CardBackground" Color="#0AFFFFFF"/>
+    <SolidColorBrush x:Key="CardBorder" Color="#BABABA"/>
+    <SolidColorBrush x:Key="SlotHighlight" Color="#FFB565C1"/>
+    <SolidColorBrush x:Key="SlotLockedOverlay" Color="#66686868"/>
+
+    <!-- Тень -->
+    <DropShadowEffect x:Key="SubtleShadow" BlurRadius="10" ShadowDepth="2" Color="#22000000" Opacity="0.9"/>
+
+    <!-- Стиль "карточки" для Border (без ControlTemplate — Border не поддерживает Template) -->
+    <Style x:Key="CardStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Background" Value="{StaticResource CardBackground}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Effect" Value="{StaticResource SubtleShadow}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <!-- Лёгкие сториборды -->
+    <Storyboard x:Key="SlotHoverShow">
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.02" Duration="0:0:0.16"/>
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.02" Duration="0:0:0.16"/>
+    </Storyboard>
+    <Storyboard x:Key="SlotHoverHide">
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.0" Duration="0:0:0.16"/>
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.0" Duration="0:0:0.16"/>
+    </Storyboard>
+
+    <!-- Конвертеры -->
+    <conv:RatingIconMultiConverter x:Key="RatingIconMultiConverter"/>
+    <conv:NullOrEmptyToVisibilityConverter x:Key="NullOrEmptyToVisibilityConverter"/>
+
+</ResourceDictionary>

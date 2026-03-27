@@ -305,8 +305,8 @@
 
     
     <!-- путь может быть относительным к проекту: используйте тот стиль, который у вас принят -->
-    <sys:String x:Key="EquipPlaceholder">\Images\placeholder_slot_dark.png</sys:String>
-    <sys:String x:Key="LockIcon">\Images\lock_dark.png</sys:String>
-    <sys:String x:Key="UnlockIcon">\Images\unlock_dark.png</sys:String>
+    <sys:String x:Key="EquipPlaceholder">pack://application:,,,/CharacterApp;component/Images/placeholder_slot_dark.png</sys:String>
+    <sys:String x:Key="LockIcon">pack://application:,,,/CharacterApp;component/Images/lock_dark.png</sys:String>
+    <sys:String x:Key="UnlockIcon">pack://application:,,,/CharacterApp;component/Images/unlock_dark.png</sys:String>
 
 </ResourceDictionary>
