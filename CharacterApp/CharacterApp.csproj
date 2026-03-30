@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ApplicationIcon>Images\EspiresGames.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -110,6 +111,19 @@
     <Resource Include="Strings\Strings.jp.xaml" />
     <Resource Include="Themes\DarkTheme.xaml" />
     <Resource Include="Themes\LightTheme.xaml" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <!-- Images/storage — diamond, die, blok, hearts (нужны для StatsPage и главной) -->
+    <Resource Include="Images\storage\diamond_active.png" />
+    <Resource Include="Images\storage\diamond_inactive.png" />
+    <Resource Include="Images\storage\blok_active.png" />
+    <Resource Include="Images\storage\blok_inactive.png" />
+    <Resource Include="Images\storage\die_active.png" />
+    <Resource Include="Images\storage\die_inactive.png" />
+    <Resource Include="Images\storage\hearts-0.png" />
+    <Resource Include="Images\storage\hearts-1.png" />
   </ItemGroup>
 
 </Project>

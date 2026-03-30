@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -96,6 +96,30 @@ namespace CharacterApp.Controls
             TxtName.Text = string.IsNullOrWhiteSpace(ItemName) ? "—" : ItemName;
             UpdateImage();
             ApplyLockState();
+            UpdateTooltip();
+        }
+
+        private void UpdateTooltip()
+        {
+            if (ItemData == null || (string.IsNullOrEmpty(ItemData.Rarity) && string.IsNullOrEmpty(ItemData.Stats) && string.IsNullOrEmpty(ItemData.Effects)))
+            {
+                TxtName.ToolTip = null; return;
+            }
+            if (TxtName.ToolTip is System.Windows.Controls.ToolTip tt)
+            {
+                if (tt.Content is StackPanel sp)
+                {
+                    foreach (UIElement el in sp.Children)
+                    {
+                        if (el is TextBlock tb)
+                        {
+                            if (tb.Name == "TtRarity")  { tb.Text = ItemData.Rarity;  tb.Visibility = string.IsNullOrEmpty(ItemData.Rarity)  ? Visibility.Collapsed : Visibility.Visible; }
+                            if (tb.Name == "TtStats")   { tb.Text = ItemData.Stats;   tb.Visibility = string.IsNullOrEmpty(ItemData.Stats)   ? Visibility.Collapsed : Visibility.Visible; }
+                            if (tb.Name == "TtEffects") { tb.Text = ItemData.Effects; tb.Visibility = string.IsNullOrEmpty(ItemData.Effects) ? Visibility.Collapsed : Visibility.Visible; }
+                        }
+                    }
+                }
+            }
         }
 
         private void UpdateImage()

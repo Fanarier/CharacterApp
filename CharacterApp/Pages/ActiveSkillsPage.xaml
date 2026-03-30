@@ -1,4 +1,4 @@
-﻿<Page x:Class="CharacterApp.Pages.ActiveSkillsPage"
+<Page x:Class="CharacterApp.Pages.ActiveSkillsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="clr-namespace:CharacterApp.Pages"
@@ -87,15 +87,20 @@
                   IsReadOnly="False">
 
             <DataGrid.Columns>
-                <!-- Column 1: статичный текст "Активный навык" -->
-                <DataGridTemplateColumn Header=" " Width="170" IsReadOnly="True">
+                <!-- Column 1: название навыка (редактируемое) -->
+                <DataGridTemplateColumn Header="Название" Width="200">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Padding="6" CornerRadius="4" Background="{DynamicResource WindowBackgroundBrush}">
-                                <TextBlock Text="Активный навык" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                            </Border>
+                            <TextBlock Text="{Binding SkillName}" Foreground="{DynamicResource TextBrush}"
+                                       VerticalAlignment="Center" FontWeight="SemiBold" Padding="6,4"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding SkillName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CellTextBox}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
                 <!-- Column 2: выбор категории -->

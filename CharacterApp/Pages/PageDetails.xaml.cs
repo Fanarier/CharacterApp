@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using CharacterApp.Models;
 
-namespace CharacterApp
+namespace CharacterApp.Pages
 {
     public partial class PageDetails : Page, ISaveLoad
     {
