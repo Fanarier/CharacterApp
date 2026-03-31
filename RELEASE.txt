@@ -1,0 +1,72 @@
+# КАК СОБРАТЬ EXE И ДОБАВИТЬ В РЕЛИЗ НА GITHUB
+============================================================
+
+## 1. СБОРКА RELEASE EXE
+
+Открой Terminal / PowerShell в папке проекта (где CharacterApp.csproj):
+
+  dotnet publish CharacterApp/CharacterApp.csproj ^
+    -c Release ^
+    -r win-x64 ^
+    --self-contained true ^
+    -p:PublishSingleFile=true ^
+    -p:IncludeNativeLibrariesForSelfExtract=true ^
+    -o ./publish
+
+Итог: папка publish/ с CharacterApp.exe (~60-100 MB).
+
+Для сборки без зависимостей от .NET Runtime:
+  --self-contained true   ← .NET встроен в exe
+  PublishSingleFile=true  ← всё в одном файле
+
+Если нужен маленький exe (пользователь ставит .NET сам):
+  --self-contained false
+
+
+## 2. СОЗДАНИЕ РЕЛИЗА НА GITHUB
+
+Шаг 1. Создай тег в git:
+  git tag v1.0.0
+  git push origin v1.0.0
+
+Шаг 2. Зайди на https://github.com/Fanarier/CharacterApp/releases/new
+
+Шаг 3. Заполни форму:
+  - Tag:        выбери v1.0.0
+  - Title:      CharacterApp v1.0.0
+  - Description: что изменилось (можно Markdown)
+
+Шаг 4. В секции "Attach binaries":
+  - Перетащи publish/CharacterApp.exe
+
+Шаг 5. Нажми "Publish release"
+
+После этого в приложении CheckUpdates_Click автоматически
+найдёт новую версию через GitHub API (Octokit).
+
+
+## 3. АВТОМАТИЗАЦИЯ ЧЕРЕЗ GITHUB ACTIONS (опционально)
+
+Создай файл .github/workflows/release.yml:
+
+  name: Build and Release
+  on:
+    push:
+      tags: ['v*']
+  jobs:
+    build:
+      runs-on: windows-latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: '8.0'
+        - run: |
+            dotnet publish CharacterApp/CharacterApp.csproj `
+              -c Release -r win-x64 --self-contained true `
+              -p:PublishSingleFile=true -o ./publish
+        - uses: softprops/action-gh-release@v2
+          with:
+            files: publish/CharacterApp.exe
+
+При каждом git push tag v* — exe собирается и добавляется в релиз автоматически.

@@ -125,5 +125,4 @@
     <Resource Include="Images\storage\hearts-0.png" />
     <Resource Include="Images\storage\hearts-1.png" />
   </ItemGroup>
-
 </Project>

@@ -169,7 +169,7 @@ namespace CharacterApp.Pages
             {
                 1 => training + mod + bm,
                 2 => training + mod + bm * 2,
-                3 => (int)Math.Floor(training + mod + bm * 2.0 + level / 5.0),
+                3 => (int)Math.Floor(training + mod + bm * 2.0 + level / 4.0),
                 _ => training + mod   // 0 dots
             };
 

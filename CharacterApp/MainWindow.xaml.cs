@@ -1,3 +1,4 @@
+using CharacterApp.Dialogs;
 using CharacterApp.Models;
 using CharacterApp.Pages;
 using Microsoft.Win32;
@@ -34,7 +35,7 @@ namespace CharacterApp
         private readonly PageDetails      _detailsPage;
         private readonly EquipmentPage    _equipmentPage;
         private readonly ActiveSkillsPage _skillsPage;
-        private readonly SettingsPage     _settingsPage;   // создаём один раз
+        private readonly SettingsPage     _settingsPage;  
         private readonly StatsPage        _statsPage;
 
         private string _lastJsonFilePath = string.Empty;
@@ -92,7 +93,7 @@ namespace CharacterApp
         private void MarkSaved()
         {
             _hasUnsavedChanges = false;
-            // Убираем * из заголовка
+           
             if (TitleBarText.Text.EndsWith(" *"))
                 TitleBarText.Text = TitleBarText.Text[..^2];
         }
@@ -251,14 +252,28 @@ namespace CharacterApp
             return c.Level;
         }
 
+
+        // ── Кастомные диалоги подтверждения ──────────────────────────────────
+        private static bool Confirm(string message, string title = "",
+                                    ConfirmDialogIcon icon = ConfirmDialogIcon.Warning)
+        {
+            var dlg = new ConfirmDialog(message, title, ConfirmMode.YesNo, icon) { Owner = System.Windows.Application.Current.MainWindow };
+            dlg.ShowDialog();
+            return dlg.Result == ConfirmDialog.ConfirmResult.Yes;
+        }
+
+        private static ConfirmDialog.ConfirmResult ConfirmYNC(string message, string title = "")
+        {
+            var dlg = new ConfirmDialog(message, title, ConfirmMode.YesNoCancel, ConfirmDialogIcon.Question) { Owner = System.Windows.Application.Current.MainWindow };
+            dlg.ShowDialog();
+            return dlg.Result;
+        }
+
         // ── Сброс ────────────────────────────────────────────────────────────
 
         public void ResetAll()
         {
-            var result = MessageBox.Show(
-                "Сбросить все данные персонажа?\nНесохранённые изменения будут потеряны.",
-                "Сброс данных", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result != MessageBoxResult.Yes) return;
+            if (!Confirm("Сбросить все данные персонажа?\nНесохранённые изменения будут потеряны.", "Сброс данных")) return;
 
             DistributeCharacter(new Character());
             _lastJsonFilePath  = string.Empty;
@@ -282,10 +297,9 @@ namespace CharacterApp
         {
             if (_hasUnsavedChanges)
             {
-                var r = MessageBox.Show("Есть несохранённые изменения. Сохранить перед выходом?",
-                    "Выход", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-                if (r == MessageBoxResult.Cancel) return;
-                if (r == MessageBoxResult.Yes) SaveAll();
+                var r = ConfirmYNC("Есть несохранённые изменения. Сохранить перед выходом?", "Выход");
+                if (r == ConfirmDialog.ConfirmResult.Cancel) return;
+                if (r == ConfirmDialog.ConfirmResult.Yes) SaveAll();
             }
             Close();
         }
@@ -446,8 +460,7 @@ namespace CharacterApp
                 if (latestVersion <= currentVersion)
                 { ShowNotification("У вас уже установлена последняя версия", NotificationType.Info); return; }
 
-                if (MessageBox.Show($"Доступна версия {latest.TagName}. Скачать?",
-                    "Обновление", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                if (!Confirm($"Доступна версия {latest.TagName}. Скачать?", "Обновление", ConfirmDialogIcon.Info)) return;
 
                 var asset = latest.Assets.FirstOrDefault(a => a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
                 if (asset == null) { ShowNotification("В релизе нет .exe-файла", NotificationType.Warning); return; }

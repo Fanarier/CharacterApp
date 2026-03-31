@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using CharacterApp.Dialogs;
 using CharacterApp.Models;
 using Microsoft.Win32;
 
@@ -239,7 +240,7 @@ namespace CharacterApp.Controls
         private void BtnClear_Click(object sender, RoutedEventArgs e)
         {
             if (IsLocked) { Notify("Слот заблокирован"); return; }
-            if (MessageBox.Show("Удалить предмет из слота?", "Подтвердите", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            { var d = new ConfirmDialog("Удалить предмет из слота?", "Подтвердите") { Owner = Application.Current.MainWindow }; d.ShowDialog(); if (d.Result != ConfirmDialog.ConfirmResult.Yes) return; }
             ItemData = null;
             ItemName = string.Empty;
             ItemImagePath = string.Empty;
