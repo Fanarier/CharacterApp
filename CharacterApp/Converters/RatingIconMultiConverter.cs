@@ -11,7 +11,7 @@ namespace CharacterApp.Converters
         // values[1] = current value (int)
         // values[2] = active icon path (string)
         // values[3] = inactive icon path (string)
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             try
             {

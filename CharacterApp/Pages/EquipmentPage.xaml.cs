@@ -55,9 +55,9 @@ namespace CharacterApp.Pages
             }
         }
 
-        public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
-        public void SaveAs()    => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
-        public void LoadJSON()  => (Application.Current.MainWindow as MainWindow)?.LoadAll();
+        public void QuickSave() => (System.Windows.Application.Current.MainWindow as MainWindow)?.SaveAll();
+        public void SaveAs()    => (System.Windows.Application.Current.MainWindow as MainWindow)?.SaveAllAs();
+        public void LoadJSON()  => (System.Windows.Application.Current.MainWindow as MainWindow)?.LoadAll();
 
         public void ApplyCharacter(Character c)
         {

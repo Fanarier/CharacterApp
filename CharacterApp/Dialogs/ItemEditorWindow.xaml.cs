@@ -9,7 +9,7 @@ namespace CharacterApp.Dialogs
 {
     public partial class ItemEditorWindow : Window
     {
-        public EquipmentItem ResultItem { get; private set; }
+        public EquipmentItem? ResultItem { get; private set; }
         private EquipmentItem _working;
 
         public ItemEditorWindow(EquipmentItem item)

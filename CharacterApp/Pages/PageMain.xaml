@@ -70,7 +70,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblMastery}" Width="120" VerticalAlignment="Center"/>
-                        <TextBox x:Name="MasteryTextBox" Width="100" TextChanged="MasteryTextBox_TextChanged" Height="30"/>
+                        <TextBox x:Name="MasteryTextBox" PreviewTextInput="Mastery_PreviewTextInput" Width="100" TextChanged="MasteryTextBox_TextChanged" Height="30"/>
                     </StackPanel>
                 </UniformGrid>
             </GroupBox>

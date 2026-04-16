@@ -14,6 +14,7 @@ namespace CharacterApp.Pages
     {
         // Храним модификаторы атрибутов — нужны при пересчёте навыков
         private bool _initialized = false;
+        private bool _subscribed   = false;  // защита от повторных подписок
         private readonly Dictionary<string, int> _mods = new()
         {
             ["STR"] = 0, ["DEX"] = 0, ["CON"] = 0,
@@ -31,9 +32,13 @@ namespace CharacterApp.Pages
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            // Пересчёт при каждом показе страницы (BM/Уровень могли измениться)
-            if (NavigationService != null)
-                NavigationService.Navigated += (_, _) => RecalcAll();
+            if (!_subscribed)
+            {
+                _subscribed = true;
+                // Пересчёт при каждом показе страницы (BM/Уровень могли измениться)
+                if (NavigationService != null)
+                    NavigationService.Navigated += (_, _) => RecalcAll();
+            }
 
             // Список всех рейтинг-контролей страницы
             _allDots = new List<IconRatingControl>
@@ -51,28 +56,31 @@ namespace CharacterApp.Pages
             };
 
             // Подписываемся на изменение Value у каждого контроля
-            var dpd = DependencyPropertyDescriptor.FromProperty(
-                IconRatingControl.ValueProperty, typeof(IconRatingControl));
-            foreach (var dot in _allDots)
-                dpd.AddValueChanged(dot, (_, _) => { RecalcAll(); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); });
+            if (!_subscribed)
+            {
+                var dpd = DependencyPropertyDescriptor.FromProperty(
+                    IconRatingControl.ValueProperty, typeof(IconRatingControl));
+                foreach (var dot in _allDots)
+                    dpd.AddValueChanged(dot, (_, _) => { RecalcAll(); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); });
+            }
 
             _initialized = true;
             RecalcAll();
         }
 
         // ── Делегирование сохранения ──────────────────────────────────────────
-        public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
-        public void SaveAs()    => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
-        public void LoadJSON()  => (Application.Current.MainWindow as MainWindow)?.LoadAll();
+        public static void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
+        public static void SaveAs()    => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
+        public static void LoadJSON()  => (Application.Current.MainWindow as MainWindow)?.LoadAll();
 
         // ── Получение БМ и Уровня из главного окна ───────────────────────────
-        private int GetBM()
+        private static int GetBM()
         {
             var mw = Application.Current.MainWindow as MainWindow;
             return mw?.GetCurrentBM() ?? 0;
         }
 
-        private int GetLevel()
+        private static int GetLevel()
         {
             var mw = Application.Current.MainWindow as MainWindow;
             return mw?.GetCurrentLevel() ?? 0;

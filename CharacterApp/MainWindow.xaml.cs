@@ -4,6 +4,7 @@ using CharacterApp.Pages;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Octokit;
+using WinApp = System.Windows.Application;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -257,14 +258,14 @@ namespace CharacterApp
         private static bool Confirm(string message, string title = "",
                                     ConfirmDialogIcon icon = ConfirmDialogIcon.Warning)
         {
-            var dlg = new ConfirmDialog(message, title, ConfirmMode.YesNo, icon) { Owner = System.Windows.Application.Current.MainWindow };
+            var dlg = new ConfirmDialog(message, title, ConfirmMode.YesNo, icon) { Owner = WinApp.Current.MainWindow };
             dlg.ShowDialog();
             return dlg.Result == ConfirmDialog.ConfirmResult.Yes;
         }
 
         private static ConfirmDialog.ConfirmResult ConfirmYNC(string message, string title = "")
         {
-            var dlg = new ConfirmDialog(message, title, ConfirmMode.YesNoCancel, ConfirmDialogIcon.Question) { Owner = System.Windows.Application.Current.MainWindow };
+            var dlg = new ConfirmDialog(message, title, ConfirmMode.YesNoCancel, ConfirmDialogIcon.Question) { Owner = WinApp.Current.MainWindow };
             dlg.ShowDialog();
             return dlg.Result;
         }

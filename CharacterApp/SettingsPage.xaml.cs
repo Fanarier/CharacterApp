@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Linq;
@@ -21,9 +21,9 @@ namespace CharacterApp
 
     public partial class SettingsPage : Page
     {
-        private const string ThemeConfigFile = "theme.config";
-        private const string LanguageConfigFile = "language.config";
-        private const string SettingsFile = "appsettings.json";
+        private static string ThemeConfigFile    => App.ThemeConfigFile;
+        private static string LanguageConfigFile => App.LanguageConfigFile;
+        private static string SettingsFile => System.IO.Path.Combine(App.DataDir, "appsettings.json");
         private AutoSaveConfig _config = new AutoSaveConfig();
 
         public SettingsPage()
@@ -150,16 +150,21 @@ namespace CharacterApp
 
         private void BrowseFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog
+            // Выбор папки через SaveFileDialog (паттерн для WPF без WindowsForms)
+            var dlg = new Microsoft.Win32.SaveFileDialog
             {
-                CheckFileExists = false,
-                CheckPathExists = true,
-                ValidateNames = false,
-                FileName = "Выберите папку"
+                Title            = "Выберите папку для автосохранения",
+                Filter           = "Папка|*.folder",
+                FileName         = "Выберите папку",
+                CheckFileExists  = false,
+                CheckPathExists  = true,
+                InitialDirectory = string.IsNullOrEmpty(TbAutoSaveFolder.Text)
+                                   ? App.DataDir
+                                   : TbAutoSaveFolder.Text
             };
             if (dlg.ShowDialog() == true)
             {
-                var folder = Path.GetDirectoryName(dlg.FileName);
+                var folder = System.IO.Path.GetDirectoryName(dlg.FileName);
                 if (!string.IsNullOrEmpty(folder))
                     TbAutoSaveFolder.Text = folder;
             }

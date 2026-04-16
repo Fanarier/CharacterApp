@@ -1,11 +1,11 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 public class ItemModel : INotifyPropertyChanged
 {
-    private string _name;
+    private string _name = string.Empty;
     private int _rarity;
-    private string _description;
+    private string _description = string.Empty;
 
     public string Name
     {
@@ -25,7 +25,7 @@ public class ItemModel : INotifyPropertyChanged
         set { _description = value; OnChanged(); }
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
-    private void OnChanged([CallerMemberName] string p = null)
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnChanged([CallerMemberName] string? p = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
 }

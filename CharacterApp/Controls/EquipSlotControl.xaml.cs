@@ -68,7 +68,7 @@ namespace CharacterApp.Controls
         }
 
         public static readonly DependencyProperty ItemDataProperty =
-            DependencyProperty.Register(nameof(ItemData), typeof(EquipmentItem), typeof(EquipSlotControl), new PropertyMetadata(null, OnItemDataChanged));
+            DependencyProperty.Register(nameof(ItemData), typeof(EquipmentItem), typeof(EquipSlotControl), new PropertyMetadata(default(EquipmentItem), OnItemDataChanged));
         public EquipmentItem ItemData { get => (EquipmentItem)GetValue(ItemDataProperty); set => SetValue(ItemDataProperty, value); }
         private static void OnItemDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -151,7 +151,7 @@ namespace CharacterApp.Controls
             try
             {
                 var lockKey = IsLocked ? "LockIcon" : "UnlockIcon";
-                object obj = null;
+                object? obj = null;
                 if (Application.Current.Resources.Contains(lockKey))
                     obj = Application.Current.Resources[lockKey];
                 else
@@ -373,7 +373,7 @@ namespace CharacterApp.Controls
         #endregion
 
         // Вспомогательные классы для drag payload
-        private class DragPayload { public string SlotKey { get; set; } public string ItemJson { get; set; } }
+        private class DragPayload { public string SlotKey { get; set; } = string.Empty; public string ItemJson { get; set; } = string.Empty; }
 
     }
 }

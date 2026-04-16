@@ -91,17 +91,16 @@ namespace CharacterApp.Pages
 
         private void CharacterName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Обновляем заголовок окна — имя персонажа там видно всегда
             if (Application.Current.MainWindow is MainWindow mw)
-                mw.UpdateTitle(CharacterNameTextBox.Text.Trim());
+            { mw.UpdateTitle(CharacterNameTextBox.Text.Trim()); mw.MarkUnsaved(); }
         }
 
-        private void HitsTextBox_TextChanged    (object sender, TextChangedEventArgs e) => SetTextColor(HitsTextBox,    Colors.Green,    Colors.Lime);
-        private void SuperHitsTextBox_TextChanged(object sender, TextChangedEventArgs e) => SetTextColor(SuperHitsTextBox, Colors.SeaGreen, Colors.Lime);
-        private void DefenseTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(DefenseTextBox,  Colors.Blue,     Colors.Lime);
-        private void ManaTextBox_TextChanged     (object sender, TextChangedEventArgs e) => SetTextColor(ManaTextBox,     Colors.LightBlue, Colors.Lime);
-        private void StaminaTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(StaminaTextBox,  Colors.LightGreen, Colors.Lime);
-        private void MasteryTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(MasteryTextBox,  Colors.SeaGreen, Colors.Lime);
+        private void HitsTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(HitsTextBox, Colors.Green, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
+        private void SuperHitsTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(SuperHitsTextBox, Colors.SeaGreen, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
+        private void DefenseTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(DefenseTextBox, Colors.Blue, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
+        private void ManaTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(ManaTextBox, Colors.LightBlue, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
+        private void StaminaTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(StaminaTextBox, Colors.LightGreen, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
+        private void MasteryTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(MasteryTextBox, Colors.SeaGreen, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
 
         private void Mastery_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
@@ -117,9 +116,9 @@ namespace CharacterApp.Pages
             var text = tb.Text.Trim();
             if (string.IsNullOrEmpty(text) || text == "0")
                 tb.ClearValue(TextBox.ForegroundProperty);
-            else if (text.StartsWith("+"))
+            else if (text.StartsWith('+'))
                 tb.Foreground = new SolidColorBrush(specialPositive);
-            else if (text.StartsWith("-"))
+            else if (text.StartsWith('-'))
                 tb.Foreground = new SolidColorBrush(Colors.Red);
             else
                 tb.Foreground = new SolidColorBrush(primaryColor);
