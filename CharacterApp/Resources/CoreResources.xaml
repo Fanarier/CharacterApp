@@ -36,4 +36,67 @@
     <conv:RatingIconMultiConverter x:Key="RatingIconMultiConverter"/>
     <conv:NullOrEmptyToVisibilityConverter x:Key="NullOrEmptyToVisibilityConverter"/>
 
+
+    <Style TargetType="DataGrid" x:Key="SkillsGridStyle">
+            <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
+            <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource WindowBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#33000000"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#22000000"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+        </Style>
+
+
+    <Style TargetType="DataGridRow" x:Key="SkillsRowStyle">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsSelected" Value="True"/>
+                        <Condition Property="IsKeyboardFocusWithin" Value="False"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="Opacity" Value="0.85"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+
+
+    <Style TargetType="TextBox" x:Key="CellTextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+
+    <ControlTemplate x:Key="StatusToggleTemplate" TargetType="ToggleButton">
+            <Border Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+              <Grid Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Ellipse x:Name="Circle" StrokeThickness="3" Fill="Transparent"
+                         Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}"
+                         Visibility="Collapsed"/>
+                <Path x:Name="Cross" Data="M8,8 L24,24 M24,8 L8,24"
+                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}"
+                      StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+              </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Circle" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Cross" Property="Visibility" Value="Collapsed"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="False">
+                    <Setter TargetName="Circle" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Cross" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="Circle" Property="Opacity" Value="0.3"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
 </ResourceDictionary>

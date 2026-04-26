@@ -81,40 +81,40 @@ namespace CharacterApp.Pages
             if (c == null) return;
 
             var head = GetSlotValue("Head");
-            c.HeadItem = head; c.HeadName = head?.Name ?? ""; c.HeadImage = head?.ImagePath ?? ""; c.HeadLocked = GetSlotLocked("Head");
+            c.HeadItem = head; c.HeadLocked = GetSlotLocked("Head");
 
             var body = GetSlotValue("Body");
-            c.BodyItem = body; c.BodyName = body?.Name ?? ""; c.BodyImage = body?.ImagePath ?? ""; c.BodyLocked = GetSlotLocked("Body");
+            c.BodyItem = body; c.BodyLocked = GetSlotLocked("Body");
 
             var hands = GetSlotValue("Hands");
-            c.HandsItem = hands; c.HandsName = hands?.Name ?? ""; c.HandsImage = hands?.ImagePath ?? ""; c.HandsLocked = GetSlotLocked("Hands");
+            c.HandsItem = hands; c.HandsLocked = GetSlotLocked("Hands");
 
             var belt = GetSlotValue("Waist");
-            c.BeltItem = belt; c.BeltName = belt?.Name ?? ""; c.BeltImage = belt?.ImagePath ?? ""; c.BeltLocked = GetSlotLocked("Waist");
+            c.BeltItem = belt; c.BeltLocked = GetSlotLocked("Waist");
 
             var legs = GetSlotValue("Legs");
-            c.LegsItem = legs; c.LegsName = legs?.Name ?? ""; c.LegsImage = legs?.ImagePath ?? ""; c.LegsLocked = GetSlotLocked("Legs");
+            c.LegsItem = legs; c.LegsLocked = GetSlotLocked("Legs");
 
             var r1 = GetSlotValue("Ring1");
-            c.Ring1Item = r1; c.Ring1Name = r1?.Name ?? ""; c.Ring1Image = r1?.ImagePath ?? ""; c.Ring1Locked = GetSlotLocked("Ring1");
+            c.Ring1Item = r1; c.Ring1Locked = GetSlotLocked("Ring1");
 
             var r2 = GetSlotValue("Ring2");
-            c.Ring2Item = r2; c.Ring2Name = r2?.Name ?? ""; c.Ring2Image = r2?.ImagePath ?? ""; c.Ring2Locked = GetSlotLocked("Ring2");
+            c.Ring2Item = r2; c.Ring2Locked = GetSlotLocked("Ring2");
 
             var am = GetSlotValue("Amulet");
-            c.AmuletItem = am; c.AmuletName = am?.Name ?? ""; c.AmuletImage = am?.ImagePath ?? ""; c.AmuletLocked = GetSlotLocked("Amulet");
+            c.AmuletItem = am; c.AmuletLocked = GetSlotLocked("Amulet");
 
             var t1 = GetSlotValue("Trinket1");
-            c.Ornament1Item = t1; c.Ornament1Name = t1?.Name ?? ""; c.Ornament1Image = t1?.ImagePath ?? ""; c.Ornament1Locked = GetSlotLocked("Trinket1");
+            c.Ornament1Item = t1; c.Ornament1Locked = GetSlotLocked("Trinket1");
 
             var t2 = GetSlotValue("Trinket2");
-            c.Ornament2Item = t2; c.Ornament2Name = t2?.Name ?? ""; c.Ornament2Image = t2?.ImagePath ?? ""; c.Ornament2Locked = GetSlotLocked("Trinket2");
+            c.Ornament2Item = t2; c.Ornament2Locked = GetSlotLocked("Trinket2");
 
             var a1 = GetSlotValue("Artifact1");
-            c.Artifact1Item = a1; c.Artifact1Name = a1?.Name ?? ""; c.Artifact1Image = a1?.ImagePath ?? ""; c.Artifact1Locked = GetSlotLocked("Artifact1");
+            c.Artifact1Item = a1; c.Artifact1Locked = GetSlotLocked("Artifact1");
 
             var a2 = GetSlotValue("Artifact2");
-            c.Artifact2Item = a2; c.Artifact2Name = a2?.Name ?? ""; c.Artifact2Image = a2?.ImagePath ?? ""; c.Artifact2Locked = GetSlotLocked("Artifact2");
+            c.Artifact2Item = a2; c.Artifact2Locked = GetSlotLocked("Artifact2");
         }
 
         public void ResetAll()
@@ -144,7 +144,7 @@ namespace CharacterApp.Pages
         {
             foreach (var obj in SlotsHost.Items)
                 if (obj is EquipSlotControl s && s.SlotKey == key) return s.ItemData;
-            return null;
+            return null!;
         }
 
         private bool GetSlotLocked(string key)

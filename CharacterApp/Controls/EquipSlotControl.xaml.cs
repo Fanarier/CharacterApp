@@ -69,7 +69,7 @@ namespace CharacterApp.Controls
 
         public static readonly DependencyProperty ItemDataProperty =
             DependencyProperty.Register(nameof(ItemData), typeof(EquipmentItem), typeof(EquipSlotControl), new PropertyMetadata(default(EquipmentItem), OnItemDataChanged));
-        public EquipmentItem ItemData { get => (EquipmentItem)GetValue(ItemDataProperty); set => SetValue(ItemDataProperty, value); }
+        public EquipmentItem? ItemData { get => (EquipmentItem)GetValue(ItemDataProperty); set => SetValue(ItemDataProperty, value); }
         private static void OnItemDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is EquipSlotControl c)
@@ -251,7 +251,7 @@ namespace CharacterApp.Controls
         {
             try
             {
-                var editor = new ItemEditorWindow(ItemData ?? new EquipmentItem());
+                var editor = new Dialogs.ItemEditorWindow(ItemData ?? new EquipmentItem());
                 editor.Owner = Application.Current.MainWindow;
                 var res = editor.ShowDialog();
                 if (res == true)
@@ -367,7 +367,7 @@ namespace CharacterApp.Controls
                 if (p is Page page) return page;
                 p = System.Windows.Media.VisualTreeHelper.GetParent(p);
             }
-            return null;
+            return null!;
         }
 
         #endregion

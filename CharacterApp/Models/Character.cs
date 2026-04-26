@@ -4,6 +4,51 @@ using System.Collections.Generic;
 namespace CharacterApp.Models
 {
     /// <summary>DTO одной строки таблицы навыков — сериализуется в JSON.</summary>
+
+    // ── Атаки ─────────────────────────────────────────────────────────────────
+    public class AttackData
+    {
+        public string AttackType  { get; set; } = "Атака";
+        public string Description { get; set; } = string.Empty;
+        public bool   IsActive    { get; set; }
+    }
+
+    // ── Пользовательский лист (кастомная страница) ────────────────────────────
+    public class CustomSheetColumn
+    {
+        public string Header { get; set; } = string.Empty;
+        /// <summary>text | toggle | number</summary>
+        public string ColumnType { get; set; } = "text";
+    }
+
+    public class CustomSheetRow
+    {
+        /// <summary>Значения ячеек по индексу колонки</summary>
+        public List<string> Cells { get; set; } = new();
+    }
+
+    public class CustomSheet
+    {
+        public string                  Name    { get; set; } = string.Empty;
+        public List<CustomSheetColumn> Columns { get; set; } = new();
+        public List<CustomSheetRow>    Rows    { get; set; } = new();
+    }
+
+    // ── Черта (фиксированная строка) ─────────────────────────────────────────
+    public class TraitData
+    {
+        public string Description { get; set; } = string.Empty;
+        public bool   IsAcquired  { get; set; }
+    }
+
+    // ── Строка владений/языков ────────────────────────────────────────────────
+    public class ProficiencyData
+    {
+        public int    TypeIndex   { get; set; }      // 0=Владение, 1=Язык
+        public string Description { get; set; } = string.Empty;
+        public int    Rating      { get; set; }      // 0..3
+    }
+
     public class SkillData
     {
         public string SkillName      { get; set; } = "";
@@ -108,7 +153,22 @@ namespace CharacterApp.Models
         public StatsData Stats { get; set; } = new StatsData();
 
         // ── Навыки ────────────────────────────────────────────────────────────
-        public List<SkillData> Skills { get; set; } = new List<SkillData>();
+        public List<SkillData> Skills        { get; set; } = new List<SkillData>();
+        public List<SkillData> PassiveSkills  { get; set; } = new List<SkillData>();
+
+        // ── Атаки ─────────────────────────────────────────────────────────────
+        public List<AttackData>   Attacks       { get; set; } = new List<AttackData>();
+
+        // ── Пользовательские листы ────────────────────────────────────────────
+        public List<CustomSheet>  CustomSheets  { get; set; } = new List<CustomSheet>();
+
+        // ── Черты ─────────────────────────────────────────────────────────────
+        public TraitData Trait4  { get; set; } = new TraitData();
+        public TraitData Trait9  { get; set; } = new TraitData();
+        public TraitData Trait18 { get; set; } = new TraitData();
+
+        // ── Владения ──────────────────────────────────────────────────────────
+        public List<ProficiencyData> Proficiencies { get; set; } = new List<ProficiencyData>();
 
         // ── Экипировка (новые поля) ───────────────────────────────────────────
         public EquipmentItem? HeadItem      { get; set; }

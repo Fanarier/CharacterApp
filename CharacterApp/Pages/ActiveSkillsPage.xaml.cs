@@ -19,6 +19,8 @@ namespace CharacterApp.Pages
 
         public void FillCharacter(Character c)
         {
+            SkillsGrid.CommitEdit(DataGridEditingUnit.Row, exitEditingMode: true);
+
             c.Skills.Clear();
             foreach (var s in Skills)
                 c.Skills.Add(new SkillData
@@ -61,6 +63,18 @@ namespace CharacterApp.Pages
         }
 
         private void BtnReset_Click(object sender, RoutedEventArgs e) => Skills.Clear();
+
+        // ToggleButton в DataGrid требует явного коммита при изменении
+        private void StatusToggle_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Primitives.ToggleButton tb
+                && tb.DataContext is SkillEntry entry)
+            {
+                entry.IsActiveSymbol = tb.IsChecked == true;
+                SkillsGrid.CommitEdit(DataGridEditingUnit.Row, exitEditingMode: false);
+            }
+        }
+
     }
 
     public class SkillEntry : INotifyPropertyChanged
@@ -99,5 +113,6 @@ namespace CharacterApp.Pages
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
     }
 }

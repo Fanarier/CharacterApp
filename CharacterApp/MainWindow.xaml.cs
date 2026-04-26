@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using Octokit;
 using WinApp = System.Windows.Application;
 using System.IO;
-using System.Net.Http;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +17,8 @@ namespace CharacterApp
 {
     public partial class MainWindow : Window
     {
+        private static readonly System.Text.Json.JsonSerializerOptions _jsonSaveOpts
+            = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
         public static MainWindow Instance { get; private set; } = null!;
 
         // ── Команды (Ctrl+S / Ctrl+O) ────────────────────────────────────────
@@ -35,7 +36,12 @@ namespace CharacterApp
         private readonly PageMain         _mainPage;
         private readonly PageDetails      _detailsPage;
         private readonly EquipmentPage    _equipmentPage;
-        private readonly ActiveSkillsPage _skillsPage;
+        private readonly ActiveSkillsPage  _skillsPage;
+        private readonly PassiveSkillsPage  _passivePage;
+        private readonly ProficienciesPage  _profPage;
+        private readonly AttacksPage         _attacksPage;
+        // Пользовательские листы: имя → страница
+        private readonly System.Collections.Generic.Dictionary<string, CustomSheetPage> _customPages = new();
         private readonly SettingsPage     _settingsPage;  
         private readonly StatsPage        _statsPage;
 
@@ -59,6 +65,9 @@ namespace CharacterApp
             _detailsPage   = new PageDetails();
             _equipmentPage = new EquipmentPage();
             _skillsPage    = new ActiveSkillsPage();
+            _passivePage   = new PassiveSkillsPage();
+            _profPage      = new ProficienciesPage();
+            _attacksPage   = new AttacksPage();
             _settingsPage  = new SettingsPage();
             _statsPage     = new StatsPage();
 
@@ -72,6 +81,18 @@ namespace CharacterApp
             _autoSaveTimer      = new DispatcherTimer();
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
             ApplyAutoSaveSettings();
+            RestoreCustomSheetsFromSettings();
+
+            // Загружаем последний файл если включена настройка
+            if (_autoSaveConfig is AutoSaveConfig cfg2
+                && cfg2.LoadLastOnStart
+                && !string.IsNullOrEmpty(cfg2.LastFilePath)
+                && System.IO.File.Exists(cfg2.LastFilePath))
+            {
+                // ContentRendered гарантирует что MainFrame готов к навигации
+                var pathToLoad = cfg2.LastFilePath;
+                ContentRendered += (_, _) => LoadFromPath(pathToLoad);
+            }
         }
 
         // ── Заголовок и маркер несохранённых данных ───────────────────────────
@@ -101,9 +122,52 @@ namespace CharacterApp
 
         // ── AutoSave ─────────────────────────────────────────────────────────
 
+
+
+        // Загрузка из конкретного пути (используется при autoload last file)
+        private void LoadFromPath(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+            try
+            {
+                var json = File.ReadAllText(path);
+                var c    = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Character>(json);
+                if (c == null) return;
+                c.NormalizeItemsFromLegacy();
+                _lastJsonFilePath = path;
+                DistributeCharacter(c);
+                UpdateTitle(c.CharacterName);
+                MarkSaved();
+            }
+            catch (Exception ex)
+            {
+                ShowNotification("Ошибка загрузки: " + ex.Message, NotificationType.Error);
+            }
+        }
+
+        private void SaveLastFilePath(string path)
+        {
+            if (_autoSaveConfig == null) return;
+            if (!string.IsNullOrEmpty(path)) _autoSaveConfig.LastFilePath = path;
+            PersistAutoSaveConfig();
+        }
+
+        public void PersistAutoSaveConfig()
+        {
+            if (_autoSaveConfig == null) return;
+            var sf = System.IO.Path.Combine(App.DataDir, "appsettings.json");
+            try
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(
+                    _autoSaveConfig, _jsonSaveOpts);
+                System.IO.File.WriteAllText(sf, json);
+            }
+            catch { }
+        }
+
         public void LoadAutoSaveConfig()
         {
-            const string SettingsFile = "appsettings.json";
+            var SettingsFile = System.IO.Path.Combine(App.DataDir, "appsettings.json");
             if (File.Exists(SettingsFile))
             {
                 try
@@ -164,6 +228,10 @@ namespace CharacterApp
             _detailsPage.FillCharacter(c);
             _equipmentPage.FillCharacter(c);
             _skillsPage.FillCharacter(c);
+            _passivePage.FillCharacter(c);
+            _profPage.FillCharacter(c);
+            _attacksPage.FillCharacter(c);
+            foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
             return c;
         }
@@ -174,6 +242,10 @@ namespace CharacterApp
             _detailsPage.ApplyCharacter(c);
             _equipmentPage.ApplyCharacter(c);
             _skillsPage.ApplyCharacter(c);
+            _passivePage.ApplyCharacter(c);
+            _profPage.ApplyCharacter(c);
+            _attacksPage.ApplyCharacter(c);
+            RebuildCustomPages(c);
             _statsPage.ApplyCharacter(c);
             UpdateTitle(c.CharacterName);
         }
@@ -316,7 +388,170 @@ namespace CharacterApp
         private void MainPage_Click   (object sender, RoutedEventArgs e) => MainFrame.Navigate(_mainPage);
         private void Details_Click    (object sender, RoutedEventArgs e) => MainFrame.Navigate(_detailsPage);
         private void Equipment_Click  (object sender, RoutedEventArgs e) => MainFrame.Navigate(_equipmentPage);
-        private void ActiveSkills_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_skillsPage);
+        private void ActiveSkills_Click (object sender, RoutedEventArgs e) => MainFrame.Navigate(_skillsPage);
+        private void PassiveSkills_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_passivePage);
+        private void Proficiencies_Click  (object sender, RoutedEventArgs e) => MainFrame.Navigate(_profPage);
+        private void Attacks_Click        (object sender, RoutedEventArgs e) => MainFrame.Navigate(_attacksPage);
+
+        // ── Пользовательские листы ──────────────────────────────────────────
+
+        // Восстанавливает кастомные страницы из appsettings (без загрузки JSON персонажа)
+        private void RestoreCustomSheetsFromSettings()
+        {
+            if (_autoSaveConfig?.SavedCustomSheets == null) return;
+            foreach (var sheet in _autoSaveConfig.SavedCustomSheets)
+            {
+                if (_customPages.ContainsKey(sheet.Name)) continue;
+                var page = new CustomSheetPage(sheet);
+                _customPages[sheet.Name] = page;
+                var name = sheet.Name;
+                var btn  = new Button
+                {
+                    Content = sheet.Name,
+                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
+                    Tag     = "custom:" + sheet.Name
+                };
+                btn.Click += (_, _) => MainFrame.Navigate(_customPages[name]);
+                int idx = MenuStack.Children.Count - 1;
+                MenuStack.Children.Insert(idx, btn);
+            }
+        }
+
+        private void RebuildCustomPages(Character c)
+        {
+            // Удаляем старые кастомные кнопки из сайдбара
+            var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
+            foreach (System.Windows.UIElement ch in MenuStack.Children)
+                if (ch is Button btn && btn.Tag is string tag && tag.StartsWith("custom:", System.StringComparison.Ordinal))
+                    toRemove.Add(ch);
+            foreach (var el in toRemove) MenuStack.Children.Remove(el);
+            _customPages.Clear();
+
+            // Создаём страницы и кнопки по данным Character
+            // Синхронизируем SavedCustomSheets: добавляем листы из JSON
+            // (Clear не делаем — чтобы не потерять листы которые ещё не в JSON)
+            if (_autoSaveConfig != null)
+            {
+                foreach (var sheet in c.CustomSheets)
+                {
+                    _autoSaveConfig.SavedCustomSheets.RemoveAll(s => s.Name == sheet.Name);
+                    _autoSaveConfig.SavedCustomSheets.Add(sheet);
+                }
+                PersistAutoSaveConfig();
+            }
+
+            foreach (var sheet in c.CustomSheets)
+            {
+                var page = new CustomSheetPage(sheet);
+                _customPages[sheet.Name] = page;
+                var name = sheet.Name; // capture
+                var btn  = new Button
+                {
+                    Content = sheet.Name,
+                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
+                    Tag     = "custom:" + sheet.Name
+                };
+                btn.Click += (_, _) => MainFrame.Navigate(_customPages[name]);
+                // Вставляем перед кнопкой Настройки
+                int idx = MenuStack.Children.Count - 1;
+                MenuStack.Children.Insert(idx, btn);
+            }
+        }
+
+        public void AddCustomSheet(CustomSheet sheet)
+        {
+            // Создаём страницу
+            var page = new CustomSheetPage(sheet);
+            _customPages[sheet.Name] = page;
+
+            // Запоминаем в конфиге чтобы восстановить при следующем запуске
+            _autoSaveConfig.SavedCustomSheets.RemoveAll(s => s.Name == sheet.Name);
+            _autoSaveConfig.SavedCustomSheets.Add(sheet);
+            PersistAutoSaveConfig();
+
+            // Кнопка в сайдбар
+            var name = sheet.Name;
+            var btn  = new Button
+            {
+                Content = sheet.Name,
+                Margin  = new System.Windows.Thickness(0, 4, 0, 4),
+                Tag     = "custom:" + sheet.Name
+            };
+            btn.Click += (_, _) => MainFrame.Navigate(_customPages[name]);
+            int idx = MenuStack.Children.Count - 1;
+            MenuStack.Children.Insert(idx, btn);
+
+            MarkUnsaved();
+        }
+
+        public void RemoveCustomSheet(string name)
+        {
+            // 1. Убираем страницу из памяти
+            _customPages.Remove(name);
+
+            // 2. Убираем из конфига + сохраняем конфиг сразу
+            _autoSaveConfig?.SavedCustomSheets?.RemoveAll(s => s.Name == name);
+            PersistAutoSaveConfig();
+
+            // 3. Убираем кнопку из сайдбара
+            var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
+            foreach (System.Windows.UIElement ch in MenuStack.Children)
+                if (ch is Button btn && btn.Tag?.ToString() == "custom:" + name)
+                    toRemove.Add(ch);
+            foreach (var el in toRemove) MenuStack.Children.Remove(el);
+
+            // 4. Если есть открытый файл — немедленно пересохраняем JSON персонажа
+            //    чтобы CustomSheets в файле тоже обновился (без этого при загрузке
+            //    RebuildCustomPages восстановит лист из JSON)
+            if (!string.IsNullOrEmpty(_lastJsonFilePath) && File.Exists(_lastJsonFilePath))
+            {
+                DoSave(_lastJsonFilePath);
+                MarkSaved();
+            }
+            else
+            {
+                MarkUnsaved();
+            }
+        }
+
+        // Собирает текущий Character из всех страниц
+        private Character GetCurrentCharacter()
+        {
+            var c = new Character();
+            _mainPage.FillCharacter(c);
+            _detailsPage.FillCharacter(c);
+            _equipmentPage.FillCharacter(c);
+            _skillsPage.FillCharacter(c);
+            _passivePage.FillCharacter(c);
+            _profPage.FillCharacter(c);
+            _attacksPage.FillCharacter(c);
+            foreach (var kv in _customPages) kv.Value.FillCharacter(c);
+            _statsPage.FillCharacter(c);
+            return c;
+        }
+
+        public static System.Collections.Generic.IEnumerable<string> GetBuiltinPageNames()
+
+        {
+            return _builtinPageNames;
+        }
+        private static readonly string[] _builtinPageNames =
+            { "MainPage", "Details", "Equipment", "Stats",
+              "ActiveSkills", "PassiveSkills", "Proficiencies", "Attacks" };
+
+        public void SetPageVisible(string pageKey, bool visible)
+        {
+            foreach (System.Windows.UIElement ch in MenuStack.Children)
+            {
+                if (ch is Button btn && btn.Tag?.ToString() == "builtin:" + pageKey)
+                {
+                    btn.Visibility = visible
+                        ? System.Windows.Visibility.Visible
+                        : System.Windows.Visibility.Collapsed;
+                    break;
+                }
+            }
+        }
         private void Settings_Click   (object sender, RoutedEventArgs e) => MainFrame.Navigate(_settingsPage);
         private void Stats_Click       (object sender, RoutedEventArgs e) => MainFrame.Navigate(_statsPage);
 
@@ -451,41 +686,34 @@ namespace CharacterApp
         {
             try
             {
+                ShowNotification("Проверка обновлений...", NotificationType.Info);
                 var client   = new GitHubClient(new ProductHeaderValue("CharacterApp"));
                 var releases = await client.Repository.Release.GetAll(GitHubOwner, GitHubRepo);
                 var latest   = releases.FirstOrDefault();
                 if (latest == null) { ShowNotification("Релизы не найдены", NotificationType.Info); return; }
 
                 var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-                var latestVersion  = new Version(latest.TagName.TrimStart('v'));
+                if (!Version.TryParse(latest.TagName.TrimStart('v'), out var latestVersion))
+                { ShowNotification("Не удалось распознать версию релиза", NotificationType.Warning); return; }
+
                 if (latestVersion <= currentVersion)
-                { ShowNotification("У вас уже установлена последняя версия", NotificationType.Info); return; }
+                { ShowNotification("У вас уже установлена последняя версия", NotificationType.Success); return; }
 
-                if (!Confirm($"Доступна версия {latest.TagName}. Скачать?", "Обновление", ConfirmDialogIcon.Info)) return;
+                if (!Confirm(
+                    $"Доступна версия {latest.TagName}. Открыть страницу релиза?",
+                    "Обновление", ConfirmDialogIcon.Info)) return;
 
-                var asset = latest.Assets.FirstOrDefault(a => a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
-                if (asset == null) { ShowNotification("В релизе нет .exe-файла", NotificationType.Warning); return; }
-
-                var localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, asset.Name);
-                using var http = new HttpClient();
-                using var resp = await http.GetAsync(asset.BrowserDownloadUrl);
-                resp.EnsureSuccessStatusCode();
-                using var fs = new FileStream(localPath, System.IO.FileMode.Create, System.IO.FileAccess.Write);
-                await resp.Content.CopyToAsync(fs);
-
-                ShowNotification($"Скачано обновление: {asset.Name}", NotificationType.Success);
+                // Открываем страницу релиза в браузере — пользователь скачивает сам
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName        = latest.HtmlUrl,
+                    UseShellExecute = true
+                });
             }
             catch (Exception ex)
             {
-                ShowNotification("Ошибка при проверке обновлений:\n" + ex.Message, NotificationType.Error);
+                ShowNotification("Ошибка при проверке обновлений: " + ex.Message, NotificationType.Error);
             }
         }
-    }
-
-    public interface ISaveLoad
-    {
-        void QuickSave();
-        void SaveAs();
-        void LoadJSON();
     }
 }

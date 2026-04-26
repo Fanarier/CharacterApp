@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -91,26 +90,23 @@ namespace CharacterApp.Pages
 
         private void CharacterName_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Обновляем заголовок окна — имя персонажа там видно всегда
             if (Application.Current.MainWindow is MainWindow mw)
-            { mw.UpdateTitle(CharacterNameTextBox.Text.Trim()); mw.MarkUnsaved(); }
+                mw.UpdateTitle(CharacterNameTextBox.Text.Trim());
         }
 
-        private void HitsTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(HitsTextBox, Colors.Green, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
-        private void SuperHitsTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(SuperHitsTextBox, Colors.SeaGreen, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
-        private void DefenseTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(DefenseTextBox, Colors.Blue, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
-        private void ManaTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(ManaTextBox, Colors.LightBlue, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
-        private void StaminaTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(StaminaTextBox, Colors.LightGreen, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
-        private void MasteryTextBox_TextChanged(object sender, TextChangedEventArgs _) { SetTextColor(MasteryTextBox, Colors.SeaGreen, Colors.Lime); (Application.Current.MainWindow as MainWindow)?.MarkUnsaved(); }
+        private void HitsTextBox_TextChanged    (object sender, TextChangedEventArgs e) => SetTextColor(HitsTextBox,    Colors.Green,    Colors.Lime);
+        private void SuperHitsTextBox_TextChanged(object sender, TextChangedEventArgs e) => SetTextColor(SuperHitsTextBox, Colors.SeaGreen, Colors.Lime);
+        private void DefenseTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(DefenseTextBox,  Colors.Blue,     Colors.Lime);
+        private void ManaTextBox_TextChanged     (object sender, TextChangedEventArgs e) => SetTextColor(ManaTextBox,     Colors.LightBlue, Colors.Lime);
+        private void StaminaTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(StaminaTextBox,  Colors.LightGreen, Colors.Lime);
+        private void MasteryTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(MasteryTextBox,  Colors.SeaGreen, Colors.Lime);
 
-        private void Mastery_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            var tb = sender as TextBox;
-            e.Handled = tb?.SelectionStart == 0
-                ? !Regex.IsMatch(e.Text, @"^[0-9+\-]+$")
-                : !Regex.IsMatch(e.Text, @"^[0-9]+$");
-        }
+        // Уже заменён на NumericOnly_PreviewTextInput в xaml — оставлен как fallback
+        private static void Mastery_PreviewTextInput(object _, TextCompositionEventArgs e)
+            => e.Handled = e.Text.Length != 1 || !char.IsDigit(e.Text[0]);
 
-        private void SetTextColor(TextBox tb, Color primaryColor, Color specialPositive)
+        private static void SetTextColor(TextBox tb, Color primaryColor, Color specialPositive)
         {
             if (tb == null) return;
             var text = tb.Text.Trim();
@@ -155,5 +151,27 @@ namespace CharacterApp.Pages
             photoPath = string.Empty;
             (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();
         }
+        // Общий хендлер для числовых полей (Evasion, Speed, Carry, Initiative)
+
+        // ── Валидация числовых полей ────────────────────────────────────────
+        private void NumericOnly_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            if (sender is System.Windows.Controls.TextBox tb)
+            {
+                var proposed = tb.Text.Insert(tb.CaretIndex, e.Text);
+                e.Handled = !IsValidInteger(proposed);
+            }
+        }
+
+        private bool IsValidInteger(string text)
+        {
+            if (string.IsNullOrEmpty(text) || text == "-") return true;
+            return int.TryParse(text, out _);
+        }
+
+
+        private void AnyNumericField_TextChanged(object sender, TextChangedEventArgs e)
+            => (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();
+
     }
 }
