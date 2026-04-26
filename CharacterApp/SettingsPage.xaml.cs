@@ -41,6 +41,8 @@ namespace CharacterApp
             InitLanguageSelection();
             LoadSettings();
             ApplyToUI();
+            // Обновляем список кастомных листов каждый раз при открытии страницы
+            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) RefreshSheetList(); };
         }
 
         private void InitThemeSelection()
@@ -140,10 +142,8 @@ namespace CharacterApp
             SyncCb(CbShowProf,         "Proficiencies");
             SyncCb(CbShowAttacks,      "Attacks");
 
-            // Восстанавливаем список кастомных листов
-            LbCustomSheets.Items.Clear();
-            foreach (var name in _config.CustomSheetNames ?? new())
-                LbCustomSheets.Items.Add(name);
+            // Восстанавливаем список кастомных листов из реального состояния MainWindow
+            RefreshSheetList();
         }
 
         private void BrowseFolder_Click(object sender, RoutedEventArgs e)
@@ -216,7 +216,13 @@ namespace CharacterApp
         private void RefreshSheetList()
         {
             LbCustomSheets.Items.Clear();
+            if (Application.Current.MainWindow is MainWindow mw)
+                foreach (var name in mw.GetCustomSheetNames())
+                    LbCustomSheets.Items.Add(name);
         }
+
+        private void RefreshSheetList_Click(object sender, RoutedEventArgs e)
+            => RefreshSheetList();
 
         private void AddSheet_Click(object sender, RoutedEventArgs e)
         {

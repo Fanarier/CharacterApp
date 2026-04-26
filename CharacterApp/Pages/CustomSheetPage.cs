@@ -225,7 +225,7 @@ namespace CharacterApp.Pages
             if (sheet == null) return;
             foreach (var sr in sheet.Rows)
             {
-                var entry = new CustomRowEntry(_sheet.Columns.Count);
+                var entry = new CustomRowEntry(_sheet.Columns.Count) { SuppressNotify = true };
                 for (int i = 0; i < _sheet.Columns.Count && i < sr.Cells.Count; i++)
                 {
                     var col = _sheet.Columns[i];
@@ -234,7 +234,8 @@ namespace CharacterApp.Pages
                     else if (i < entry.Cells.Count)
                         entry.Cells[i] = sr.Cells[i];
                 }
-                Rows.Add(entry);   // ← был пропущен
+                entry.SuppressNotify = false;
+                Rows.Add(entry);
             }
         }
 
@@ -244,6 +245,9 @@ namespace CharacterApp.Pages
     // ── ViewModel строки кастомного листа ────────────────────────────────────
     public class CustomRowEntry : INotifyPropertyChanged
     {
+        /// <summary>Когда true — не вызывает MarkUnsaved при изменении ячеек (используется при загрузке).</summary>
+        public bool SuppressNotify { get; set; }
+
         public ObservableCollection<string> Cells     { get; }
         public ObservableCollection<bool>   BoolCells { get; }
 
@@ -252,8 +256,8 @@ namespace CharacterApp.Pages
             Cells     = new ObservableCollection<string>(Enumerable.Repeat("", columnCount));
             BoolCells = new ObservableCollection<bool>(Enumerable.Repeat(false, columnCount));
 
-            Cells.CollectionChanged     += (_, _) => Mark();
-            BoolCells.CollectionChanged += (_, _) => Mark();
+            Cells.CollectionChanged     += (_, _) => { if (!SuppressNotify) Mark(); };
+            BoolCells.CollectionChanged += (_, _) => { if (!SuppressNotify) Mark(); };
         }
 
         private static void Mark() => (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();

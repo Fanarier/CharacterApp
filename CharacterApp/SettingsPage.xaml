@@ -140,8 +140,12 @@
                              Background="{DynamicResource SurfaceBrush}"
                              Foreground="{DynamicResource TextBrush}"
                              BorderBrush="{DynamicResource BorderBrush}"/>
-                    <Button Content="Удалить выбранный" Click="RemoveSheet_Click"
-                            Margin="0,0,0,10" Padding="10,6" HorizontalAlignment="Left"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="🔄 Обновить список" Click="RefreshSheetList_Click"
+                                Margin="0,0,8,0" Padding="10,6" HorizontalAlignment="Left"/>
+                        <Button Content="Удалить выбранный" Click="RemoveSheet_Click"
+                                Padding="10,6" HorizontalAlignment="Left"/>
+                    </StackPanel>
                     <Separator Margin="0,0,0,10"/>
                     <TextBlock Text="Создать новый лист:" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>

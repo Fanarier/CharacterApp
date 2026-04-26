@@ -204,6 +204,7 @@ namespace CharacterApp
                 var filename  = string.Format(_autoSaveConfig.FilePattern, DateTime.Now);
                 var path      = Path.Combine(_autoSaveConfig.Folder, filename);
                 File.WriteAllText(path, json);
+                SaveLastFilePath(path);   // ← запоминаем последний автосейв
 
                 var files = new DirectoryInfo(_autoSaveConfig.Folder)
                     .GetFiles("*.json")
@@ -255,6 +256,7 @@ namespace CharacterApp
             if (!string.IsNullOrEmpty(_lastJsonFilePath) && File.Exists(_lastJsonFilePath))
             {
                 DoSave(_lastJsonFilePath);
+                SaveLastFilePath(_lastJsonFilePath);   // ← запоминаем путь
                 MarkSaved();
                 ShowNotification("Данные сохранены!", NotificationType.Success);
             }
@@ -271,6 +273,7 @@ namespace CharacterApp
             {
                 _lastJsonFilePath = dlg.FileName;
                 DoSave(_lastJsonFilePath);
+                SaveLastFilePath(_lastJsonFilePath);   // ← запоминаем путь
                 MarkSaved();
                 ShowNotification("Данные сохранены!", NotificationType.Success);
             }
@@ -282,6 +285,7 @@ namespace CharacterApp
             if (dlg.ShowDialog() == true)
             {
                 _lastJsonFilePath = dlg.FileName;
+                SaveLastFilePath(_lastJsonFilePath);   // ← запоминаем путь
                 try
                 {
                     var json      = File.ReadAllText(_lastJsonFilePath);
@@ -443,6 +447,7 @@ namespace CharacterApp
             foreach (var sheet in c.CustomSheets)
             {
                 var page = new CustomSheetPage(sheet);
+                page.ApplyCharacter(c);          // ← загружаем строки из JSON
                 _customPages[sheet.Name] = page;
                 var name = sheet.Name; // capture
                 var btn  = new Button
@@ -538,6 +543,10 @@ namespace CharacterApp
         private static readonly string[] _builtinPageNames =
             { "MainPage", "Details", "Equipment", "Stats",
               "ActiveSkills", "PassiveSkills", "Proficiencies", "Attacks" };
+
+        /// <summary>Возвращает имена всех активных кастомных листов.</summary>
+        public System.Collections.Generic.IEnumerable<string> GetCustomSheetNames()
+            => _customPages.Keys;
 
         public void SetPageVisible(string pageKey, bool visible)
         {
