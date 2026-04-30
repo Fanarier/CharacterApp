@@ -76,6 +76,7 @@ namespace CharacterApp
             CommandBindings.Add(new CommandBinding(OpenCommand, (_, __) => LoadAll()));
 
             MainFrame.Navigate(_mainPage);
+            HighlightActiveButton("builtin:MainPage");
 
             LoadAutoSaveConfig();
             _autoSaveTimer      = new DispatcherTimer();
@@ -389,13 +390,32 @@ namespace CharacterApp
 
         // ── Навигация ─────────────────────────────────────────────────────────
 
-        private void MainPage_Click   (object sender, RoutedEventArgs e) => MainFrame.Navigate(_mainPage);
-        private void Details_Click    (object sender, RoutedEventArgs e) => MainFrame.Navigate(_detailsPage);
-        private void Equipment_Click  (object sender, RoutedEventArgs e) => MainFrame.Navigate(_equipmentPage);
-        private void ActiveSkills_Click (object sender, RoutedEventArgs e) => MainFrame.Navigate(_skillsPage);
-        private void PassiveSkills_Click(object sender, RoutedEventArgs e) => MainFrame.Navigate(_passivePage);
-        private void Proficiencies_Click  (object sender, RoutedEventArgs e) => MainFrame.Navigate(_profPage);
-        private void Attacks_Click        (object sender, RoutedEventArgs e) => MainFrame.Navigate(_attacksPage);
+        private void NavigateTo(System.Windows.Controls.Page page, string tag)
+        {
+            MainFrame.Navigate(page);
+            HighlightActiveButton(tag);
+        }
+
+        private void HighlightActiveButton(string activeTag)
+        {
+            foreach (var ch in MenuStack.Children)
+            {
+                if (ch is not Button btn) continue;
+                var tag = btn.Tag?.ToString() ?? "";
+                bool isActive = tag == activeTag;
+                btn.Style = isActive
+                    ? (Style)FindResource("SidebarNavButtonActive")
+                    : (Style)FindResource("SidebarNavButton");
+            }
+        }
+
+        private void MainPage_Click    (object sender, RoutedEventArgs e) => NavigateTo(_mainPage,      "builtin:MainPage");
+        private void Details_Click     (object sender, RoutedEventArgs e) => NavigateTo(_detailsPage,   "builtin:Details");
+        private void Equipment_Click   (object sender, RoutedEventArgs e) => NavigateTo(_equipmentPage, "builtin:Equipment");
+        private void ActiveSkills_Click(object sender, RoutedEventArgs e) => NavigateTo(_skillsPage,    "builtin:ActiveSkills");
+        private void PassiveSkills_Click(object sender, RoutedEventArgs e) => NavigateTo(_passivePage,  "builtin:PassiveSkills");
+        private void Proficiencies_Click(object sender, RoutedEventArgs e) => NavigateTo(_profPage,     "builtin:Proficiencies");
+        private void Attacks_Click     (object sender, RoutedEventArgs e) => NavigateTo(_attacksPage,   "builtin:Attacks");
 
         // ── Пользовательские листы ──────────────────────────────────────────
 
@@ -415,7 +435,7 @@ namespace CharacterApp
                     Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                     Tag     = "custom:" + sheet.Name
                 };
-                btn.Click += (_, _) => MainFrame.Navigate(_customPages[name]);
+                btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
@@ -456,7 +476,7 @@ namespace CharacterApp
                     Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                     Tag     = "custom:" + sheet.Name
                 };
-                btn.Click += (_, _) => MainFrame.Navigate(_customPages[name]);
+                btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
                 // Вставляем перед кнопкой Настройки
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
@@ -482,7 +502,7 @@ namespace CharacterApp
                 Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                 Tag     = "custom:" + sheet.Name
             };
-            btn.Click += (_, _) => MainFrame.Navigate(_customPages[name]);
+            btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
             int idx = MenuStack.Children.Count - 1;
             MenuStack.Children.Insert(idx, btn);
 
@@ -561,8 +581,8 @@ namespace CharacterApp
                 }
             }
         }
-        private void Settings_Click   (object sender, RoutedEventArgs e) => MainFrame.Navigate(_settingsPage);
-        private void Stats_Click       (object sender, RoutedEventArgs e) => MainFrame.Navigate(_statsPage);
+        private void Settings_Click   (object sender, RoutedEventArgs e) => NavigateTo(_settingsPage, "builtin:Settings");
+        private void Stats_Click      (object sender, RoutedEventArgs e) => NavigateTo(_statsPage,    "builtin:Stats");
 
         private void QuickSave_Click  (object sender, RoutedEventArgs e) => SaveAll();
         private void SaveAs_Click     (object sender, RoutedEventArgs e) => SaveAllAs();

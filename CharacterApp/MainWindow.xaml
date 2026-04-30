@@ -16,24 +16,24 @@
     <!-- Локальные ресурсы -->
     <Window.Resources>
         <Style x:Key="TitleBarButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width"           Value="34"/>
+            <Setter Property="Height"          Value="30"/>
+            <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground"      Value="White"/>
+            <Setter Property="Cursor"          Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="0">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#50FFFFFF"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#35FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#70FFFFFF"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#55FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -64,8 +64,14 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="{DynamicResource AccentBrush}"
                 MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#6E2A88" Offset="0"/>
+                    <GradientStop Color="#9B40B5" Offset="0.5"/>
+                    <GradientStop Color="#7830A0" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -121,58 +127,65 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- SIDEBAR: замените старый DockPanel на этот -->
             <!-- SIDEBAR -->
-            <DockPanel Grid.Column="0" Background="#AA333333" x:Name="Sidebar" Width="250" ClipToBounds="True">
-                <!-- Верх: бургер + поиск -->
-                <StackPanel DockPanel.Dock="Top" Margin="8">
-                    <Button x:Name="BtnToggleMenu"
-                Width="38" Height="38"
-                HorizontalAlignment="Left"
-                Click="BtnToggleMenu_Click"
-                ToolTip="Открыть/закрыть меню"
-                Margin="5,0,0,8">
-                        <Grid Width="20" Height="16">
-                            <Rectangle Height="2" Fill="{DynamicResource TextBrush}" VerticalAlignment="Top" RadiusX="1" RadiusY="1"/>
-                            <Rectangle Height="2" Fill="{DynamicResource TextBrush}" VerticalAlignment="Center" RadiusX="1" RadiusY="1"/>
-                            <Rectangle Height="2" Fill="{DynamicResource TextBrush}" VerticalAlignment="Bottom" RadiusX="1" RadiusY="1"/>
-                        </Grid>
-                    </Button>
+            <Border Grid.Column="0" x:Name="Sidebar" Width="250" ClipToBounds="True"
+                    Background="{DynamicResource SidebarGradient}">
+                <Border BorderBrush="{DynamicResource SidebarSeparatorBrush}" BorderThickness="0,0,1,0">
+                    <DockPanel>
 
-                    <TextBox x:Name="TbMenuSearch"
-                 Width="230"
-                 Height="28"
-                 Margin="0,0,0,8"
-                 VerticalAlignment="Center"
-                 TextChanged="TbMenuSearch_TextChanged"
-                 Visibility="Visible" />
-                </StackPanel>
+                        <!-- TOP: burger + search -->
+                        <StackPanel DockPanel.Dock="Top" Margin="10,10,10,4">
+                            <Button x:Name="BtnToggleMenu" Width="38" Height="38"
+                                    HorizontalAlignment="Left" Click="BtnToggleMenu_Click"
+                                    ToolTip="Открыть/закрыть меню"
+                                    Margin="4,0,0,10" Background="Transparent" BorderThickness="0">
+                                <Grid Width="20" Height="15">
+                                    <Rectangle Height="2" VerticalAlignment="Top"    RadiusX="1" RadiusY="1" Fill="{DynamicResource BurgerLineBrush}"/>
+                                    <Rectangle Height="2" VerticalAlignment="Center" RadiusX="1" RadiusY="1" Fill="{DynamicResource BurgerLineBrush}"/>
+                                    <Rectangle Height="2" VerticalAlignment="Bottom" RadiusX="1" RadiusY="1" Fill="{DynamicResource BurgerLineBrush}"/>
+                                </Grid>
+                            </Button>
+                            <TextBox x:Name="TbMenuSearch" Height="34" Margin="0,0,0,4"
+                                     TextChanged="TbMenuSearch_TextChanged" Visibility="Visible"/>
+                        </StackPanel>
 
-                <!-- Главное меню -->
-                <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" Height="Auto">
-                    <StackPanel x:Name="MenuStack" Margin="10,0,10,0" Opacity="1">
-                        <TextBlock Text="{DynamicResource MenuTitle}" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Foreground="White" Width="230"/>
-                        <Button Content="{DynamicResource MainPageBtn}" Click="MainPage_Click" Margin="0,4" Width="230" Tag="builtin:MainPage"/>
-                        <Button Content="{DynamicResource DetailsPageBtn}" Click="Details_Click" Margin="0,4" Width="230" Tag="builtin:Details"/>
-                        <Button Content="{DynamicResource EquipmentPageBtn}" Click="Equipment_Click" Margin="0,4" Width="230" Tag="builtin:Equipment"/>
-                        <Button Content="{DynamicResource StatsPageBtn}" Click="Stats_Click" Margin="0,4" Width="230" Tag="builtin:Stats"/>
-                        <Button Content="{DynamicResource ActiveSkillsPageBtn}" Click="ActiveSkills_Click" Margin="0,4" Width="230" Tag="builtin:ActiveSkills"/>
-                        <Button Content="{DynamicResource PassiveSkillsPageBtn}" Click="PassiveSkills_Click" Margin="0,4" Width="230" Tag="builtin:PassiveSkills"/>
-                        <Button Content="{DynamicResource ProficienciesPageBtn}" Click="Proficiencies_Click" Margin="0,4" Width="230" Tag="builtin:Proficiencies"/>
-                        <Button Content="{DynamicResource AttacksPageBtn}" Click="Attacks_Click" Margin="0,4" Width="230" Tag="builtin:Attacks"/>
-                        <Button Content="{DynamicResource SettingsPageBtn}" Click="Settings_Click" Margin="0,4" Width="230" Tag="builtin:Settings"/>
-                    </StackPanel>
-                </ScrollViewer>
+                        <!-- BOTTOM: save/load actions -->
+                        <Border DockPanel.Dock="Bottom" x:Name="BottomButtonsPanel" Padding="0,6,0,8"
+                                Background="{DynamicResource SidebarBottomGradient}">
+                            <Border BorderBrush="{DynamicResource SidebarBottomSeparatorBrush}" BorderThickness="0,1,0,0">
+                                <StackPanel Margin="0,4,0,0">
+                                    <Button Content="💾  Быстрое сохранение"  Click="QuickSave_Click"    Style="{DynamicResource SidebarActionButton}"/>
+                                    <Button Content="📁  Сохранить как..."     Click="SaveAs_Click"       Style="{DynamicResource SidebarActionButton}"/>
+                                    <Button Content="📂  Загрузить..."         Click="LoadJSON_Click"     Style="{DynamicResource SidebarActionButton}"/>
+                                    <Button Content="🔄  Сбросить всё"         Click="ResetAll_Click"     Style="{DynamicResource SidebarActionButton}" Foreground="#FF7070"/>
+                                    <Button Content="⬆   Проверить обновления" Click="CheckUpdates_Click" Style="{DynamicResource SidebarActionButton}"/>
+                                </StackPanel>
+                            </Border>
+                        </Border>
 
-                <!-- Нижний блок с кнопками сохранения -->
-                <StackPanel DockPanel.Dock="Bottom" x:Name="BottomButtonsPanel" Background="#FF444444" Height="195" VerticalAlignment="Bottom" Opacity="1">
-                    <Button Content="{DynamicResource QuickSaveBtn}" Click="QuickSave_Click" Margin="0,6,0,4" Width="230"/>
-                    <Button Content="{DynamicResource SaveAsBtn}" Click="SaveAs_Click" Margin="0,4" Width="230"/>
-                    <Button Content="{DynamicResource LoadBtn}" Click="LoadJSON_Click" Margin="0,4" Width="230"/>
-                    <Button Content="{DynamicResource ResetBtn}" Click="ResetAll_Click" Margin="0,4" Width="230" Foreground="OrangeRed"/>
-                    <Button Content="{DynamicResource CheckUpdatesBtn}" Click="CheckUpdates_Click" Margin="0,4" Width="230"/>
-                </StackPanel>
-            </DockPanel>
+                        <!-- MAIN NAV -->
+                        <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="MenuStack" Margin="4,0,4,8">
+                                <Border Margin="10,2,10,10" Padding="6,8">
+                                    <TextBlock Text="{DynamicResource MenuTitle}" FontSize="18" FontWeight="Bold"
+                                               Foreground="{DynamicResource MenuTitleBrush}"/>
+                                </Border>
+                                <Button Content="{DynamicResource MainPageBtn}"          Click="MainPage_Click"      Tag="builtin:MainPage"      Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource DetailsPageBtn}"       Click="Details_Click"       Tag="builtin:Details"       Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource EquipmentPageBtn}"     Click="Equipment_Click"     Tag="builtin:Equipment"     Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource StatsPageBtn}"         Click="Stats_Click"         Tag="builtin:Stats"         Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource ActiveSkillsPageBtn}"  Click="ActiveSkills_Click"  Tag="builtin:ActiveSkills"  Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource PassiveSkillsPageBtn}" Click="PassiveSkills_Click" Tag="builtin:PassiveSkills" Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource ProficienciesPageBtn}" Click="Proficiencies_Click" Tag="builtin:Proficiencies" Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource AttacksPageBtn}"       Click="Attacks_Click"       Tag="builtin:Attacks"       Style="{DynamicResource SidebarNavButton}"/>
+                                <Separator Margin="10,8"/>
+                                <Button Content="{DynamicResource SettingsPageBtn}"      Click="Settings_Click"      Tag="builtin:Settings"      Style="{DynamicResource SidebarNavButton}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                    </DockPanel>
+                </Border>
+            </Border>
 
 
 
