@@ -83,6 +83,20 @@
                             VerticalAlignment="Center"
                             Grid.Column="0"
                             Margin="10,0,5,0">
+                    <!-- Back button -->
+                    <Button x:Name="BtnBack"
+                            Click="BtnBack_Click"
+                            Visibility="Collapsed"
+                            ToolTip="Назад"
+                            Width="28" Height="22" Margin="0,0,6,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand">
+                        <Border Background="#30FFFFFF" CornerRadius="5" Padding="4,2">
+                            <TextBlock Text="◀" Foreground="White" FontSize="11"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Button>
                     <Image Source="/Images/EspiresGames.ico"
                            Width="20" Height="20"
                            VerticalAlignment="Center"/>
@@ -138,27 +152,41 @@
                             <Button x:Name="BtnToggleMenu" Width="38" Height="38"
                                     HorizontalAlignment="Left" Click="BtnToggleMenu_Click"
                                     ToolTip="Открыть/закрыть меню"
-                                    Margin="4,0,0,10" Background="Transparent" BorderThickness="0">
+                                    Margin="4,0,0,6" Background="Transparent" BorderThickness="0">
                                 <Grid Width="20" Height="15">
                                     <Rectangle Height="2" VerticalAlignment="Top"    RadiusX="1" RadiusY="1" Fill="{DynamicResource BurgerLineBrush}"/>
                                     <Rectangle Height="2" VerticalAlignment="Center" RadiusX="1" RadiusY="1" Fill="{DynamicResource BurgerLineBrush}"/>
                                     <Rectangle Height="2" VerticalAlignment="Bottom" RadiusX="1" RadiusY="1" Fill="{DynamicResource BurgerLineBrush}"/>
                                 </Grid>
                             </Button>
+
+                            <!-- Character tabs -->
+                            <Border BorderBrush="{DynamicResource BorderAccentBrush}"
+                                    BorderThickness="0,0,0,1" Margin="0,0,0,8" Padding="0,0,0,0">
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Disabled"
+                                              PanningMode="HorizontalOnly">
+                                    <WrapPanel x:Name="CharacterTabsPanel"
+                                               Orientation="Horizontal"
+                                               Margin="0,0,0,0"/>
+                                </ScrollViewer>
+                            </Border>
+
                             <TextBox x:Name="TbMenuSearch" Height="34" Margin="0,0,0,4"
                                      TextChanged="TbMenuSearch_TextChanged" Visibility="Visible"/>
                         </StackPanel>
 
-                        <!-- BOTTOM: save/load actions -->
+                        <!-- BOTTOM: dice roller + save/load actions -->
                         <Border DockPanel.Dock="Bottom" x:Name="BottomButtonsPanel" Padding="0,6,0,8"
                                 Background="{DynamicResource SidebarBottomGradient}">
                             <Border BorderBrush="{DynamicResource SidebarBottomSeparatorBrush}" BorderThickness="0,1,0,0">
                                 <StackPanel Margin="0,4,0,0">
-                                    <Button Content="💾  Быстрое сохранение"  Click="QuickSave_Click"    Style="{DynamicResource SidebarActionButton}"/>
-                                    <Button Content="📁  Сохранить как..."     Click="SaveAs_Click"       Style="{DynamicResource SidebarActionButton}"/>
-                                    <Button Content="📂  Загрузить..."         Click="LoadJSON_Click"     Style="{DynamicResource SidebarActionButton}"/>
-                                    <Button Content="🔄  Сбросить всё"         Click="ResetAll_Click"     Style="{DynamicResource SidebarActionButton}" Foreground="#FF7070"/>
-                                    <Button Content="⬆   Проверить обновления" Click="CheckUpdates_Click" Style="{DynamicResource SidebarActionButton}"/>
+                                    <Button Click="QuickSave_Click"    Style="{DynamicResource SidebarActionButton}"><TextBlock><Run Text="💾  "/><Run Text="{DynamicResource QuickSaveBtn}"/></TextBlock></Button>
+                                    <Button Click="SaveAs_Click"       Style="{DynamicResource SidebarActionButton}"><TextBlock><Run Text="📁  "/><Run Text="{DynamicResource SaveAsBtn}"/></TextBlock></Button>
+                                    <Button Click="LoadJSON_Click"     Style="{DynamicResource SidebarActionButton}"><TextBlock><Run Text="📂  "/><Run Text="{DynamicResource LoadBtn}"/></TextBlock></Button>
+                                    <Button Click="ExportXps_Click"    Style="{DynamicResource SidebarActionButton}"><TextBlock><Run Text="🖨️  "/><Run Text="Экспорт в PDF"/></TextBlock></Button>
+                                    <Button Click="ResetAll_Click"     Style="{DynamicResource SidebarActionButton}" Foreground="#FF7070"><TextBlock><Run Text="🔄  "/><Run Text="{DynamicResource ResetBtn}"/></TextBlock></Button>
+                                    <Button Click="CheckUpdates_Click" Style="{DynamicResource SidebarActionButton}"><TextBlock><Run Text="⬆   "/><Run Text="{DynamicResource CheckUpdatesBtn}"/></TextBlock></Button>
                                 </StackPanel>
                             </Border>
                         </Border>
@@ -179,6 +207,9 @@
                                 <Button Content="{DynamicResource ProficienciesPageBtn}" Click="Proficiencies_Click" Tag="builtin:Proficiencies" Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource AttacksPageBtn}"       Click="Attacks_Click"       Tag="builtin:Attacks"       Style="{DynamicResource SidebarNavButton}"/>
                                 <Separator Margin="10,8"/>
+                                <Button Content="📝  Журнал сессий"                     Click="Journal_Click"       Tag="builtin:Journal"       Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="🔔  Ресурсы"                           Click="Resources_Click"     Tag="builtin:Resources"     Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="🎲  Кубики"                            Click="Dice_Click"          Tag="builtin:Dice"          Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource SettingsPageBtn}"      Click="Settings_Click"      Tag="builtin:Settings"      Style="{DynamicResource SidebarNavButton}"/>
                             </StackPanel>
                         </ScrollViewer>

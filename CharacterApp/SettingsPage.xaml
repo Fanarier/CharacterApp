@@ -82,6 +82,32 @@
                 </StackPanel>
             </GroupBox>
 
+            <!-- Accent color picker -->
+            <GroupBox Header="Акцентный цвет" Margin="5" Padding="10">
+                <StackPanel>
+                    <TextBlock Text="Выберите акцентный цвет интерфейса:"
+                               Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,10"/>
+                    <WrapPanel x:Name="AccentColorPanel" Margin="0,0,0,10">
+                        <!-- Filled dynamically from code -->
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="HEX:" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextBrush}" Margin="0,0,6,0"/>
+                        <TextBox x:Name="TbAccentHex" Width="90" Height="28"
+                                 Padding="6,2" Text="#B565C1"
+                                 ToolTip="Введите HEX-код цвета и нажмите Enter"
+                                 KeyDown="TbAccentHex_KeyDown"/>
+                        <Border x:Name="AccentPreview" Width="28" Height="28"
+                                CornerRadius="6" Margin="6,0,0,0"
+                                BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1"/>
+                        <Button Content="Применить" Click="ApplyAccentColor_Click"
+                                Margin="6,0,0,0" Padding="10,4" MinHeight="0"/>
+                        <Button Content="Сбросить" Click="ResetAccentColor_Click"
+                                Margin="4,0,0,0" Padding="10,4" MinHeight="0"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
             <GroupBox Header="{DynamicResource LanguageBtn}" Margin="5" Padding="10">
                 <StackPanel HorizontalAlignment="Center">
                     <ComboBox x:Name="LanguageComboBox" Width="200" SelectedValuePath="Tag">

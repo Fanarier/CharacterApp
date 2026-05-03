@@ -1,0 +1,92 @@
+<UserControl x:Class="CharacterApp.Controls.DiceRollerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Self">
+    <Border x:Name="RootBorder"
+            Margin="6,4,6,8"
+            Padding="10,8"
+            CornerRadius="10"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource BorderAccentBrush}"
+            Background="{DynamicResource AccentDimBrush}">
+
+        <StackPanel>
+            <!-- Header -->
+            <TextBlock Text="🎲  Кубики"
+                       FontSize="12.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource AccentLightBrush}"
+                       Margin="0,0,0,8"/>
+
+            <!-- Dice buttons grid -->
+            <UniformGrid Rows="2" Columns="4" Margin="0,0,0,8">
+                <Button Content="d4"   Tag="4"   Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="d6"   Tag="6"   Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="d8"   Tag="8"   Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="d10"  Tag="10"  Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="d12"  Tag="12"  Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="d20"  Tag="20"  Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="d100" Tag="100" Click="DiceBtn_Click" Style="{StaticResource DiceButtonStyle}" Margin="2"/>
+                <Button Content="∑"    Tag="0"   Click="RollFormula_Click" Style="{StaticResource DiceButtonStyle}" Margin="2" ToolTip="Бросить формулу"/>
+            </UniformGrid>
+
+            <!-- Formula input + modifier -->
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="46"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="TbFormula" Grid.Column="0"
+                         Text="2d6+3" Margin="0,0,4,0"
+                         Height="28" Padding="6,0"
+                         ToolTip="Формула: NdX+M  (например 2d6+3)"/>
+                <TextBlock Grid.Column="1" Text="mod"
+                           VerticalAlignment="Center" Margin="0,0,4,0"
+                           Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                <TextBox x:Name="TbModifier" Grid.Column="2"
+                         Text="0" Height="28" Padding="4,0"
+                         TextAlignment="Center"
+                         ToolTip="Дополнительный модификатор"/>
+            </Grid>
+
+            <!-- Result display -->
+            <Border x:Name="ResultBorder"
+                    CornerRadius="6" Padding="6,5"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource BorderAccentBrush}"
+                    Background="{DynamicResource SurfaceBrush}"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TbRollDetail"
+                               Grid.Column="0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TbRollResult"
+                               Grid.Column="1"
+                               FontSize="22" FontWeight="Bold"
+                               Foreground="{DynamicResource AccentLightBrush}"
+                               VerticalAlignment="Center"
+                               Margin="8,0,2,0"/>
+                </Grid>
+            </Border>
+
+            <!-- Roll history (last 5) -->
+            <ItemsControl x:Name="HistoryList" Margin="0,6,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Margin="0,1"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -129,7 +129,14 @@ namespace CharacterApp.Controls
             {
                 try
                 {
-                    ImgItem.Source = new BitmapImage(new Uri(ItemImagePath, UriKind.RelativeOrAbsolute));
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.UriSource      = new Uri(ItemImagePath, UriKind.RelativeOrAbsolute);
+                    bmp.DecodePixelWidth = 200;   // масштабируем при загрузке — быстрее и меньше памяти
+                    bmp.CacheOption    = BitmapCacheOption.OnLoad;
+                    bmp.EndInit();
+                    bmp.Freeze();
+                    ImgItem.Source = bmp;
                     ImgPlaceholder.Visibility = Visibility.Collapsed;
                 }
                 catch
@@ -220,15 +227,27 @@ namespace CharacterApp.Controls
                 Notify("Фото не добавлено");
                 return;
             }
-            var win = new Window
+            try
             {
-                Title = ItemName ?? "Просмотр",
-                Content = new Image { Source = new BitmapImage(new Uri(ItemImagePath, UriKind.RelativeOrAbsolute)), Stretch = System.Windows.Media.Stretch.Uniform },
-                Width = 800,
-                Height = 600,
-                Owner = Application.Current.MainWindow
-            };
-            win.ShowDialog();
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.UriSource       = new Uri(ItemImagePath, UriKind.RelativeOrAbsolute);
+                bmp.CacheOption     = BitmapCacheOption.OnLoad;
+                bmp.EndInit();
+                bmp.Freeze();
+                var win = new Window
+                {
+                    Title   = ItemName ?? "Просмотр",
+                    Content = new Image { Source = bmp, Stretch = System.Windows.Media.Stretch.Uniform },
+                    Width   = 800, Height = 600,
+                    Owner   = Application.Current.MainWindow
+                };
+                win.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Notify($"Ошибка загрузки изображения: {ex.Message}");
+            }
         }
 
         private void BtnEdit_Click(object sender, RoutedEventArgs e)

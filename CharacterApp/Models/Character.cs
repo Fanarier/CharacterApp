@@ -162,6 +162,12 @@ namespace CharacterApp.Models
         // ── Пользовательские листы ────────────────────────────────────────────
         public List<CustomSheet>  CustomSheets  { get; set; } = new List<CustomSheet>();
 
+        // ── Журнал сессий ─────────────────────────────────────────────────────
+        public List<Pages.JournalEntry>    JournalEntries { get; set; } = new();
+        // ── Трекер ресурсов ───────────────────────────────────────────────────
+        public Pages.HpData                HpData         { get; set; } = new();
+        public List<Pages.ResourceTracker> Resources      { get; set; } = new();
+
         // ── Черты ─────────────────────────────────────────────────────────────
         public TraitData Trait4  { get; set; } = new TraitData();
         public TraitData Trait9  { get; set; } = new TraitData();
@@ -184,43 +190,43 @@ namespace CharacterApp.Models
         public EquipmentItem? Artifact1Item { get; set; }
         public EquipmentItem? Artifact2Item { get; set; }
 
-        // ── Экипировка (legacy — нужны EquipmentPage + обратная совместимость) ─
-        public string HeadName        { get; set; } = "";
-        public string HeadImage       { get; set; } = "";
-        public bool   HeadLocked      { get; set; }
-        public string BodyName        { get; set; } = "";
-        public string BodyImage       { get; set; } = "";
-        public bool   BodyLocked      { get; set; }
-        public string HandsName       { get; set; } = "";
-        public string HandsImage      { get; set; } = "";
-        public bool   HandsLocked     { get; set; }
-        public string BeltName        { get; set; } = "";
-        public string BeltImage       { get; set; } = "";
-        public bool   BeltLocked      { get; set; }
-        public string LegsName        { get; set; } = "";
-        public string LegsImage       { get; set; } = "";
-        public bool   LegsLocked      { get; set; }
-        public string Ring1Name       { get; set; } = "";
-        public string Ring1Image      { get; set; } = "";
-        public bool   Ring1Locked     { get; set; }
-        public string Ring2Name       { get; set; } = "";
-        public string Ring2Image      { get; set; } = "";
-        public bool   Ring2Locked     { get; set; }
-        public string AmuletName      { get; set; } = "";
-        public string AmuletImage     { get; set; } = "";
-        public bool   AmuletLocked    { get; set; }
-        public string Ornament1Name   { get; set; } = "";
-        public string Ornament1Image  { get; set; } = "";
-        public bool   Ornament1Locked { get; set; }
-        public string Ornament2Name   { get; set; } = "";
-        public string Ornament2Image  { get; set; } = "";
-        public bool   Ornament2Locked { get; set; }
-        public string Artifact1Name   { get; set; } = "";
-        public string Artifact1Image  { get; set; } = "";
-        public bool   Artifact1Locked { get; set; }
-        public string Artifact2Name   { get; set; } = "";
-        public string Artifact2Image  { get; set; } = "";
-        public bool   Artifact2Locked { get; set; }
+        // ── Экипировка (legacy — только для чтения старых файлов, не сериализуются) ─
+        [Newtonsoft.Json.JsonIgnore] public string HeadName        { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string HeadImage       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   HeadLocked      { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string BodyName        { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string BodyImage       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   BodyLocked      { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string HandsName       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string HandsImage      { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   HandsLocked     { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string BeltName        { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string BeltImage       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   BeltLocked      { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string LegsName        { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string LegsImage       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   LegsLocked      { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string Ring1Name       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string Ring1Image      { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   Ring1Locked     { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string Ring2Name       { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string Ring2Image      { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   Ring2Locked     { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string AmuletName      { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string AmuletImage     { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   AmuletLocked    { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string Ornament1Name   { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string Ornament1Image  { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   Ornament1Locked { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string Ornament2Name   { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string Ornament2Image  { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   Ornament2Locked { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string Artifact1Name   { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string Artifact1Image  { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   Artifact1Locked { get; set; }
+        [Newtonsoft.Json.JsonIgnore] public string Artifact2Name   { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public string Artifact2Image  { get; set; } = "";
+        [Newtonsoft.Json.JsonIgnore] public bool   Artifact2Locked { get; set; }
 
         // ── Миграция legacy → EquipmentItem ──────────────────────────────────
         public void NormalizeItemsFromLegacy()

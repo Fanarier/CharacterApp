@@ -385,8 +385,24 @@
                                    ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
           </Grid>
         </Border>
-      </StackPanel>
 
+        <!-- ═══ Radar Chart ═══ -->
+        <Border Margin="10,16,10,6" Padding="16,14" CornerRadius="12"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="4" Color="#000000" Opacity="0.3"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="📊  Профиль атрибутов" FontSize="13"
+                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
+                <controls:RadarChartControl x:Name="RadarChart"
+                                            Width="280" Height="280"
+                                            HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+      </StackPanel>
     </Grid>
   </ScrollViewer>
 </Page>

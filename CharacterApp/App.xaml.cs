@@ -15,6 +15,9 @@ namespace CharacterApp
         public static string ThemeConfigFile    => Path.Combine(DataDir, "theme.config");
         public static string LanguageConfigFile => Path.Combine(DataDir, "language.config");
 
+        /// <summary>Текущий кастомный акцентный цвет (сохраняется в памяти на сессию).</summary>
+        public static string CurrentAccentHex { get; set; } = "";
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);

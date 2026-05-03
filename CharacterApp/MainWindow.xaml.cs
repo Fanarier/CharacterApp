@@ -10,6 +10,8 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Threading.Tasks;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
@@ -33,22 +35,37 @@ namespace CharacterApp
         private const string GitHubOwner = "Fanarier";
         private const string GitHubRepo  = "CharacterApp";
 
-        private readonly PageMain         _mainPage;
-        private readonly PageDetails      _detailsPage;
-        private readonly EquipmentPage    _equipmentPage;
+        private readonly PageMain          _mainPage;
+        private readonly PageDetails       _detailsPage;
+        private readonly EquipmentPage     _equipmentPage;
         private readonly ActiveSkillsPage  _skillsPage;
-        private readonly PassiveSkillsPage  _passivePage;
-        private readonly ProficienciesPage  _profPage;
-        private readonly AttacksPage         _attacksPage;
-        // Пользовательские листы: имя → страница
+        private readonly PassiveSkillsPage _passivePage;
+        private readonly ProficienciesPage _profPage;
+        private readonly AttacksPage       _attacksPage;
+        private readonly DicePage          _dicePage;
+        // Lazy pages
+        private JournalPage?   _journalPage;
+        private ResourcesPage? _resourcesPage;
         private readonly System.Collections.Generic.Dictionary<string, CustomSheetPage> _customPages = new();
-        private readonly SettingsPage     _settingsPage;  
-        private readonly StatsPage        _statsPage;
+        private readonly SettingsPage _settingsPage;
+        private readonly StatsPage    _statsPage;
+
+        // История навигации для кнопки "Назад"
+        private System.Windows.Controls.Page? _previousPage;
+        private string _previousTag = "";
+        private System.Windows.Controls.Page? _currentPage;
+        private string _currentTag = "";
+
+        // ── Несколько персонажей ──────────────────────────────────────────────
+        private readonly System.Collections.ObjectModel.ObservableCollection<CharacterSlot>
+            _characterSlots = new();
+        private int _activeSlotIndex = 0;
 
         private string _lastJsonFilePath = string.Empty;
         private bool   _hasUnsavedChanges = false;
 
         private AutoSaveConfig _autoSaveConfig = new AutoSaveConfig();
+        private AppSettings    _appSettings    = new AppSettings();
         private readonly DispatcherTimer _autoSaveTimer;
 
         private bool _sidebarOpen = true;
@@ -70,6 +87,7 @@ namespace CharacterApp
             _attacksPage   = new AttacksPage();
             _settingsPage  = new SettingsPage();
             _statsPage     = new StatsPage();
+            _dicePage      = new DicePage();
 
             // Привязываем команды
             CommandBindings.Add(new CommandBinding(SaveCommand, (_, __) => SaveAll()));
@@ -77,23 +95,51 @@ namespace CharacterApp
 
             MainFrame.Navigate(_mainPage);
             HighlightActiveButton("builtin:MainPage");
+            InitCharacterSlots();
 
-            LoadAutoSaveConfig();
+            // Загружаем единые настройки и синхронизируем в AutoSaveConfig
+            _appSettings    = AppSettings.Load();
+            SyncSettingsToAutoSaveConfig();
             _autoSaveTimer      = new DispatcherTimer();
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
             ApplyAutoSaveSettings();
             RestoreCustomSheetsFromSettings();
 
             // Загружаем последний файл если включена настройка
-            if (_autoSaveConfig is AutoSaveConfig cfg2
-                && cfg2.LoadLastOnStart
-                && !string.IsNullOrEmpty(cfg2.LastFilePath)
-                && System.IO.File.Exists(cfg2.LastFilePath))
+            if (_appSettings.LoadLastOnStart
+                && !string.IsNullOrEmpty(_appSettings.LastFilePath)
+                && System.IO.File.Exists(_appSettings.LastFilePath))
             {
-                // ContentRendered гарантирует что MainFrame готов к навигации
-                var pathToLoad = cfg2.LastFilePath;
+                var pathToLoad = _appSettings.LastFilePath;
                 ContentRendered += (_, _) => LoadFromPath(pathToLoad);
             }
+        }
+
+        // Синхронизация нового AppSettings → старый AutoSaveConfig (обратная совместимость)
+        private void SyncSettingsToAutoSaveConfig()
+        {
+            _autoSaveConfig.Enabled         = _appSettings.AutoSaveEnabled;
+            _autoSaveConfig.IntervalMinutes  = _appSettings.AutoSaveIntervalMinutes;
+            _autoSaveConfig.Folder           = _appSettings.AutoSaveFolder;
+            _autoSaveConfig.FilePattern      = _appSettings.AutoSaveFilePattern;
+            _autoSaveConfig.LoadLastOnStart  = _appSettings.LoadLastOnStart;
+            _autoSaveConfig.LastFilePath     = _appSettings.LastFilePath;
+            _autoSaveConfig.HiddenPages      = _appSettings.HiddenPages;
+            _autoSaveConfig.CustomSheetNames = _appSettings.CustomSheetNames;
+            _autoSaveConfig.SavedCustomSheets = _appSettings.SavedCustomSheets;
+        }
+
+        private void SyncAutoSaveConfigToSettings()
+        {
+            _appSettings.AutoSaveEnabled         = _autoSaveConfig.Enabled;
+            _appSettings.AutoSaveIntervalMinutes = _autoSaveConfig.IntervalMinutes;
+            _appSettings.AutoSaveFolder          = _autoSaveConfig.Folder;
+            _appSettings.AutoSaveFilePattern     = _autoSaveConfig.FilePattern;
+            _appSettings.LoadLastOnStart         = _autoSaveConfig.LoadLastOnStart;
+            _appSettings.LastFilePath            = _autoSaveConfig.LastFilePath;
+            _appSettings.HiddenPages             = _autoSaveConfig.HiddenPages;
+            _appSettings.CustomSheetNames        = _autoSaveConfig.CustomSheetNames;
+            _appSettings.SavedCustomSheets       = _autoSaveConfig.SavedCustomSheets;
         }
 
         // ── Заголовок и маркер несохранённых данных ───────────────────────────
@@ -103,6 +149,8 @@ namespace CharacterApp
             var name   = string.IsNullOrWhiteSpace(characterName) ? "Персонаж" : characterName;
             var marker = _hasUnsavedChanges ? " *" : "";
             TitleBarText.Text = $"Espires Games  —  {name}{marker}";
+            // Sync tab label
+            UpdateActiveSlotName(name);
         }
 
         public void MarkUnsaved()
@@ -156,6 +204,7 @@ namespace CharacterApp
         public void PersistAutoSaveConfig()
         {
             if (_autoSaveConfig == null) return;
+            // Save to old file for backward compat
             var sf = System.IO.Path.Combine(App.DataDir, "appsettings.json");
             try
             {
@@ -164,6 +213,9 @@ namespace CharacterApp
                 System.IO.File.WriteAllText(sf, json);
             }
             catch { }
+            // Also sync to unified settings and save
+            SyncAutoSaveConfigToSettings();
+            try { _appSettings.Save(); } catch { }
         }
 
         public void LoadAutoSaveConfig()
@@ -198,6 +250,9 @@ namespace CharacterApp
 
         private void AutoSaveTimer_Tick(object? sender, EventArgs e)
         {
+            // Пропускаем автосохранение если данные не изменились
+            if (!_hasUnsavedChanges) return;
+
             try
             {
                 var character = CollectCharacter();
@@ -205,7 +260,7 @@ namespace CharacterApp
                 var filename  = string.Format(_autoSaveConfig.FilePattern, DateTime.Now);
                 var path      = Path.Combine(_autoSaveConfig.Folder, filename);
                 File.WriteAllText(path, json);
-                SaveLastFilePath(path);   // ← запоминаем последний автосейв
+                SaveLastFilePath(path);
 
                 var files = new DirectoryInfo(_autoSaveConfig.Folder)
                     .GetFiles("*.json")
@@ -235,6 +290,9 @@ namespace CharacterApp
             _attacksPage.FillCharacter(c);
             foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
+            // Journal & Resources (only if pages were opened)
+            if (_journalPage   != null) c.JournalEntries = _journalPage.GetEntries();
+            if (_resourcesPage != null) { c.HpData = _resourcesPage.GetHpData(); c.Resources = _resourcesPage.GetResources(); }
             return c;
         }
 
@@ -249,15 +307,30 @@ namespace CharacterApp
             _attacksPage.ApplyCharacter(c);
             RebuildCustomPages(c);
             _statsPage.ApplyCharacter(c);
+            // Journal & Resources — apply lazily (create page if needed)
+            _journalPage ??= new JournalPage();
+            _journalPage.LoadEntries(c.JournalEntries ?? new());
+            _resourcesPage ??= new ResourcesPage();
+            _resourcesPage.LoadData(c.HpData, c.Resources);
             UpdateTitle(c.CharacterName);
         }
 
         public void SaveAll()
         {
-            if (!string.IsNullOrEmpty(_lastJsonFilePath) && File.Exists(_lastJsonFilePath))
+            if (!string.IsNullOrEmpty(_lastJsonFilePath))
             {
+                if (!File.Exists(_lastJsonFilePath))
+                {
+                    var result = System.Windows.MessageBox.Show(
+                        $"Файл сохранения не найден:\n{_lastJsonFilePath}\n\nВыбрать новое место сохранения?",
+                        "Файл не найден", System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Warning);
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                        SaveAllAs();
+                    return;
+                }
                 DoSave(_lastJsonFilePath);
-                SaveLastFilePath(_lastJsonFilePath);   // ← запоминаем путь
+                SaveLastFilePath(_lastJsonFilePath);
                 MarkSaved();
                 ShowNotification("Данные сохранены!", NotificationType.Success);
             }
@@ -390,10 +463,45 @@ namespace CharacterApp
 
         // ── Навигация ─────────────────────────────────────────────────────────
 
-        private void NavigateTo(System.Windows.Controls.Page page, string tag)
+        private async void NavigateTo(System.Windows.Controls.Page page, string tag)
         {
+            // Track history for back button
+            if (_currentPage != null && _currentPage != page)
+            {
+                _previousPage = _currentPage;
+                _previousTag  = _currentTag;
+            }
+            _currentPage = page;
+            _currentTag  = tag;
+
+            // Show back button only when there's history
+            BtnBack.Visibility = _previousPage != null
+                ? Visibility.Visible : Visibility.Collapsed;
+
+            // Fade out current page
+            if (MainFrame.Opacity > 0)
+            {
+                var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(120));
+                MainFrame.BeginAnimation(OpacityProperty, fadeOut);
+                await Task.Delay(120);
+            }
+
             MainFrame.Navigate(page);
             HighlightActiveButton(tag);
+
+            // Fade in new page
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180));
+            MainFrame.BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        private void BtnBack_Click(object sender, RoutedEventArgs e)
+        {
+            if (_previousPage == null) return;
+            var target    = _previousPage;
+            var targetTag = _previousTag;
+            _previousPage = null;
+            _previousTag  = "";
+            NavigateTo(target, targetTag);
         }
 
         private void HighlightActiveButton(string activeTag)
@@ -583,6 +691,20 @@ namespace CharacterApp
         }
         private void Settings_Click   (object sender, RoutedEventArgs e) => NavigateTo(_settingsPage, "builtin:Settings");
         private void Stats_Click      (object sender, RoutedEventArgs e) => NavigateTo(_statsPage,    "builtin:Stats");
+        private void Dice_Click       (object sender, RoutedEventArgs e) => NavigateTo(_dicePage,     "builtin:Dice");
+        private void Journal_Click    (object sender, RoutedEventArgs e)
+        {
+            _journalPage ??= new JournalPage();
+            NavigateTo(_journalPage, "builtin:Journal");
+        }
+        private void Resources_Click  (object sender, RoutedEventArgs e)
+        {
+            _resourcesPage ??= new ResourcesPage();
+            NavigateTo(_resourcesPage, "builtin:Resources");
+        }
+
+        private void ExportXps_Click(object sender, RoutedEventArgs e)
+            => Helpers.PdfExporter.Export(CollectCharacter());
 
         private void QuickSave_Click  (object sender, RoutedEventArgs e) => SaveAll();
         private void SaveAs_Click     (object sender, RoutedEventArgs e) => SaveAllAs();
@@ -687,7 +809,9 @@ namespace CharacterApp
 
         private void TbMenuSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var query = TbMenuSearch.Text?.Trim() ?? string.Empty;
+            var query    = TbMenuSearch.Text?.Trim() ?? string.Empty;
+            bool anyVisible = false;
+
             foreach (var child in MenuStack.Children)
             {
                 if (child is Button btn)
@@ -699,14 +823,34 @@ namespace CharacterApp
                     if (string.IsNullOrEmpty(contentText))
                         contentText = btn.Content?.ToString() ?? string.Empty;
 
-                    btn.Visibility = string.IsNullOrEmpty(query) ||
-                                     contentText.Contains(query, StringComparison.OrdinalIgnoreCase)
-                        ? Visibility.Visible
-                        : Visibility.Collapsed;
+                    bool visible = string.IsNullOrEmpty(query) ||
+                                   contentText.Contains(query, StringComparison.OrdinalIgnoreCase);
+                    btn.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                    if (visible) anyVisible = true;
                 }
                 else if (child is TextBlock tb2)
                     tb2.Visibility = string.IsNullOrEmpty(query) ? Visibility.Visible : Visibility.Collapsed;
             }
+
+            // Показываем/скрываем плашку "Ничего не найдено"
+            var noResultsLbl = MenuStack.Children.OfType<TextBlock>()
+                                         .FirstOrDefault(t => t.Tag?.ToString() == "NoResults");
+            if (noResultsLbl == null && !string.IsNullOrEmpty(query))
+            {
+                noResultsLbl = new TextBlock
+                {
+                    Tag        = "NoResults",
+                    Text       = "Ничего не найдено",
+                    Foreground = (System.Windows.Media.Brush)FindResource("TextMutedBrush"),
+                    FontSize   = 12,
+                    Margin     = new Thickness(16, 8, 0, 4),
+                    Visibility = Visibility.Collapsed
+                };
+                MenuStack.Children.Add(noResultsLbl);
+            }
+            if (noResultsLbl != null)
+                noResultsLbl.Visibility = (!anyVisible && !string.IsNullOrEmpty(query))
+                    ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // ── Обновления ───────────────────────────────────────────────────────
@@ -744,5 +888,151 @@ namespace CharacterApp
                 ShowNotification("Ошибка при проверке обновлений: " + ex.Message, NotificationType.Error);
             }
         }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // MULTI-CHARACTER SUPPORT
+        // ══════════════════════════════════════════════════════════════════════
+
+        /// <summary>Инициализирует первый слот при старте.</summary>
+        private void InitCharacterSlots()
+        {
+            _characterSlots.Clear();
+            _characterSlots.Add(new CharacterSlot { DisplayName = "Персонаж 1" });
+            _activeSlotIndex = 0;
+            RebuildCharacterTabs();
+        }
+
+        /// <summary>Сохраняет текущего персонажа в активный слот, переключается на targetIdx.</summary>
+        public void SwitchToSlot(int targetIdx)
+        {
+            if (targetIdx == _activeSlotIndex) return;
+            if (targetIdx < 0 || targetIdx >= _characterSlots.Count) return;
+
+            // Save current
+            _characterSlots[_activeSlotIndex].SavedCharacter = CollectCharacter();
+            _characterSlots[_activeSlotIndex].FilePath       = _lastJsonFilePath;
+            _characterSlots[_activeSlotIndex].HasChanges     = _hasUnsavedChanges;
+
+            // Switch
+            _activeSlotIndex  = targetIdx;
+            var slot          = _characterSlots[targetIdx];
+            _lastJsonFilePath = slot.FilePath ?? "";
+
+            // Rebuild pages for new character
+            var c = slot.SavedCharacter ?? new Character();
+            DistributeCharacter(c);
+            MarkSaved();
+            RebuildCharacterTabs();
+        }
+
+        /// <summary>Добавляет новый пустой слот.</summary>
+        public void AddCharacterSlot()
+        {
+            // Save current first
+            if (_characterSlots.Count > 0)
+                _characterSlots[_activeSlotIndex].SavedCharacter = CollectCharacter();
+
+            int num = _characterSlots.Count + 1;
+            _characterSlots.Add(new CharacterSlot { DisplayName = $"Персонаж {num}" });
+            SwitchToSlot(_characterSlots.Count - 1);
+        }
+
+        /// <summary>Удаляет активный слот.</summary>
+        public void RemoveActiveSlot()
+        {
+            if (_characterSlots.Count <= 1)
+            {
+                ShowNotification("Нельзя удалить единственного персонажа", NotificationType.Warning);
+                return;
+            }
+            _characterSlots.RemoveAt(_activeSlotIndex);
+            _activeSlotIndex = Math.Max(0, _activeSlotIndex - 1);
+            var c = _characterSlots[_activeSlotIndex].SavedCharacter ?? new Character();
+            _lastJsonFilePath = _characterSlots[_activeSlotIndex].FilePath ?? "";
+            DistributeCharacter(c);
+            MarkSaved();
+            RebuildCharacterTabs();
+        }
+
+        /// <summary>Обновляет имя таба активного слота по имени персонажа.</summary>
+        public void UpdateActiveSlotName(string name)
+        {
+            if (_characterSlots.Count > _activeSlotIndex)
+                _characterSlots[_activeSlotIndex].DisplayName =
+                    string.IsNullOrWhiteSpace(name) ? $"Персонаж {_activeSlotIndex + 1}" : name;
+            RebuildCharacterTabs();
+        }
+
+        /// <summary>Перестраивает панель табов в сайдбаре.</summary>
+        private void RebuildCharacterTabs()
+        {
+            CharacterTabsPanel.Children.Clear();
+            for (int i = 0; i < _characterSlots.Count; i++)
+            {
+                int idx    = i;
+                var slot   = _characterSlots[i];
+                bool active = i == _activeSlotIndex;
+
+                var tab = new Border
+                {
+                    MinWidth        = 0,
+                    MaxWidth        = 160,
+                    Padding         = new Thickness(8, 5, 8, 5),
+                    Margin          = new Thickness(2, 0, 2, 0),
+                    CornerRadius    = new CornerRadius(8, 8, 0, 0),
+                    Cursor          = System.Windows.Input.Cursors.Hand,
+                    ToolTip         = slot.DisplayName,
+                };
+                tab.Background = active
+                    ? (Brush)FindResource("AccentGradientV")
+                    : (Brush)FindResource("SurfaceBrush");
+                tab.BorderBrush = (Brush)FindResource("BorderAccentBrush");
+                tab.BorderThickness = new Thickness(1, 1, 1, active ? 0 : 1);
+
+                var lbl = new TextBlock
+                {
+                    Text           = slot.DisplayName,
+                    FontSize       = 11.5,
+                    Foreground     = active ? Brushes.White : (Brush)FindResource("TextMutedBrush"),
+                    TextTrimming   = TextTrimming.CharacterEllipsis,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    MaxWidth       = 120,
+                };
+                tab.Child = lbl;
+                tab.MouseLeftButtonDown += (_, _) => SwitchToSlot(idx);
+                CharacterTabsPanel.Children.Add(tab);
+            }
+
+            // Add "+" button
+            var addBtn = new Border
+            {
+                Width = 28, Height = 28,
+                Margin = new Thickness(2, 0, 0, 0),
+                CornerRadius = new CornerRadius(7),
+                Background = (Brush)FindResource("AccentDimBrush"),
+                BorderBrush = (Brush)FindResource("BorderAccentBrush"),
+                BorderThickness = new Thickness(1),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                ToolTip = "Добавить персонажа",
+                Child = new TextBlock
+                {
+                    Text = "＋", FontSize = 14,
+                    Foreground = (Brush)FindResource("AccentLightBrush"),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment   = VerticalAlignment.Center,
+                }
+            };
+            addBtn.MouseLeftButtonDown += (_, _) => AddCharacterSlot();
+            CharacterTabsPanel.Children.Add(addBtn);
+        }
+    }
+
+    // ── Data class for one character slot ─────────────────────────────────────
+    public class CharacterSlot
+    {
+        public string     DisplayName    { get; set; } = "Персонаж";
+        public string?    FilePath       { get; set; }
+        public bool       HasChanges     { get; set; }
+        public Character? SavedCharacter { get; set; }
     }
 }

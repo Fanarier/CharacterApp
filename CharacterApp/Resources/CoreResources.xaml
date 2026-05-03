@@ -33,6 +33,68 @@
     </Storyboard>
 
     <!-- Конвертеры -->
+    <!-- Стиль кнопки кубика в DiceRoller -->
+    <Style x:Key="DiceButtonStyle" TargetType="Button">
+        <Setter Property="MinHeight"       Value="0"/>
+        <Setter Property="Padding"         Value="0"/>
+        <Setter Property="Margin"          Value="2"/>
+        <Setter Property="Background"      Value="#20B565C1"/>
+        <Setter Property="Foreground"      Value="{DynamicResource AccentLightBrush}"/>
+        <Setter Property="BorderBrush"     Value="#35B565C1"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontSize"        Value="11.5"/>
+        <Setter Property="FontFamily"      Value="Segoe UI Semibold"/>
+        <Setter Property="Cursor"          Value="Hand"/>
+        <Setter Property="Height"          Value="26"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5" RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#35B565C1"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#70B565C1"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                         To="0.88" Duration="0:0:0.07"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                         To="0.88" Duration="0:0:0.07"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                         To="1" Duration="0:0:0.12"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                         To="1" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <conv:RatingIconMultiConverter x:Key="RatingIconMultiConverter"/>
 
     <!-- Компактная кнопка с иконкой (для слотов экипировки) -->

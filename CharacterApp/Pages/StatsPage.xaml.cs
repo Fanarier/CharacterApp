@@ -119,6 +119,14 @@ namespace CharacterApp.Pages
             RecalcAttr("WIS", WisBase, WisMod, WisSaveDot, WisSaveTotal);
             RecalcAttr("CHA", ChaBase, ChaMod, ChaSaveDot, ChaSaveTotal);
 
+            // Update radar chart
+            RadarChart.Values = new[]
+            {
+                ParseInt(StrBase.Text), ParseInt(DexBase.Text), ParseInt(ConBase.Text),
+                ParseInt(IntBase.Text), ParseInt(WisBase.Text), ParseInt(ChaBase.Text)
+            };
+            RadarChart.InvalidateVisual();
+
             RecalcSkill(AthTrain, AthProf, AthTotal, "STR", bm, level);
 
             RecalcSkill(AcrTrain, AcrProf, AcrTotal, "DEX", bm, level);

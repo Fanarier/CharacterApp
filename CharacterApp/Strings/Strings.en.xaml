@@ -84,7 +84,7 @@
     <sys:String x:Key="ProficienciesPageBtn">Proficiencies</sys:String>
     <sys:String x:Key="ProficienciesHeader">Proficiencies</sys:String>
     <sys:String x:Key="TraitsHeader">Traits</sys:String>
-    <sys:String x:Key="ProficienciesTableHeader">Proficiencies & Languages</sys:String>
+    <sys:String x:Key="ProficienciesTableHeader">Proficiencies &amp; Languages</sys:String>
     <sys:String x:Key="AttacksPageBtn">Attacks</sys:String>
     <sys:String x:Key="AttacksHeader">Attacks</sys:String>
 </ResourceDictionary>

@@ -1,0 +1,384 @@
+<Page x:Class="CharacterApp.Pages.DicePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Кубики">
+
+    <Page.Resources>
+        <!-- Кнопка кубика — большая, гексагональная на вид -->
+        <Style x:Key="BigDiceBtn" TargetType="Button">
+            <Setter Property="Width"           Value="80"/>
+            <Setter Property="Height"          Value="80"/>
+            <Setter Property="Margin"          Value="6"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource AccentLightBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderAccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="MinHeight"       Value="0"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="14">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="#000000" Opacity="0.4"/>
+                                </Border.Effect>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock x:Name="IconTb" Text="⬡" FontSize="32"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{TemplateBinding Foreground}"/>
+                                <TextBlock x:Name="LabelTb" FontSize="14" FontWeight="Bold"
+                                           HorizontalAlignment="Center" Margin="0,-6,0,0"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           Text="{TemplateBinding Content}"/>
+                            </StackPanel>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1.1" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1.1" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1" Duration="0:0:0.18"/>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1" Duration="0:0:0.18"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentDimBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="0.88" Duration="0:0:0.07"/>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="0.88" Duration="0:0:0.07"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Кнопка счётчика множителя -->
+        <Style x:Key="CounterBtn" TargetType="Button">
+            <Setter Property="Width"           Value="30"/>
+            <Setter Property="Height"          Value="30"/>
+            <Setter Property="Margin"          Value="2"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource AccentLightBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderAccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize"        Value="16"/>
+            <Setter Property="FontWeight"      Value="Bold"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="MinHeight"       Value="0"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentDimBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentGradientV}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══ HEADER ═══ -->
+        <Border Grid.Row="0" Padding="20,16,20,12">
+            <TextBlock Text="🎲  Кубики" FontSize="24" FontWeight="Bold"
+                       Foreground="{DynamicResource TextBrush}"/>
+        </Border>
+
+        <!-- ═══ CONTENT ═══ -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="20,0,20,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- LEFT: Dice + controls -->
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+
+                    <!-- Dice grid -->
+                    <Border Padding="16,14" CornerRadius="12"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderMedBrush}"
+                            BorderThickness="1" Margin="0,0,0,16">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Color="#000000" Opacity="0.35"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <TextBlock Text="Тип кубика" FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,12"/>
+                            <WrapPanel>
+                                <Button Content="d4"   Tag="4"   Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                <Button Content="d6"   Tag="6"   Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                <Button Content="d8"   Tag="8"   Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                <Button Content="d10"  Tag="10"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                <Button Content="d12"  Tag="12"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                <Button Content="d20"  Tag="20"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                <Button Content="d100" Tag="100" Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Controls row: count + modifier -->
+                    <Border Padding="16,14" CornerRadius="12"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderMedBrush}"
+                            BorderThickness="1" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Количество кубиков -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Количество кубиков" FontSize="12"
+                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="−" Tag="-" Click="CounterBtn_Click" Style="{StaticResource CounterBtn}"/>
+                                    <Border Width="50" Background="{DynamicResource Surface2Brush}"
+                                            BorderBrush="{DynamicResource BorderAccentBrush}"
+                                            BorderThickness="1" CornerRadius="6" Margin="4,0">
+                                        <TextBlock x:Name="TbDiceCount" Text="1" FontSize="18" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Padding="0,4"/>
+                                    </Border>
+                                    <Button Content="+" Tag="+" Click="CounterBtn_Click" Style="{StaticResource CounterBtn}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Separator Grid.Column="1" Style="{x:Null}"
+                                       Width="1" Background="{DynamicResource BorderBrush}"
+                                       VerticalAlignment="Stretch" Margin="0,4"/>
+
+                            <!-- Модификатор -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Модификатор (бонус / штраф)" FontSize="12"
+                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="−" Tag="-" Click="ModBtn_Click" Style="{StaticResource CounterBtn}"/>
+                                    <Border Width="60" Background="{DynamicResource Surface2Brush}"
+                                            BorderBrush="{DynamicResource BorderAccentBrush}"
+                                            BorderThickness="1" CornerRadius="6" Margin="4,0">
+                                        <TextBlock x:Name="TbModifier" Text="0" FontSize="18" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Padding="0,4">
+                                            <TextBlock.Foreground>
+                                                <SolidColorBrush x:Name="ModifierColor" Color="#E8EAFF"/>
+                                            </TextBlock.Foreground>
+                                        </TextBlock>
+                                    </Border>
+                                    <Button Content="+" Tag="+" Click="ModBtn_Click" Style="{StaticResource CounterBtn}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Formula row -->
+                    <Border Padding="16,14" CornerRadius="12"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderMedBrush}"
+                            BorderThickness="1" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Формула" FontSize="12"
+                                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TbFormula" Grid.Column="0"
+                                         Text="2d6+3" Height="34" FontSize="14"
+                                         ToolTip="Примеры: 2d6+3  |  1d20-1  |  4d4"/>
+                                <Button Grid.Column="2" Content="Бросить формулу 🎲"
+                                        Click="RollFormula_Click" Height="34" Margin="0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- RESULT display (big) -->
+                    <Border x:Name="ResultPanel" Padding="20,18" CornerRadius="14"
+                            Visibility="Collapsed" Margin="0,0,0,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#22B565C1" Offset="0"/>
+                                <GradientStop Color="#10B565C1" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.BorderBrush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#70B565C1" Offset="0"/>
+                                <GradientStop Color="#30B565C1" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                        <Border.BorderThickness>1.5</Border.BorderThickness>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#B565C1" Opacity="0.3"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock x:Name="TbRollDetail" Grid.Row="0"
+                                       FontSize="14" Foreground="{DynamicResource TextMutedBrush}"
+                                       HorizontalAlignment="Center" Margin="0,0,0,8"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock x:Name="TbRollResult" Grid.Row="1"
+                                       FontSize="56" FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       RenderTransformOrigin="0.5,0.5">
+                                <TextBlock.Foreground>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="#E090F0" Offset="0"/>
+                                        <GradientStop Color="#B060D0" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </TextBlock.Foreground>
+                                <TextBlock.RenderTransform>
+                                    <ScaleTransform x:Name="ResultScale"/>
+                                </TextBlock.RenderTransform>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- RIGHT: History -->
+                <Border Grid.Column="1"
+                        Padding="16,14" CornerRadius="12"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderMedBrush}"
+                        BorderThickness="1"
+                        VerticalAlignment="Top">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="История бросков"
+                                       FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}"/>
+                            <Button Grid.Column="1" Content="Очистить"
+                                    Click="ClearHistory_Click"
+                                    Margin="0" Padding="8,3"
+                                    MinHeight="0" FontSize="11"/>
+                        </Grid>
+
+                        <ItemsControl x:Name="HistoryList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,2" Padding="10,8" CornerRadius="8"
+                                            Background="{DynamicResource Surface2Brush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding Formula}"
+                                                           FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+                                                <TextBlock Text="{Binding Detail}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
+                                                           TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding Time}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource TextDimBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Total}"
+                                                       FontSize="22" FontWeight="Bold"
+                                                       VerticalAlignment="Center"
+                                                       Margin="12,0,0,0"
+                                                       Foreground="{DynamicResource AccentLightBrush}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock x:Name="TbEmptyHistory"
+                                   Text="Ещё ничего не брошено"
+                                   FontSize="13" Margin="0,16,0,0"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextDimBrush}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

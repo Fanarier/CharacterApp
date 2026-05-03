@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace CharacterApp
@@ -42,7 +43,7 @@ namespace CharacterApp
             LoadSettings();
             ApplyToUI();
             // Обновляем список кастомных листов каждый раз при открытии страницы
-            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) RefreshSheetList(); };
+            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) { RefreshSheetList(); InitAccentColorPanel(); } };
         }
 
         private void InitThemeSelection()
@@ -202,6 +203,96 @@ namespace CharacterApp
 
         private void Back_Click(object sender, RoutedEventArgs e) => NavigationService?.GoBack();
 
+        // ── Accent Color ──────────────────────────────────────────────────────
+        private static readonly string[] _presetAccents =
+        {
+            "#B565C1", "#5E8FBF", "#4CAF72", "#E08030",
+            "#D04060", "#50A8A0", "#8070CC", "#C09030"
+        };
+
+        private void InitAccentColorPanel()
+        {
+            foreach (var hex in _presetAccents)
+            {
+                var swatch = new System.Windows.Shapes.Rectangle
+                {
+                    Width = 28, Height = 28,
+                    RadiusX = 6, RadiusY = 6,
+                    Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)),
+                    Margin = new Thickness(3),
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                    ToolTip = hex,
+                    Stroke = (Brush)FindResource("BorderBrush"),
+                    StrokeThickness = 1
+                };
+                var h = hex;
+                swatch.MouseLeftButtonDown += (_, _) =>
+                {
+                    TbAccentHex.Text = h;
+                    UpdateAccentPreview(h);
+                    ApplyAccent(h);
+                };
+                AccentColorPanel.Children.Add(swatch);
+            }
+            UpdateAccentPreview(TbAccentHex.Text);
+        }
+
+        private void TbAccentHex_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+                ApplyAccentColor_Click(sender, e);
+            else
+                UpdateAccentPreview(TbAccentHex.Text);
+        }
+
+        private void ApplyAccentColor_Click(object sender, RoutedEventArgs e)
+            => ApplyAccent(TbAccentHex.Text);
+
+        private void ResetAccentColor_Click(object sender, RoutedEventArgs e)
+        {
+            TbAccentHex.Text = "#B565C1";
+            ApplyAccent("#B565C1");
+        }
+
+        private void UpdateAccentPreview(string hex)
+        {
+            try
+            {
+                AccentPreview.Background =
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            }
+            catch { }
+        }
+
+        private static void ApplyAccent(string hex)
+        {
+            try
+            {
+                var color = (Color)ColorConverter.ConvertFromString(hex);
+                var res   = Application.Current.Resources;
+                res["AccentBrush"]      = new SolidColorBrush(color);
+                res["AccentLightBrush"] = new SolidColorBrush(Lighten(color, 0.2f));
+                res["AccentDimBrush"]   = new SolidColorBrush(Color.FromArgb(45, color.R, color.G, color.B));
+                res["AccentGlowBrush"]  = new SolidColorBrush(Color.FromArgb(90, color.R, color.G, color.B));
+                res["AccentGradient"]   = new LinearGradientBrush(Darken(color, 0.2f), Lighten(color, 0.2f), 0);
+                res["AccentGradientV"]  = new LinearGradientBrush(Lighten(color, 0.1f), Darken(color, 0.1f), 90);
+                res["BorderAccentBrush"] = new SolidColorBrush(Color.FromArgb(100, color.R, color.G, color.B));
+                // Store for next session
+                App.CurrentAccentHex = hex;
+            }
+            catch { }
+        }
+
+        private static Color Lighten(Color c, float amt) => Color.FromRgb(
+            (byte)Math.Min(255, c.R + 255 * amt),
+            (byte)Math.Min(255, c.G + 255 * amt),
+            (byte)Math.Min(255, c.B + 255 * amt));
+
+        private static Color Darken(Color c, float amt) => Color.FromRgb(
+            (byte)Math.Max(0, c.R - 255 * amt),
+            (byte)Math.Max(0, c.G - 255 * amt),
+            (byte)Math.Max(0, c.B - 255 * amt));
+
         // ── Видимость страниц ─────────────────────────────────────────────────
         private void PageVisibility_Changed(object sender, RoutedEventArgs e)
         {
@@ -232,6 +323,13 @@ namespace CharacterApp
             if (string.IsNullOrEmpty(name))
             {
                 mw.ShowNotification("Укажите название листа", NotificationType.Warning);
+                return;
+            }
+
+            // Проверка на дублирование имени
+            if (mw.GetCustomSheetNames().Contains(name))
+            {
+                mw.ShowNotification($"Лист «{name}» уже существует", NotificationType.Warning);
                 return;
             }
 
