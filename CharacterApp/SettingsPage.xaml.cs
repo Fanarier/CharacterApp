@@ -212,6 +212,16 @@ namespace CharacterApp
 
         private void InitAccentColorPanel()
         {
+            // Очищаем перед добавлением — иначе дублируются при каждом открытии страницы
+            AccentColorPanel.Children.Clear();
+
+            // Подставляем текущий цвет из настроек
+            var savedHex = AppSettings.Load().AccentColorHex;
+            if (!string.IsNullOrWhiteSpace(savedHex))
+                TbAccentHex.Text = savedHex;
+            else if (string.IsNullOrWhiteSpace(TbAccentHex.Text))
+                TbAccentHex.Text = "#B565C1";
+
             foreach (var hex in _presetAccents)
             {
                 var swatch = new System.Windows.Shapes.Rectangle
@@ -269,16 +279,55 @@ namespace CharacterApp
             try
             {
                 var color = (Color)ColorConverter.ConvertFromString(hex);
-                var res   = Application.Current.Resources;
-                res["AccentBrush"]      = new SolidColorBrush(color);
-                res["AccentLightBrush"] = new SolidColorBrush(Lighten(color, 0.2f));
-                res["AccentDimBrush"]   = new SolidColorBrush(Color.FromArgb(45, color.R, color.G, color.B));
-                res["AccentGlowBrush"]  = new SolidColorBrush(Color.FromArgb(90, color.R, color.G, color.B));
-                res["AccentGradient"]   = new LinearGradientBrush(Darken(color, 0.2f), Lighten(color, 0.2f), 0);
-                res["AccentGradientV"]  = new LinearGradientBrush(Lighten(color, 0.1f), Darken(color, 0.1f), 90);
-                res["BorderAccentBrush"] = new SolidColorBrush(Color.FromArgb(100, color.R, color.G, color.B));
-                // Store for next session
+
+                var newValues = new System.Collections.Generic.Dictionary<string, object>
+                {
+                    // Core accent brushes
+                    ["AccentBrush"]       = new SolidColorBrush(color),
+                    ["AccentLightBrush"]  = new SolidColorBrush(Lighten(color, 0.2f)),
+                    ["AccentDimBrush"]    = new SolidColorBrush(Color.FromArgb(45,  color.R, color.G, color.B)),
+                    ["AccentGlowBrush"]   = new SolidColorBrush(Color.FromArgb(90,  color.R, color.G, color.B)),
+                    ["AccentGradient"]    = new LinearGradientBrush(Darken(color, 0.2f),  Lighten(color, 0.2f), 0),
+                    ["AccentGradientV"]   = new LinearGradientBrush(Lighten(color, 0.1f), Darken(color, 0.1f), 90),
+                    ["BorderAccentBrush"] = new SolidColorBrush(Color.FromArgb(100, color.R, color.G, color.B)),
+                    ["AccentGlow"]        = new System.Windows.Media.Effects.DropShadowEffect
+                                           { BlurRadius = 18, ShadowDepth = 0, Color = color, Opacity = 0.55 },
+                    ["SmallGlow"]         = new System.Windows.Media.Effects.DropShadowEffect
+                                           { BlurRadius = 8,  ShadowDepth = 0, Color = color, Opacity = 0.5  },
+                    // Title bar + burger menu + sidebar separators
+                    ["BurgerLineBrush"]              = new LinearGradientBrush(Lighten(color, 0.15f), color, 0),
+                    ["MenuTitleBrush"]               = new LinearGradientBrush(Lighten(color, 0.15f), color, 0),
+                    ["SidebarSeparatorBrush"]        = new SolidColorBrush(Color.FromArgb(26,  color.R, color.G, color.B)),
+                    ["SidebarBottomSeparatorBrush"]  = new SolidColorBrush(Color.FromArgb(24,  color.R, color.G, color.B)),
+                    // Active nav item (SidebarNavButtonActive)
+                    ["NavActiveBgBrush"]  = new SolidColorBrush(Color.FromArgb(48,  color.R, color.G, color.B)),
+                    ["NavActiveBarBrush"] = new SolidColorBrush(color),
+                    ["NavHoverBgBrush"]   = new SolidColorBrush(Color.FromArgb(18,  color.R, color.G, color.B)),
+                };
+
+                // 1. Обновляем ВНУТРИ словаря темы — это основной источник DynamicResource в стилях
+                var merged = Application.Current.Resources.MergedDictionaries;
+                ResourceDictionary? themeDict = null;
+                foreach (var d in merged)
+                    if (d.Source != null && d.Source.OriginalString.Contains("Theme.xaml"))
+                    { themeDict = d; break; }
+
+                if (themeDict != null)
+                    foreach (var kv in newValues)
+                        if (themeDict.Contains(kv.Key)) themeDict[kv.Key] = kv.Value;
+
+                // 2. Также на уровне Application — перекрывает всё (для элементов вне темы)
+                var res = Application.Current.Resources;
+                foreach (var kv in newValues) res[kv.Key] = kv.Value;
+
+                // 3. Сохраняем для следующей сессии
                 App.CurrentAccentHex = hex;
+                var cfg = AppSettings.Load();
+                cfg.AccentColorHex = hex;
+                cfg.Save();
+
+                // 4. Перестраиваем динамически созданные табы персонажей
+                (Application.Current.MainWindow as MainWindow)?.RebuildCharacterTabs();
             }
             catch { }
         }

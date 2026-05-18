@@ -53,6 +53,12 @@ namespace CharacterApp.Pages
             CharacterImage.Source = !string.IsNullOrEmpty(photoPath) && File.Exists(photoPath)
                 ? new BitmapImage(new Uri(photoPath, UriKind.RelativeOrAbsolute))
                 : null;
+
+            // Треугольник развития
+            TbBodyDev.Text   = c.BodyDev.ToString();
+            TbMindDev.Text   = c.MindDev.ToString();
+            TbSpiritDev.Text = c.SpiritDev.ToString();
+            UpdateTriangleChart();
         }
 
         public void FillCharacter(Character c)
@@ -84,6 +90,11 @@ namespace CharacterApp.Pages
             c.CustomField4Label = CustomField4Label.Text.Trim();
             c.CustomField4Value = CustomField4Value.Text.Trim();
             c.PhotoPath = photoPath;
+
+            // Треугольник развития
+            c.BodyDev   = int.TryParse(TbBodyDev.Text,   out var bd) ? bd : 0;
+            c.MindDev   = int.TryParse(TbMindDev.Text,   out var md) ? md : 0;
+            c.SpiritDev = int.TryParse(TbSpiritDev.Text, out var sd) ? sd : 0;
         }
 
         // ── TextChanged хендлеры ─────────────────────────────────────────────
@@ -172,6 +183,23 @@ namespace CharacterApp.Pages
 
         private void AnyNumericField_TextChanged(object sender, TextChangedEventArgs e)
             => (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();
+
+        // ── Треугольник развития ─────────────────────────────────────────────
+
+        private void TriDev_Changed(object sender, TextChangedEventArgs e)
+        {
+            UpdateTriangleChart();
+            (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();
+        }
+
+        private void UpdateTriangleChart()
+        {
+            if (TriangleChart == null) return;
+            TriangleChart.BodyValue   = int.TryParse(TbBodyDev.Text,   out var b) ? Math.Clamp(b, 0, 20) : 0;
+            TriangleChart.MindValue   = int.TryParse(TbMindDev.Text,   out var m) ? Math.Clamp(m, 0, 20) : 0;
+            TriangleChart.SpiritValue = int.TryParse(TbSpiritDev.Text, out var s) ? Math.Clamp(s, 0, 20) : 0;
+            TriangleChart.InvalidateVisual();
+        }
 
     }
 }

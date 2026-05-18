@@ -4,10 +4,11 @@
       Title="Кубики">
 
     <Page.Resources>
-        <!-- Кнопка кубика — большая, гексагональная на вид -->
+
+        <!-- Кнопка кубика -->
         <Style x:Key="BigDiceBtn" TargetType="Button">
-            <Setter Property="Width"           Value="80"/>
-            <Setter Property="Height"          Value="80"/>
+            <Setter Property="Width"           Value="86"/>
+            <Setter Property="Height"          Value="86"/>
             <Setter Property="Margin"          Value="6"/>
             <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="Foreground"      Value="{DynamicResource AccentLightBrush}"/>
@@ -20,23 +21,31 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
-                            <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
-                            <Border x:Name="Bd"
+                            <Grid.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform x:Name="BtnScale"/>
+                                    <RotateTransform x:Name="BtnRotate"/>
+                                    <TranslateTransform x:Name="BtnShake"/>
+                                </TransformGroup>
+                            </Grid.RenderTransform>
+                            <Border x:Name="Bd" CornerRadius="16"
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="14">
+                                    BorderThickness="{TemplateBinding BorderThickness}">
                                 <Border.Effect>
-                                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="#000000" Opacity="0.4"/>
+                                    <DropShadowEffect x:Name="BtnShadow"
+                                                      BlurRadius="12" ShadowDepth="3"
+                                                      Color="#000" Opacity="0.4"/>
                                 </Border.Effect>
                             </Border>
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock x:Name="IconTb" Text="⬡" FontSize="32"
+                                <TextBlock x:Name="IconTb" Text="{TemplateBinding Tag}"
+                                           FontSize="22" FontWeight="Bold"
                                            HorizontalAlignment="Center"
                                            Foreground="{TemplateBinding Foreground}"/>
-                                <TextBlock x:Name="LabelTb" FontSize="14" FontWeight="Bold"
-                                           HorizontalAlignment="Center" Margin="0,-6,0,0"
-                                           Foreground="{TemplateBinding Foreground}"
+                                <TextBlock FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            Text="{TemplateBinding Content}"/>
                             </StackPanel>
                         </Grid>
@@ -45,52 +54,53 @@
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                             To="1.1" Duration="0:0:0.15"/>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                             To="1.1" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleX" To="1.12" Duration="0:0:0.14"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleY" To="1.12" Duration="0:0:0.14"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnShadow"
+                                                Storyboard.TargetProperty="BlurRadius" To="22" Duration="0:0:0.14"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnShadow"
+                                                Storyboard.TargetProperty="Opacity"    To="0.7" Duration="0:0:0.14"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
                                 <Trigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                             To="1" Duration="0:0:0.18"/>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                             To="1" Duration="0:0:0.18"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.16"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.16"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnShadow"
+                                                Storyboard.TargetProperty="BlurRadius" To="12" Duration="0:0:0.16"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnShadow"
+                                                Storyboard.TargetProperty="Opacity"    To="0.4" Duration="0:0:0.16"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentDimBrush}"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Bd" Property="Background"   Value="{DynamicResource AccentDimBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush"  Value="{DynamicResource AccentBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                             To="0.88" Duration="0:0:0.07"/>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                             To="0.88" Duration="0:0:0.07"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleX" To="0.86" Duration="0:0:0.07"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleY" To="0.86" Duration="0:0:0.07"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
                                 <Trigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                             To="1" Duration="0:0:0.15"/>
-                                            <DoubleAnimation Storyboard.TargetName="Root"
-                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                             To="1" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleX" To="1.12" Duration="0:0:0.12"
+                                                EasingFunction="{x:Null}"/>
+                                            <DoubleAnimation Storyboard.TargetName="BtnScale"
+                                                Storyboard.TargetProperty="ScaleY" To="1.12" Duration="0:0:0.12"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
@@ -101,27 +111,57 @@
             </Setter>
         </Style>
 
-        <!-- Кнопка счётчика множителя -->
-        <Style x:Key="CounterBtn" TargetType="Button">
-            <Setter Property="Width"           Value="30"/>
-            <Setter Property="Height"          Value="30"/>
-            <Setter Property="Margin"          Value="2"/>
+        <!-- ADV / DIS / NORMAL mode toggle pill -->
+        <Style x:Key="ModeBtn" TargetType="Button">
+            <Setter Property="MinHeight"       Value="0"/>
+            <Setter Property="Padding"         Value="20,10"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="10"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Counter button -->
+        <Style x:Key="CntBtn" TargetType="Button">
+            <Setter Property="Width"           Value="34"/>
+            <Setter Property="Height"          Value="34"/>
+            <Setter Property="MinHeight"       Value="0"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="FontSize"        Value="18"/>
+            <Setter Property="FontWeight"      Value="Bold"/>
+            <Setter Property="Cursor"          Value="Hand"/>
             <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="Foreground"      Value="{DynamicResource AccentLightBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderAccentBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize"        Value="16"/>
-            <Setter Property="FontWeight"      Value="Bold"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="MinHeight"       Value="0"/>
-            <Setter Property="Padding"         Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                        <Border x:Name="Bd" CornerRadius="9"
+                                Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -130,13 +170,14 @@
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentGradientV}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentGlowBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
     </Page.Resources>
 
     <Grid Background="Transparent">
@@ -145,112 +186,221 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══ HEADER ═══ -->
-        <Border Grid.Row="0" Padding="20,16,20,12">
-            <TextBlock Text="🎲  Кубики" FontSize="24" FontWeight="Bold"
-                       Foreground="{DynamicResource TextBrush}"/>
+        <!-- ══ HEADER ══ -->
+        <Border Grid.Row="0" Padding="20,14" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🎲" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Кубики" FontSize="20" FontWeight="Bold"
+                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
         </Border>
 
-        <!-- ═══ CONTENT ═══ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="20,0,20,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="300"/>
-                </Grid.ColumnDefinitions>
+        <!-- ══ MAIN LAYOUT ══ -->
+        <Grid Grid.Row="1" Margin="16,14,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="290"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- LEFT: Dice + controls -->
-                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+            <!-- ══════ LEFT PANEL ══════ -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
 
-                    <!-- Dice grid -->
-                    <Border Padding="16,14" CornerRadius="12"
+                    <!-- ─ ADV / NORMAL / DIS ─ -->
+                    <Border Padding="16,14" CornerRadius="14" Margin="0,0,0,12"
                             Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderMedBrush}"
-                            BorderThickness="1" Margin="0,0,0,16">
+                            BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1">
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Color="#000000" Opacity="0.35"/>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.18"/>
                         </Border.Effect>
                         <StackPanel>
-                            <TextBlock Text="Тип кубика" FontSize="13"
+                            <TextBlock Text="РЕЖИМ БРОСКА" FontSize="10" FontWeight="Bold"
                                        Foreground="{DynamicResource TextMutedBrush}"
-                                       Margin="0,0,0,12"/>
-                            <WrapPanel>
-                                <Button Content="d4"   Tag="4"   Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
-                                <Button Content="d6"   Tag="6"   Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
-                                <Button Content="d8"   Tag="8"   Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
-                                <Button Content="d10"  Tag="10"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
-                                <Button Content="d12"  Tag="12"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
-                                <Button Content="d20"  Tag="20"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
-                                <Button Content="d100" Tag="100" Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click"/>
+                                       Margin="0,0,0,10"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- ADV -->
+                                <Button x:Name="BtnAdv" Grid.Column="0"
+                                        Content="⬆  Преимущество"
+                                        Tag="adv" Click="ModeBtn_Click"
+                                        Style="{StaticResource ModeBtn}"
+                                        ToolTip="Advantage: бросок 2d20, берётся старший">
+                                    <Button.Background>
+                                        <SolidColorBrush Color="#1A4CAF72"/>
+                                    </Button.Background>
+                                    <Button.BorderBrush>
+                                        <SolidColorBrush Color="#4CAF72"/>
+                                    </Button.BorderBrush>
+                                    <Button.Foreground>
+                                        <SolidColorBrush Color="#4CAF72"/>
+                                    </Button.Foreground>
+                                </Button>
+
+                                <!-- NORMAL -->
+                                <Button x:Name="BtnNormal" Grid.Column="2"
+                                        Content="⚬  Обычный"
+                                        Tag="normal" Click="ModeBtn_Click"
+                                        Style="{StaticResource ModeBtn}"
+                                        ToolTip="Обычный бросок">
+                                    <Button.Background>
+                                        <SolidColorBrush x:Name="NormalBg" Color="#30B565C1"/>
+                                    </Button.Background>
+                                    <Button.BorderBrush>
+                                        <SolidColorBrush x:Name="NormalBorder" Color="#B565C1"/>
+                                    </Button.BorderBrush>
+                                    <Button.Foreground>
+                                        <SolidColorBrush Color="#D090E0"/>
+                                    </Button.Foreground>
+                                </Button>
+
+                                <!-- DIS -->
+                                <Button x:Name="BtnDis" Grid.Column="4"
+                                        Content="⬇  Помеха"
+                                        Tag="dis" Click="ModeBtn_Click"
+                                        Style="{StaticResource ModeBtn}"
+                                        ToolTip="Disadvantage: бросок 2d20, берётся младший">
+                                    <Button.Background>
+                                        <SolidColorBrush Color="#1AD04060"/>
+                                    </Button.Background>
+                                    <Button.BorderBrush>
+                                        <SolidColorBrush Color="#D04060"/>
+                                    </Button.BorderBrush>
+                                    <Button.Foreground>
+                                        <SolidColorBrush Color="#D04060"/>
+                                    </Button.Foreground>
+                                </Button>
+                            </Grid>
+
+                            <!-- Mode indicator bar -->
+                            <Border x:Name="ModeBar" Height="3" CornerRadius="2"
+                                    Margin="0,10,0,0" HorizontalAlignment="Left" Width="0">
+                                <Border.Background>
+                                    <SolidColorBrush x:Name="ModeBarColor" Color="#B565C1"/>
+                                </Border.Background>
+                            </Border>
+
+                            <!-- Mode hint -->
+                            <TextBlock x:Name="TbModeHint"
+                                       Text="Обычный бросок — один результат"
+                                       FontSize="11" Margin="0,6,0,0"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ─ DICE BUTTONS ─ -->
+                    <Border Padding="16,14" CornerRadius="14" Margin="0,0,0,12"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.18"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <TextBlock Text="ТИП КУБИКА" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,12"/>
+                            <WrapPanel HorizontalAlignment="Center">
+                                <Button Content="d4"   Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">4</sys:Int32></Button.CommandParameter>
+                                </Button>
+                                <Button Content="d6"   Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">6</sys:Int32></Button.CommandParameter>
+                                </Button>
+                                <Button Content="d8"   Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">8</sys:Int32></Button.CommandParameter>
+                                </Button>
+                                <Button Content="d10"  Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">10</sys:Int32></Button.CommandParameter>
+                                </Button>
+                                <Button Content="d12"  Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">12</sys:Int32></Button.CommandParameter>
+                                </Button>
+                                <Button Content="d20"  Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">20</sys:Int32></Button.CommandParameter>
+                                </Button>
+                                <Button Content="d100" Tag="⬡"  Style="{StaticResource BigDiceBtn}" Click="DiceBtn_Click">
+                                    <Button.CommandParameter><sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">100</sys:Int32></Button.CommandParameter>
+                                </Button>
                             </WrapPanel>
                         </StackPanel>
                     </Border>
 
-                    <!-- Controls row: count + modifier -->
-                    <Border Padding="16,14" CornerRadius="12"
+                    <!-- ─ COUNT + MODIFIER ─ -->
+                    <Border Padding="16,14" CornerRadius="14" Margin="0,0,0,12"
                             Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderMedBrush}"
-                            BorderThickness="1" Margin="0,0,0,16">
+                            BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.18"/>
+                        </Border.Effect>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="1"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Количество кубиков -->
+                            <!-- Count -->
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Количество кубиков" FontSize="12"
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Content="−" Tag="-" Click="CounterBtn_Click" Style="{StaticResource CounterBtn}"/>
-                                    <Border Width="50" Background="{DynamicResource Surface2Brush}"
+                                <TextBlock Text="КОЛИЧЕСТВО КУБИКОВ" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,10"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="−" Tag="-" Click="CounterBtn_Click" Style="{StaticResource CntBtn}"/>
+                                    <Border MinWidth="54" Background="{DynamicResource Surface2Brush}"
                                             BorderBrush="{DynamicResource BorderAccentBrush}"
-                                            BorderThickness="1" CornerRadius="6" Margin="4,0">
-                                        <TextBlock x:Name="TbDiceCount" Text="1" FontSize="18" FontWeight="Bold"
+                                            BorderThickness="1" CornerRadius="9" Margin="6,0" Padding="8,4">
+                                        <TextBlock x:Name="TbDiceCount" Text="1"
+                                                   FontSize="22" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextBrush}"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                   Padding="0,4"/>
+                                                   HorizontalAlignment="Center"/>
                                     </Border>
-                                    <Button Content="+" Tag="+" Click="CounterBtn_Click" Style="{StaticResource CounterBtn}"/>
+                                    <Button Content="+" Tag="+" Click="CounterBtn_Click" Style="{StaticResource CntBtn}"/>
                                 </StackPanel>
                             </StackPanel>
 
-                            <Separator Grid.Column="1" Style="{x:Null}"
-                                       Width="1" Background="{DynamicResource BorderBrush}"
-                                       VerticalAlignment="Stretch" Margin="0,4"/>
+                            <!-- Divider -->
+                            <Border Grid.Column="1" Background="{DynamicResource BorderMedBrush}" Margin="0,4"/>
 
-                            <!-- Модификатор -->
+                            <!-- Modifier -->
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Модификатор (бонус / штраф)" FontSize="12"
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Content="−" Tag="-" Click="ModBtn_Click" Style="{StaticResource CounterBtn}"/>
-                                    <Border Width="60" Background="{DynamicResource Surface2Brush}"
+                                <TextBlock Text="МОДИФИКАТОР" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,10"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="−" Tag="-" Click="ModBtn_Click" Style="{StaticResource CntBtn}"/>
+                                    <Border MinWidth="64" Background="{DynamicResource Surface2Brush}"
                                             BorderBrush="{DynamicResource BorderAccentBrush}"
-                                            BorderThickness="1" CornerRadius="6" Margin="4,0">
-                                        <TextBlock x:Name="TbModifier" Text="0" FontSize="18" FontWeight="Bold"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                   Padding="0,4">
+                                            BorderThickness="1" CornerRadius="9" Margin="6,0" Padding="8,4">
+                                        <TextBlock x:Name="TbModifier" Text="0"
+                                                   FontSize="22" FontWeight="Bold"
+                                                   HorizontalAlignment="Center">
                                             <TextBlock.Foreground>
-                                                <SolidColorBrush x:Name="ModifierColor" Color="#E8EAFF"/>
+                                                <SolidColorBrush x:Name="ModifierColor" Color="#9090B0"/>
                                             </TextBlock.Foreground>
                                         </TextBlock>
                                     </Border>
-                                    <Button Content="+" Tag="+" Click="ModBtn_Click" Style="{StaticResource CounterBtn}"/>
+                                    <Button Content="+" Tag="+" Click="ModBtn_Click" Style="{StaticResource CntBtn}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
                     </Border>
 
-                    <!-- Formula row -->
-                    <Border Padding="16,14" CornerRadius="12"
+                    <!-- ─ FORMULA ─ -->
+                    <Border Padding="16,14" CornerRadius="14" Margin="0,0,0,12"
                             Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderMedBrush}"
-                            BorderThickness="1" Margin="0,0,0,16">
+                            BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.18"/>
+                        </Border.Effect>
                         <StackPanel>
-                            <TextBlock Text="Формула" FontSize="12"
-                                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
+                            <TextBlock Text="ФОРМУЛА" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,10"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -258,16 +408,20 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="TbFormula" Grid.Column="0"
-                                         Text="2d6+3" Height="34" FontSize="14"
-                                         ToolTip="Примеры: 2d6+3  |  1d20-1  |  4d4"/>
-                                <Button Grid.Column="2" Content="Бросить формулу 🎲"
-                                        Click="RollFormula_Click" Height="34" Margin="0"/>
+                                         Text="2d6+3" Height="36" FontSize="15" FontWeight="SemiBold"
+                                         ToolTip="Примеры: 2d6+3  |  1d20  |  4d4-2  |  d12+5"
+                                         KeyDown="Formula_KeyDown"/>
+                                <Button Grid.Column="2" Content="🎲  Бросить"
+                                        Click="RollFormula_Click" Height="36" Padding="16,0"/>
                             </Grid>
+                            <TextBlock Text="Формат: NdX±M  (например: 2d6+3, 1d20, d8-1)"
+                                       FontSize="11" Margin="0,6,0,0"
+                                       Foreground="{DynamicResource TextDimBrush}"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- RESULT display (big) -->
-                    <Border x:Name="ResultPanel" Padding="20,18" CornerRadius="14"
+                    <!-- ─ RESULT PANEL ─ -->
+                    <Border x:Name="ResultPanel" Padding="18,20" CornerRadius="16"
                             Visibility="Collapsed" Margin="0,0,0,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -283,102 +437,163 @@
                         </Border.BorderBrush>
                         <Border.BorderThickness>1.5</Border.BorderThickness>
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#B565C1" Opacity="0.3"/>
+                            <DropShadowEffect x:Name="ResultGlow"
+                                              BlurRadius="24" ShadowDepth="0"
+                                              Color="#B565C1" Opacity="0.4"/>
                         </Border.Effect>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock x:Name="TbRollDetail" Grid.Row="0"
-                                       FontSize="14" Foreground="{DynamicResource TextMutedBrush}"
-                                       HorizontalAlignment="Center" Margin="0,0,0,8"
+                        <StackPanel>
+                            <!-- ADV / DIS sub-results -->
+                            <StackPanel x:Name="AdvDisRow" Orientation="Horizontal"
+                                        HorizontalAlignment="Center" Margin="0,0,0,8"
+                                        Visibility="Collapsed">
+                                <Border x:Name="Die1Panel" Padding="12,6" CornerRadius="10" Margin="4,0">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock x:Name="TbDie1Label" Text="КУБИК 1"
+                                                   FontSize="9" FontWeight="Bold"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   Margin="0,0,0,2"/>
+                                        <TextBlock x:Name="TbDie1"
+                                                   FontSize="28" FontWeight="Bold"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="vs" VerticalAlignment="Center" Margin="4,0"
+                                           FontSize="14" Foreground="{DynamicResource TextDimBrush}"/>
+                                <Border x:Name="Die2Panel" Padding="12,6" CornerRadius="10" Margin="4,0">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock x:Name="TbDie2Label" Text="КУБИК 2"
+                                                   FontSize="9" FontWeight="Bold"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   Margin="0,0,0,2"/>
+                                        <TextBlock x:Name="TbDie2"
+                                                   FontSize="28" FontWeight="Bold"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Formula + detail -->
+                            <TextBlock x:Name="TbRollDetail" FontSize="13"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       HorizontalAlignment="Center" Margin="0,0,0,6"
                                        TextWrapping="Wrap" TextAlignment="Center"/>
-                            <TextBlock x:Name="TbRollResult" Grid.Row="1"
-                                       FontSize="56" FontWeight="Bold"
+
+                            <!-- BIG RESULT NUMBER -->
+                            <TextBlock x:Name="TbRollResult" FontSize="72" FontWeight="Black"
                                        HorizontalAlignment="Center"
                                        RenderTransformOrigin="0.5,0.5">
                                 <TextBlock.Foreground>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                        <GradientStop Color="#E090F0" Offset="0"/>
-                                        <GradientStop Color="#B060D0" Offset="1"/>
+                                    <LinearGradientBrush x:Name="ResultGrad" StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop x:Name="ResultGradStop1" Color="#E090F0" Offset="0"/>
+                                        <GradientStop x:Name="ResultGradStop2" Color="#B060D0" Offset="1"/>
                                     </LinearGradientBrush>
                                 </TextBlock.Foreground>
                                 <TextBlock.RenderTransform>
-                                    <ScaleTransform x:Name="ResultScale"/>
+                                    <TransformGroup>
+                                        <ScaleTransform x:Name="ResultScale"/>
+                                        <TranslateTransform x:Name="ResultTranslate"/>
+                                    </TransformGroup>
                                 </TextBlock.RenderTransform>
                             </TextBlock>
-                        </Grid>
+
+                            <!-- Mode tag -->
+                            <Border x:Name="ModeTagBorder" CornerRadius="8" Padding="10,3"
+                                    HorizontalAlignment="Center" Margin="0,4,0,0">
+                                <TextBlock x:Name="TbModeTag" FontSize="11" FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
                     </Border>
+
                 </StackPanel>
+            </ScrollViewer>
 
-                <!-- RIGHT: History -->
-                <Border Grid.Column="1"
-                        Padding="16,14" CornerRadius="12"
-                        Background="{DynamicResource SurfaceBrush}"
-                        BorderBrush="{DynamicResource BorderMedBrush}"
-                        BorderThickness="1"
-                        VerticalAlignment="Top">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="История бросков"
-                                       FontSize="14" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextBrush}"/>
-                            <Button Grid.Column="1" Content="Очистить"
-                                    Click="ClearHistory_Click"
-                                    Margin="0" Padding="8,3"
-                                    MinHeight="0" FontSize="11"/>
-                        </Grid>
+            <!-- ══════ RIGHT PANEL — HISTORY ══════ -->
+            <Border Grid.Column="2" CornerRadius="14"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1"
+                    VerticalAlignment="Top">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.18"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Header -->
+                    <Grid Margin="14,12,14,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📜" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="История" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Очистить" Click="ClearHistory_Click"
+                                Padding="8,4" MinHeight="0" FontSize="11"/>
+                    </Grid>
 
-                        <ItemsControl x:Name="HistoryList">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Margin="0,2" Padding="10,8" CornerRadius="8"
-                                            Background="{DynamicResource Surface2Brush}"
-                                            BorderBrush="{DynamicResource BorderBrush}"
-                                            BorderThickness="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{Binding Formula}"
-                                                           FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextBrush}"/>
-                                                <TextBlock Text="{Binding Detail}"
-                                                           FontSize="11"
-                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                           TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                                <TextBlock Text="{Binding Time}"
-                                                           FontSize="10"
-                                                           Foreground="{DynamicResource TextDimBrush}"
-                                                           Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding Total}"
-                                                       FontSize="22" FontWeight="Bold"
-                                                       VerticalAlignment="Center"
-                                                       Margin="12,0,0,0"
-                                                       Foreground="{DynamicResource AccentLightBrush}"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                    <Border Height="1" Background="{DynamicResource BorderMedBrush}" Margin="0,10,0,0"/>
 
-                        <TextBlock x:Name="TbEmptyHistory"
-                                   Text="Ещё ничего не брошено"
-                                   FontSize="13" Margin="0,16,0,0"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TextDimBrush}"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </ScrollViewer>
+                    <!-- List -->
+                    <ScrollViewer MaxHeight="520" VerticalScrollBarVisibility="Auto"
+                                  Padding="10,8,10,10">
+                        <StackPanel>
+                            <ItemsControl x:Name="HistoryList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,6" Padding="10,9" CornerRadius="10"
+                                                Background="{DynamicResource Surface2Brush}"
+                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border x:Name="ModeBadge"
+                                                                Background="{Binding ModeColor}"
+                                                                CornerRadius="4" Padding="4,1"
+                                                                Margin="0,0,6,0"
+                                                                Visibility="{Binding ModeBadgeVisible}">
+                                                            <TextBlock Text="{Binding Mode}"
+                                                                       FontSize="9" FontWeight="Bold"
+                                                                       Foreground="White"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Formula}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextBrush}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Detail}"
+                                                               FontSize="11"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                    <TextBlock Text="{Binding Time}"
+                                                               FontSize="10"
+                                                               Foreground="{DynamicResource TextDimBrush}"
+                                                               Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Total}"
+                                                           FontSize="26" FontWeight="Bold"
+                                                           VerticalAlignment="Center" Margin="10,0,0,0"
+                                                           Foreground="{DynamicResource AccentLightBrush}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock x:Name="TbEmptyHistory"
+                                       Text="Ещё ничего не брошено…"
+                                       FontSize="13" Margin="0,16" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextDimBrush}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

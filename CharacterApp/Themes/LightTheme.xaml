@@ -276,23 +276,11 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="NavRoot" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
-                        <Border x:Name="HoverBd" CornerRadius="10" Opacity="0" IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#1A4E8FBF" Offset="0"/>
-                                    <GradientStop Color="#084E8FBF" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                        <Border x:Name="HoverBd" CornerRadius="10" Opacity="0" IsHitTestVisible="False"
+                                Background="{DynamicResource AccentDimBrush}"/>
                         <Border x:Name="AccentBar" Width="3" HorizontalAlignment="Left"
-                                CornerRadius="0,3,3,0" Opacity="0" IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#7ABCE8" Offset="0"/>
-                                    <GradientStop Color="#4A90CC" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                                CornerRadius="0,3,3,0" Opacity="0" IsHitTestVisible="False"
+                                Background="{DynamicResource AccentGradientV}"/>
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     </Grid>

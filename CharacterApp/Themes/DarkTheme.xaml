@@ -17,6 +17,7 @@
         <GradientStop Color="#08090D" Offset="0"/>
         <GradientStop Color="#06070B" Offset="1"/>
     </LinearGradientBrush>
+    <!-- Accent-linked brushes — updated by ApplyAccent at runtime -->
     <LinearGradientBrush x:Key="BurgerLineBrush" StartPoint="0,0" EndPoint="1,0">
         <GradientStop Color="#CE80DA" Offset="0"/>
         <GradientStop Color="#8E3EA8" Offset="1"/>
@@ -25,8 +26,12 @@
         <GradientStop Color="#CE80DA" Offset="0"/>
         <GradientStop Color="#8E3EA8" Offset="1"/>
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="SidebarSeparatorBrush" Color="#1AB565C1"/>
+    <SolidColorBrush x:Key="SidebarSeparatorBrush"       Color="#1AB565C1"/>
     <SolidColorBrush x:Key="SidebarBottomSeparatorBrush" Color="#18B565C1"/>
+    <!-- Named resources for SidebarNavButtonActive (GradientStop.Color can't use DynamicResource) -->
+    <SolidColorBrush x:Key="NavActiveBgBrush"  Color="#30B565C1"/>
+    <SolidColorBrush x:Key="NavActiveBarBrush" Color="#B565C1"/>
+    <SolidColorBrush x:Key="NavHoverBgBrush"   Color="#12B565C1"/>
     <SolidColorBrush x:Key="SurfaceBrush"       Color="#181926"/>
     <SolidColorBrush x:Key="Surface2Brush"      Color="#1E2032"/>
     <SolidColorBrush x:Key="Surface3Brush"      Color="#252840"/>
@@ -51,7 +56,7 @@
     <DropShadowEffect x:Key="SubtleShadow"  BlurRadius="12" ShadowDepth="3" Color="#000000" Opacity="0.55"/>
     <DropShadowEffect x:Key="CardShadow"    BlurRadius="24" ShadowDepth="6" Color="#000000" Opacity="0.65"/>
     <DropShadowEffect x:Key="AccentGlow"    BlurRadius="18" ShadowDepth="0" Color="#B565C1"  Opacity="0.55"/>
-    <DropShadowEffect x:Key="SmallGlow"     BlurRadius="8"  ShadowDepth="0" Color="#B565C1"  Opacity="0.5"/>
+    <DropShadowEffect x:Key="SmallGlow"     BlurRadius="8"  ShadowDepth="0" Color="#B565C1"  Opacity="0.5"/><!-- updated by ApplyAccent -->
 
     <!-- Images -->
     <sys:String x:Key="IconExhaustionActive">\Images\block_active_dark.png</sys:String>
@@ -294,23 +299,11 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="NavRoot" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
-                        <Border x:Name="HoverBd" CornerRadius="10" Opacity="0" IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#1EB565C1" Offset="0"/>
-                                    <GradientStop Color="#08B565C1" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                        <Border x:Name="HoverBd" CornerRadius="10" Opacity="0" IsHitTestVisible="False"
+                                Background="{DynamicResource AccentDimBrush}"/>
                         <Border x:Name="AccentBar" Width="3" HorizontalAlignment="Left"
-                                CornerRadius="0,3,3,0" Opacity="0" IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#D080E8" Offset="0"/>
-                                    <GradientStop Color="#8E3EA8" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                                CornerRadius="0,3,3,0" Opacity="0" IsHitTestVisible="False"
+                                Background="{DynamicResource AccentGradientV}"/>
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     </Grid>
@@ -804,7 +797,7 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#12B565C1"/>
+                <Setter Property="Background" Value="{DynamicResource NavHoverBgBrush}"/>
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
                 <Setter Property="Background" Value="{DynamicResource AccentGradientV}"/>
@@ -827,7 +820,7 @@
         <Setter Property="Background"      Value="Transparent"/>
     </Style>
     <Style TargetType="DataGridColumnHeader">
-        <Setter Property="Background"      Value="#12B565C1"/>
+        <Setter Property="Background"      Value="{DynamicResource NavHoverBgBrush}"/>
         <Setter Property="Foreground"      Value="{DynamicResource AccentLightBrush}"/>
         <Setter Property="FontWeight"      Value="SemiBold"/>
         <Setter Property="FontSize"        Value="12"/>
@@ -926,25 +919,16 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="NavRoot" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
-                        <!-- Active background - always visible -->
-                        <Border CornerRadius="10">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#30B565C1" Offset="0"/>
-                                    <GradientStop Color="#10B565C1" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        <!-- Active left bar - always visible, glowing -->
-                        <Border Width="3" HorizontalAlignment="Left" CornerRadius="0,3,3,0">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#E090F0" Offset="0"/>
-                                    <GradientStop Color="#A040C0" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <!-- Active background — uses DynamicResource NavActiveBgBrush -->
+                        <Border CornerRadius="10"
+                                Background="{DynamicResource NavActiveBgBrush}"/>
+                        <!-- Active left bar — uses DynamicResource NavActiveBarBrush -->
+                        <Border Width="3" HorizontalAlignment="Left" CornerRadius="0,3,3,0"
+                                Background="{DynamicResource NavActiveBarBrush}">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#B565C1" Opacity="0.8"/>
+                                <DropShadowEffect BlurRadius="6" ShadowDepth="0"
+                                                  Color="#B565C1"
+                                                  Opacity="0.8"/>
                             </Border.Effect>
                         </Border>
                         <ContentPresenter Margin="{TemplateBinding Padding}"

@@ -1,3 +1,4 @@
+using System.Windows.Data;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -7,7 +8,7 @@ using CharacterApp.Models;
 
 namespace CharacterApp.Pages
 {
-    public partial class ActiveSkillsPage : Page
+    public partial class ActiveSkillsPage : Page, IPageSearchable
     {
         public ObservableCollection<SkillEntry> Skills { get; } = new ObservableCollection<SkillEntry>();
 
@@ -75,8 +76,19 @@ namespace CharacterApp.Pages
             }
         }
 
-    }
+        public void FilterItems(string query)
+        {
+            var view = CollectionViewSource.GetDefaultView(Skills);
+            if (string.IsNullOrWhiteSpace(query))
+                view.Filter = null;
+            else
+                view.Filter = obj => obj is SkillEntry s &&
+                    (s.SkillName?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
+                     s.Description?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
+                     s.CategoryDisplay?.Contains(query, StringComparison.OrdinalIgnoreCase) == true);
+        }
 
+    }
     public class SkillEntry : INotifyPropertyChanged
     {
         private string _skillName     = "";

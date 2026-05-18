@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Effects;
 
 namespace CharacterApp
 {
@@ -55,6 +57,15 @@ namespace CharacterApp
             LoadLanguage(lang);
 
             EnsureCoreResources();
+
+            // Акцентный цвет — восстанавливаем из настроек
+            var settings = AppSettings.Load();
+            if (!string.IsNullOrWhiteSpace(settings.AccentColorHex))
+            {
+                CurrentAccentHex = settings.AccentColorHex;
+                ApplyAccentOnStartup(settings.AccentColorHex);
+            }
+
             var main = new MainWindow();
             main.Show();
         }
@@ -86,6 +97,46 @@ namespace CharacterApp
                 if (old != null) dicts.Remove(old);
                 var uri = new Uri($"Strings/Strings.{langCode}.xaml", UriKind.Relative);
                 dicts.Add(new ResourceDictionary { Source = uri });
+            }
+            catch { }
+        }
+
+        private static Color Lighten(Color c, float amt) => Color.FromRgb(
+            (byte)Math.Min(255, c.R + 255 * amt),
+            (byte)Math.Min(255, c.G + 255 * amt),
+            (byte)Math.Min(255, c.B + 255 * amt));
+
+        private static Color Darken(Color c, float amt) => Color.FromRgb(
+            (byte)Math.Max(0, c.R - 255 * amt),
+            (byte)Math.Max(0, c.G - 255 * amt),
+            (byte)Math.Max(0, c.B - 255 * amt));
+
+        private void ApplyAccentOnStartup(string hex)
+        {
+            try
+            {
+                var color = (Color)ColorConverter.ConvertFromString(hex);
+                var res = Resources;
+                var pairs = new (string Key, object Val)[]
+                {
+                    ("AccentBrush",                  new SolidColorBrush(color)),
+                    ("AccentLightBrush",             new SolidColorBrush(Lighten(color, 0.2f))),
+                    ("AccentDimBrush",               new SolidColorBrush(Color.FromArgb(45,  color.R, color.G, color.B))),
+                    ("AccentGlowBrush",              new SolidColorBrush(Color.FromArgb(90,  color.R, color.G, color.B))),
+                    ("AccentGradient",               new LinearGradientBrush(Darken(color, 0.2f),  Lighten(color, 0.2f), 0)),
+                    ("AccentGradientV",              new LinearGradientBrush(Lighten(color, 0.1f), Darken(color, 0.1f), 90)),
+                    ("BorderAccentBrush",            new SolidColorBrush(Color.FromArgb(100, color.R, color.G, color.B))),
+                    ("AccentGlow",                   new DropShadowEffect { BlurRadius = 18, ShadowDepth = 0, Color = color, Opacity = 0.55 }),
+                    ("SmallGlow",                    new DropShadowEffect { BlurRadius = 8,  ShadowDepth = 0, Color = color, Opacity = 0.5  }),
+                    ("BurgerLineBrush",              new LinearGradientBrush(Lighten(color, 0.15f), color, 0)),
+                    ("MenuTitleBrush",               new LinearGradientBrush(Lighten(color, 0.15f), color, 0)),
+                    ("SidebarSeparatorBrush",        new SolidColorBrush(Color.FromArgb(26,  color.R, color.G, color.B))),
+                    ("SidebarBottomSeparatorBrush",  new SolidColorBrush(Color.FromArgb(24,  color.R, color.G, color.B))),
+                    ("NavActiveBgBrush",             new SolidColorBrush(Color.FromArgb(48,  color.R, color.G, color.B))),
+                    ("NavActiveBarBrush",            new SolidColorBrush(color)),
+                    ("NavHoverBgBrush",              new SolidColorBrush(Color.FromArgb(18,  color.R, color.G, color.B))),
+                };
+                foreach (var (k, v) in pairs) res[k] = v;
             }
             catch { }
         }

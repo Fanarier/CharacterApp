@@ -1,3 +1,4 @@
+using System.Windows.Data;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -5,7 +6,7 @@ using CharacterApp.Models;
 
 namespace CharacterApp.Pages
 {
-    public partial class PassiveSkillsPage : Page, ISaveLoad
+    public partial class PassiveSkillsPage : Page, ISaveLoad, IPageSearchable
     {
         public ObservableCollection<SkillEntry> Skills { get; } = new ObservableCollection<SkillEntry>();
 
@@ -96,5 +97,17 @@ namespace CharacterApp.Pages
                 (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();
             }
         }
+
+        public void FilterItems(string query)
+        {
+            var view = CollectionViewSource.GetDefaultView(Skills);
+            if (string.IsNullOrWhiteSpace(query))
+                view.Filter = null;
+            else
+                view.Filter = obj => obj is SkillEntry s &&
+                    (s.SkillName?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
+                     s.Description?.Contains(query, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
     }
 }

@@ -93,6 +93,10 @@ namespace CharacterApp
             CommandBindings.Add(new CommandBinding(SaveCommand, (_, __) => SaveAll()));
             CommandBindings.Add(new CommandBinding(OpenCommand, (_, __) => LoadAll()));
 
+            // Register keyboard shortcuts in code-behind (avoids x:Static XAML designer errors)
+            InputBindings.Add(new KeyBinding(SaveCommand, new KeyGesture(Key.S, ModifierKeys.Control)));
+            InputBindings.Add(new KeyBinding(OpenCommand, new KeyGesture(Key.O, ModifierKeys.Control)));
+
             MainFrame.Navigate(_mainPage);
             HighlightActiveButton("builtin:MainPage");
             InitCharacterSlots();
@@ -541,7 +545,8 @@ namespace CharacterApp
                 {
                     Content = sheet.Name,
                     Margin  = new System.Windows.Thickness(0, 4, 0, 4),
-                    Tag     = "custom:" + sheet.Name
+                    Tag     = "custom:" + sheet.Name,
+                    Style   = (Style)FindResource("SidebarNavButton")
                 };
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
                 int idx = MenuStack.Children.Count - 1;
@@ -582,7 +587,8 @@ namespace CharacterApp
                 {
                     Content = sheet.Name,
                     Margin  = new System.Windows.Thickness(0, 4, 0, 4),
-                    Tag     = "custom:" + sheet.Name
+                    Tag     = "custom:" + sheet.Name,
+                    Style   = (Style)FindResource("SidebarNavButton")
                 };
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
                 // Вставляем перед кнопкой Настройки
@@ -608,7 +614,8 @@ namespace CharacterApp
             {
                 Content = sheet.Name,
                 Margin  = new System.Windows.Thickness(0, 4, 0, 4),
-                Tag     = "custom:" + sheet.Name
+                Tag     = "custom:" + sheet.Name,
+                Style   = (Style)FindResource("SidebarNavButton")
             };
             btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
             int idx = MenuStack.Children.Count - 1;
@@ -728,9 +735,10 @@ namespace CharacterApp
             {
                 var tasks = new List<Task>
                 {
-                    AnimateOpacityAsync(MenuStack,          MenuStack.Opacity,          0, fadeMs),
-                    AnimateOpacityAsync(BottomButtonsPanel, BottomButtonsPanel.Opacity, 0, fadeMs),
-                    AnimateOpacityAsync(TbMenuSearch,       TbMenuSearch.Opacity,       0, fadeMs)
+                    AnimateOpacityAsync(MenuStack,            MenuStack.Opacity,            0, fadeMs),
+                    AnimateOpacityAsync(BottomButtonsPanel,   BottomButtonsPanel.Opacity,   0, fadeMs),
+                    AnimateOpacityAsync(TbMenuSearch,         TbMenuSearch.Opacity,         0, fadeMs),
+                    AnimateOpacityAsync(CharacterTabsBorder,  CharacterTabsBorder.Opacity,  0, fadeMs),
                 };
                 foreach (var child in MenuStack.Children)
                     if (child is Button btn && btn.Content is StackPanel sp)
@@ -748,15 +756,18 @@ namespace CharacterApp
                         foreach (UIElement tbEl in sp.Children) if (tbEl is TextBlock tb)
                         { tb.Visibility = Visibility.Collapsed; tb.Opacity = 1; }
 
-                MenuStack.Visibility          = Visibility.Collapsed;
+                MenuStack.Visibility           = Visibility.Collapsed;
                 BottomButtonsPanel.Visibility  = Visibility.Collapsed;
                 TbMenuSearch.Visibility        = Visibility.Collapsed;
+                CharacterTabsBorder.Visibility = Visibility.Collapsed;
             }
             else
             {
-                MenuStack.Visibility          = Visibility.Visible;
+                MenuStack.Visibility           = Visibility.Visible;
                 BottomButtonsPanel.Visibility  = Visibility.Visible;
                 TbMenuSearch.Visibility        = Visibility.Visible;
+                CharacterTabsBorder.Visibility = Visibility.Visible;
+                CharacterTabsBorder.Opacity    = 0;
 
                 foreach (var child in MenuStack.Children)
                     if (child is Button btn && btn.Content is StackPanel sp)
@@ -767,10 +778,11 @@ namespace CharacterApp
 
                 var tasks = new List<Task>
                 {
-                    AnimateWidthAsync   (Sidebar,            SidebarOpenWidth, AnimDurationMs),
-                    AnimateOpacityAsync (MenuStack,          0, 1, fadeInMs),
-                    AnimateOpacityAsync (BottomButtonsPanel, 0, 1, fadeInMs),
-                    AnimateOpacityAsync (TbMenuSearch,       0, 1, fadeInMs)
+                    AnimateWidthAsync   (Sidebar,              SidebarOpenWidth, AnimDurationMs),
+                    AnimateOpacityAsync (MenuStack,            0, 1, fadeInMs),
+                    AnimateOpacityAsync (BottomButtonsPanel,   0, 1, fadeInMs),
+                    AnimateOpacityAsync (TbMenuSearch,         0, 1, fadeInMs),
+                    AnimateOpacityAsync (CharacterTabsBorder,  0, 1, fadeInMs),
                 };
                 foreach (var child in MenuStack.Children)
                     if (child is Button btn && btn.Content is StackPanel sp)
@@ -811,6 +823,10 @@ namespace CharacterApp
         {
             var query    = TbMenuSearch.Text?.Trim() ?? string.Empty;
             bool anyVisible = false;
+
+            // Delegate search to the current page if it supports it
+            if (MainFrame.Content is Pages.IPageSearchable searchablePage)
+                searchablePage.FilterItems(query);
 
             foreach (var child in MenuStack.Children)
             {
@@ -964,7 +980,7 @@ namespace CharacterApp
         }
 
         /// <summary>Перестраивает панель табов в сайдбаре.</summary>
-        private void RebuildCharacterTabs()
+        public void RebuildCharacterTabs()
         {
             CharacterTabsPanel.Children.Clear();
             for (int i = 0; i < _characterSlots.Count; i++)

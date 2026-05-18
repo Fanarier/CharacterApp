@@ -145,6 +145,11 @@ namespace CharacterApp.Models
         public string StartBonus3  { get; set; } = "";
         public int    Level        { get; set; }
         public int    Experience   { get; set; }
+
+        // ── Треугольник развития (Тело-Разум-Дух) ─────────────────────────────
+        public int BodyDev   { get; set; } = 0;
+        public int MindDev   { get; set; } = 0;
+        public int SpiritDev { get; set; } = 0;
         public string Awakening    { get; set; } = "";
         public string Buff         { get; set; } = "";
         public string Debuff       { get; set; } = "";

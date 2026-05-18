@@ -6,7 +6,7 @@
         xmlns:chrome="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:local="clr-namespace:CharacterApp"
         Title="Espires Games" Height="800" Width="1000"
-        MinHeight="500" MinWidth="700"
+        MinHeight="500" MinWidth="1150"
         UseLayoutRounding="True" SnapsToDevicePixels="True"
         RenderOptions.BitmapScalingMode="NearestNeighbor"
         WindowStyle="None"
@@ -41,10 +41,7 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Window.InputBindings>
-        <KeyBinding Key="S" Modifiers="Ctrl" Command="{x:Static local:MainWindow.SaveCommand}"/>
-        <KeyBinding Key="O" Modifiers="Ctrl" Command="{x:Static local:MainWindow.OpenCommand}"/>
-    </Window.InputBindings>
+    <!-- KeyBindings registered in code-behind to avoid x:Static designer errors -->
 
     <chrome:WindowChrome.WindowChrome>
         <chrome:WindowChrome
@@ -64,14 +61,8 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#6E2A88" Offset="0"/>
-                    <GradientStop Color="#9B40B5" Offset="0.5"/>
-                    <GradientStop Color="#7830A0" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                Background="{DynamicResource AccentGradient}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -161,7 +152,8 @@
                             </Button>
 
                             <!-- Character tabs -->
-                            <Border BorderBrush="{DynamicResource BorderAccentBrush}"
+                            <Border x:Name="CharacterTabsBorder"
+                                    BorderBrush="{DynamicResource BorderAccentBrush}"
                                     BorderThickness="0,0,0,1" Margin="0,0,0,8" Padding="0,0,0,0">
                                 <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                               VerticalScrollBarVisibility="Disabled"

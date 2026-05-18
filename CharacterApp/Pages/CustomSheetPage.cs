@@ -15,7 +15,7 @@ namespace CharacterApp.Pages
     /// Полностью динамическая страница — строится по CustomSheet-описанию.
     /// Не использует XAML — создаётся программно.
     /// </summary>
-    public class CustomSheetPage : Page, ISaveLoad
+    public class CustomSheetPage : Page, ISaveLoad, IPageSearchable
     {
         private readonly CustomSheet _sheet;
         private readonly DataGrid    _grid;
@@ -237,6 +237,16 @@ namespace CharacterApp.Pages
                 entry.SuppressNotify = false;
                 Rows.Add(entry);
             }
+        }
+
+
+        public void FilterItems(string query)
+        {
+            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Rows);
+            if (string.IsNullOrWhiteSpace(query))
+            { view.Filter = null; return; }
+            view.Filter = obj => obj is CustomRowEntry row &&
+                row.Cells.Any(c => c?.Contains(query, StringComparison.OrdinalIgnoreCase) == true);
         }
 
         public void ResetAll() => Rows.Clear();
