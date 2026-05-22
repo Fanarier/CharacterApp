@@ -89,17 +89,17 @@
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblVision}" MinWidth="150" VerticalAlignment="Center"/>
-                        <controls:IconRatingControl x:Name="VisionControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconVisionActive}" InactiveIcon="{DynamicResource IconVisionInactive}"/>
+                        <controls:IconRatingControl x:Name="VisionControl" MaxValue="10" Width="280" ActiveIcon="{DynamicResource IconVisionActive}" InactiveIcon="{DynamicResource IconVisionInactive}"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblHearing}" MinWidth="150" VerticalAlignment="Center"/>
-                        <controls:IconRatingControl x:Name="HearingControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconHearingActive}" InactiveIcon="{DynamicResource IconHearingInactive}"/>
+                        <controls:IconRatingControl x:Name="HearingControl" MaxValue="10" Width="280" ActiveIcon="{DynamicResource IconHearingActive}" InactiveIcon="{DynamicResource IconHearingInactive}"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblAura}" MinWidth="150" VerticalAlignment="Center"/>
-                        <controls:IconRatingControl x:Name="AuraControl" MaxValue="3" Width="150" ActiveIcon="{DynamicResource IconAuraActive}" InactiveIcon="{DynamicResource IconAuraInactive}"/>
+                        <controls:IconRatingControl x:Name="AuraControl" MaxValue="10" Width="280" ActiveIcon="{DynamicResource IconAuraActive}" InactiveIcon="{DynamicResource IconAuraInactive}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblMana}" MinWidth="145" VerticalAlignment="Center"/>
@@ -145,11 +145,11 @@
                                    Foreground="{DynamicResource AccentLightBrush}"
                                    HorizontalAlignment="Center" Margin="0,0,0,4"/>
                         <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBox x:Name="TbBodyDev" Width="54" Height="32"
+                            <TextBox x:Name="TbBodyDev" Width="54" Height="32" MaxLength="1"
                                      TextAlignment="Center" FontSize="14" FontWeight="Bold"
                                      TextChanged="TriDev_Changed" Tag="Body"
                                      VerticalContentAlignment="Center"/>
-                            <TextBlock Text="/20" VerticalAlignment="Center" Margin="4,0,0,0"
+                            <TextBlock Text="/8" VerticalAlignment="Center" Margin="4,0,0,0"
                                        FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
 
@@ -159,11 +159,11 @@
                                    Foreground="{DynamicResource AccentLightBrush}"
                                    HorizontalAlignment="Center" Margin="0,0,0,4"/>
                         <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBox x:Name="TbMindDev" Width="54" Height="32"
+                            <TextBox x:Name="TbMindDev" Width="54" Height="32" MaxLength="1"
                                      TextAlignment="Center" FontSize="14" FontWeight="Bold"
                                      TextChanged="TriDev_Changed" Tag="Mind"
                                      VerticalContentAlignment="Center"/>
-                            <TextBlock Text="/20" VerticalAlignment="Center" Margin="4,0,0,0"
+                            <TextBlock Text="/8" VerticalAlignment="Center" Margin="4,0,0,0"
                                        FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
 
@@ -173,11 +173,11 @@
                                    Foreground="{DynamicResource AccentLightBrush}"
                                    HorizontalAlignment="Center" Margin="0,0,0,4"/>
                         <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBox x:Name="TbSpiritDev" Width="54" Height="32"
+                            <TextBox x:Name="TbSpiritDev" Width="54" Height="32" MaxLength="1"
                                      TextAlignment="Center" FontSize="14" FontWeight="Bold"
                                      TextChanged="TriDev_Changed" Tag="Spirit"
                                      VerticalContentAlignment="Center"/>
-                            <TextBlock Text="/20" VerticalAlignment="Center" Margin="4,0,0,0"
+                            <TextBlock Text="/8" VerticalAlignment="Center" Margin="4,0,0,0"
                                        FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
                     </Grid>
@@ -187,7 +187,7 @@
                         x:Name="TriangleChart"
                         Width="260" Height="240"
                         HorizontalAlignment="Center"
-                        MaxValue="20"/>
+                        MaxValue="8"/>
                 </StackPanel>
             </Border>
 

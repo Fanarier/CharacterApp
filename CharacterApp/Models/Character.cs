@@ -234,6 +234,12 @@ namespace CharacterApp.Models
         [Newtonsoft.Json.JsonIgnore] public bool   Artifact2Locked { get; set; }
 
         // ── Миграция legacy → EquipmentItem ──────────────────────────────────
+        // ── Инвентарь ─────────────────────────────────────────────────────────
+        public List<InventoryItem>  Inventory    { get; set; } = new();
+        public int                  GoldCoins    { get; set; }
+        public int                  SilverCoins  { get; set; }
+        public int                  CopperCoins  { get; set; }
+
         public void NormalizeItemsFromLegacy()
         {
             if (HeadItem == null && (!string.IsNullOrEmpty(HeadName) || !string.IsNullOrEmpty(HeadImage)))

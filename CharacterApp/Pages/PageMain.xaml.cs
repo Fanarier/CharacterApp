@@ -195,9 +195,9 @@ namespace CharacterApp.Pages
         private void UpdateTriangleChart()
         {
             if (TriangleChart == null) return;
-            TriangleChart.BodyValue   = int.TryParse(TbBodyDev.Text,   out var b) ? Math.Clamp(b, 0, 20) : 0;
-            TriangleChart.MindValue   = int.TryParse(TbMindDev.Text,   out var m) ? Math.Clamp(m, 0, 20) : 0;
-            TriangleChart.SpiritValue = int.TryParse(TbSpiritDev.Text, out var s) ? Math.Clamp(s, 0, 20) : 0;
+            TriangleChart.BodyValue   = int.TryParse(TbBodyDev.Text,   out var b) ? Math.Clamp(b, 0, 8) : 0;
+            TriangleChart.MindValue   = int.TryParse(TbMindDev.Text,   out var m) ? Math.Clamp(m, 0, 8) : 0;
+            TriangleChart.SpiritValue = int.TryParse(TbSpiritDev.Text, out var s) ? Math.Clamp(s, 0, 8) : 0;
             TriangleChart.InvalidateVisual();
         }
 

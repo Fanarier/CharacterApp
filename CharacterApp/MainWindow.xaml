@@ -193,6 +193,7 @@
                                 <Button Content="{DynamicResource MainPageBtn}"          Click="MainPage_Click"      Tag="builtin:MainPage"      Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource DetailsPageBtn}"       Click="Details_Click"       Tag="builtin:Details"       Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource EquipmentPageBtn}"     Click="Equipment_Click"     Tag="builtin:Equipment"     Style="{DynamicResource SidebarNavButton}"/>
+                                <Button Content="{DynamicResource NavInventory}"             Click="Inventory_Click"     Tag="builtin:Inventory"     Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource StatsPageBtn}"         Click="Stats_Click"         Tag="builtin:Stats"         Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource ActiveSkillsPageBtn}"  Click="ActiveSkills_Click"  Tag="builtin:ActiveSkills"  Style="{DynamicResource SidebarNavButton}"/>
                                 <Button Content="{DynamicResource PassiveSkillsPageBtn}" Click="PassiveSkills_Click" Tag="builtin:PassiveSkills" Style="{DynamicResource SidebarNavButton}"/>

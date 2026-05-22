@@ -21,6 +21,10 @@
             <GroupBox Header="{DynamicResource LblPhysique}" Margin="5" Padding="10">
                 <UniformGrid Columns="2" Margin="5">
                     <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="Раса:" MinWidth="120" VerticalAlignment="Center"/>
+                        <TextBox x:Name="RaceTextBox" MinWidth="120" Height="30" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="{DynamicResource LblHeightWeight}" MinWidth="120" VerticalAlignment="Center"/>
                         <TextBox x:Name="HeightWeightTextBox" MinWidth="120" Height="30" HorizontalAlignment="Stretch"/>
                     </StackPanel>

@@ -37,6 +37,7 @@ namespace CharacterApp
 
         private readonly PageMain          _mainPage;
         private readonly PageDetails       _detailsPage;
+        private readonly Pages.InventoryPage  _inventoryPage;
         private readonly EquipmentPage     _equipmentPage;
         private readonly ActiveSkillsPage  _skillsPage;
         private readonly PassiveSkillsPage _passivePage;
@@ -80,6 +81,7 @@ namespace CharacterApp
 
             _mainPage      = new PageMain();
             _detailsPage   = new PageDetails();
+            _inventoryPage = new Pages.InventoryPage();
             _equipmentPage = new EquipmentPage();
             _skillsPage    = new ActiveSkillsPage();
             _passivePage   = new PassiveSkillsPage();
@@ -523,7 +525,8 @@ namespace CharacterApp
 
         private void MainPage_Click    (object sender, RoutedEventArgs e) => NavigateTo(_mainPage,      "builtin:MainPage");
         private void Details_Click     (object sender, RoutedEventArgs e) => NavigateTo(_detailsPage,   "builtin:Details");
-        private void Equipment_Click   (object sender, RoutedEventArgs e) => NavigateTo(_equipmentPage, "builtin:Equipment");
+        private void Equipment_Click   (object sender, RoutedEventArgs e) => NavigateTo(_equipmentPage,  "builtin:Equipment");
+        private void Inventory_Click   (object sender, RoutedEventArgs e) => NavigateTo(_inventoryPage, "builtin:Inventory");
         private void ActiveSkills_Click(object sender, RoutedEventArgs e) => NavigateTo(_skillsPage,    "builtin:ActiveSkills");
         private void PassiveSkills_Click(object sender, RoutedEventArgs e) => NavigateTo(_passivePage,  "builtin:PassiveSkills");
         private void Proficiencies_Click(object sender, RoutedEventArgs e) => NavigateTo(_profPage,     "builtin:Proficiencies");

@@ -19,7 +19,7 @@
 
     <sys:String x:Key="GroupStatsHeader">Basic Stats</sys:String>
     <sys:String x:Key="LblHits">Hits:</sys:String>
-    <sys:String x:Key="LblDefense">Defense:</sys:String>
+    <sys:String x:Key="LblDefense">Armor:</sys:String>
     <sys:String x:Key="LblEvasion">Evasion:</sys:String>
     <sys:String x:Key="LblSuperHits">Super Hits:</sys:String>
     <sys:String x:Key="LblSpeed">Speed:</sys:String>
@@ -87,4 +87,5 @@
     <sys:String x:Key="ProficienciesTableHeader">Proficiencies &amp; Languages</sys:String>
     <sys:String x:Key="AttacksPageBtn">Attacks</sys:String>
     <sys:String x:Key="AttacksHeader">Attacks</sys:String>
+    <sys:String x:Key="NavInventory">Inventory</sys:String>
 </ResourceDictionary>

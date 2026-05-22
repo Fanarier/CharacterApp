@@ -19,7 +19,7 @@
 
     <sys:String x:Key="GroupStatsHeader">基本ステータス</sys:String>
     <sys:String x:Key="LblHits">ヒット:</sys:String>
-    <sys:String x:Key="LblDefense">防御:</sys:String>
+    <sys:String x:Key="LblDefense">アーマー:</sys:String>
     <sys:String x:Key="LblEvasion">回避:</sys:String>
     <sys:String x:Key="LblSuperHits">スーパー ヒット:</sys:String>
     <sys:String x:Key="LblSpeed">速度:</sys:String>
@@ -86,4 +86,5 @@
     <sys:String x:Key="ProficienciesTableHeader">習熟と言語</sys:String>
     <sys:String x:Key="AttacksPageBtn">攻撃</sys:String>
     <sys:String x:Key="AttacksHeader">攻撃</sys:String>
+    <sys:String x:Key="NavInventory">インベントリ</sys:String>
 </ResourceDictionary>

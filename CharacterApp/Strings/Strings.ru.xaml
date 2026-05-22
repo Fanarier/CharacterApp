@@ -19,7 +19,7 @@
 
     <sys:String x:Key="GroupStatsHeader">Основные характеристики</sys:String>
     <sys:String x:Key="LblHits">Хиты:</sys:String>
-    <sys:String x:Key="LblDefense">Защита:</sys:String>
+    <sys:String x:Key="LblDefense">Броня:</sys:String>
     <sys:String x:Key="LblEvasion">Уклонение:</sys:String>
     <sys:String x:Key="LblSuperHits">Сверх‑хиты:</sys:String>
     <sys:String x:Key="LblSpeed">Скорость:</sys:String>
@@ -86,4 +86,5 @@
     <sys:String x:Key="ProficienciesTableHeader">Владения и Языки</sys:String>
     <sys:String x:Key="AttacksPageBtn">Атаки</sys:String>
     <sys:String x:Key="AttacksHeader">Атаки</sys:String>
+    <sys:String x:Key="NavInventory">Инвентарь</sys:String>
 </ResourceDictionary>
