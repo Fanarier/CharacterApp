@@ -296,6 +296,7 @@ namespace CharacterApp
             _attacksPage.FillCharacter(c);
             foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
+            _inventoryPage.SaveTo(c);
             // Journal & Resources (only if pages were opened)
             if (_journalPage   != null) c.JournalEntries = _journalPage.GetEntries();
             if (_resourcesPage != null) { c.HpData = _resourcesPage.GetHpData(); c.Resources = _resourcesPage.GetResources(); }
@@ -313,6 +314,7 @@ namespace CharacterApp
             _attacksPage.ApplyCharacter(c);
             RebuildCustomPages(c);
             _statsPage.ApplyCharacter(c);
+            _inventoryPage.LoadFrom(c);
             // Journal & Resources — apply lazily (create page if needed)
             _journalPage ??= new JournalPage();
             _journalPage.LoadEntries(c.JournalEntries ?? new());
@@ -670,6 +672,7 @@ namespace CharacterApp
             _attacksPage.FillCharacter(c);
             foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
+            _inventoryPage.SaveTo(c);
             return c;
         }
 

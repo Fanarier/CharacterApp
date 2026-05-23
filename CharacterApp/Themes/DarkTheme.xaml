@@ -575,17 +575,29 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="30"/>
                                 </Grid.ColumnDefinitions>
-                                <ContentPresenter x:Name="ContentPresenter" Margin="{TemplateBinding Padding}"
+                                <!-- Text — non-interactive, drawn on top -->
+                                <ContentPresenter x:Name="ContentPresenter" Grid.Column="0"
+                                                  Margin="{TemplateBinding Padding}"
                                                   VerticalAlignment="Center"
                                                   Content="{TemplateBinding SelectionBoxItem}"
-                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
-                                <ToggleButton Grid.Column="1" Background="Transparent" BorderThickness="0"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  IsHitTestVisible="False"/>
+                                <!-- Arrow — non-interactive, drawn on top -->
+                                <Path x:Name="Arrow" Grid.Column="1"
+                                      Data="M0,0 L6,6 L12,0"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      IsHitTestVisible="False"/>
+                                <!-- Invisible toggle button spans the FULL width -->
+                                <ToggleButton Grid.Column="0" Grid.ColumnSpan="2"
                                               Focusable="False"
                                               IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <Path x:Name="Arrow" Data="M0,0 L6,6 L12,0"
-                                          Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="Transparent"/>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
                                 </ToggleButton>
                             </Grid>
                         </Border>
@@ -629,7 +641,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentDimBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentGradientV}"/>

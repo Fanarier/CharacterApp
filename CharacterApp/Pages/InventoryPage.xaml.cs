@@ -188,11 +188,11 @@ namespace CharacterApp.Pages
 
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(58) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(56) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
 
             // ── Image thumbnail ──
             var imgBorder = new Border
@@ -216,7 +216,7 @@ namespace CharacterApp.Pages
             }
             else
             {
-                imgBorder.Child = new TextBlock { Text = "📦", FontSize = 24,
+                imgBorder.Child = new TextBlock { Text = "🖼", FontSize = 22,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center };
             }
@@ -240,8 +240,7 @@ namespace CharacterApp.Pages
                 Foreground = (Brush)FindResource("TextMutedBrush"),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(8, 0, 8, 0),
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxWidth = 400
+                TextTrimming = TextTrimming.CharacterEllipsis
             };
             Grid.SetColumn(descBlock, 2);
 
