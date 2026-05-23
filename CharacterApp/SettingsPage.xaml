@@ -161,8 +161,9 @@
                 <StackPanel>
                     <TextBlock Text="Ваши страницы с произвольными колонками:"
                                Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8"/>
-                    <ListBox x:Name="LbCustomSheets" MinHeight="50" MaxHeight="100"
+                    <ListBox x:Name="LbCustomSheets" MinHeight="50" MaxHeight="120"
                              Margin="0,0,0,8"
+                             SelectionChanged="LbCustomSheets_SelectionChanged"
                              Background="{DynamicResource SurfaceBrush}"
                              Foreground="{DynamicResource TextBrush}"
                              BorderBrush="{DynamicResource BorderBrush}"/>
@@ -172,6 +173,37 @@
                         <Button Content="Удалить выбранный" Click="RemoveSheet_Click"
                                 Padding="10,6" HorizontalAlignment="Left"/>
                     </StackPanel>
+
+                    <!-- Редактирование выбранного листа -->
+                    <Border x:Name="BdrEditSheet" Visibility="Collapsed"
+                            BorderBrush="{DynamicResource BorderMedBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="✏️  Редактировать выбранный лист:"
+                                       FontWeight="SemiBold" FontSize="13"
+                                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Название листа:" VerticalAlignment="Center"
+                                           Margin="0,0,8,0" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBox x:Name="TbRenameSheetName" Grid.Column="1" Padding="6,4"/>
+                            </Grid>
+                            <TextBlock Text="Заголовки колонок — по одному на строку:"
+                                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Типы колонок не меняются, только названия"
+                                       FontSize="11" Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="0,0,0,6"/>
+                            <TextBox x:Name="TbRenameColumns" AcceptsReturn="True"
+                                     TextWrapping="Wrap" MinHeight="60" Padding="6,4"
+                                     VerticalScrollBarVisibility="Auto"/>
+                            <Button Content="Применить изменения" Click="ApplyRename_Click"
+                                    Margin="0,8,0,0" Padding="12,7" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+
                     <Separator Margin="0,0,0,10"/>
                     <TextBlock Text="Создать новый лист:" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>

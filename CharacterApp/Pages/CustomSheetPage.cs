@@ -19,6 +19,8 @@ namespace CharacterApp.Pages
     {
         private readonly CustomSheet _sheet;
         private readonly DataGrid    _grid;
+        private          TextBlock   _headerBlock = null!;
+        public  CustomSheet          Sheet        => _sheet;
         public ObservableCollection<CustomRowEntry> Rows { get; } = new();
 
         public CustomSheetPage(CustomSheet sheet)
@@ -27,14 +29,14 @@ namespace CharacterApp.Pages
             Title  = sheet.Name;
 
             _grid = BuildGrid();
-            var header = new TextBlock
+            _headerBlock = new TextBlock
             {
                 Text       = sheet.Name,
                 FontSize   = 18,
                 FontWeight = FontWeights.Bold,
                 Margin     = new Thickness(4, 0, 4, 12)
             };
-            header.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            _headerBlock.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
 
             var addBtn = new Button { Content = "Добавить строку", Margin = new Thickness(6), Padding = new Thickness(12,7,12,7) };
             addBtn.Click += (_, _) => AddRow();
@@ -56,11 +58,11 @@ namespace CharacterApp.Pages
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            Grid.SetRow(header,   0);
-            Grid.SetRow(_grid,    1);
-            Grid.SetRow(btnPanel, 2);
+            Grid.SetRow(_headerBlock, 0);
+            Grid.SetRow(_grid,        1);
+            Grid.SetRow(btnPanel,     2);
 
-            root.Children.Add(header);
+            root.Children.Add(_headerBlock);
             root.Children.Add(_grid);
             root.Children.Add(btnPanel);
 
@@ -180,6 +182,24 @@ namespace CharacterApp.Pages
             {
                 Rows.Remove(sel);
                 (Application.Current.MainWindow as MainWindow)?.MarkUnsaved();
+            }
+        }
+
+        // ── Переименование ───────────────────────────────────────────────────
+        public void UpdateTitle(string newTitle)
+        {
+            _sheet.Name      = newTitle;
+            Title            = newTitle;
+            _headerBlock.Text = newTitle;
+        }
+
+        public void UpdateHeaders(System.Collections.Generic.List<string> newHeaders)
+        {
+            for (int i = 0; i < System.Math.Min(newHeaders.Count, _sheet.Columns.Count); i++)
+            {
+                _sheet.Columns[i].Header = newHeaders[i];
+                if (i < _grid.Columns.Count)
+                    _grid.Columns[i].Header = newHeaders[i];
             }
         }
 

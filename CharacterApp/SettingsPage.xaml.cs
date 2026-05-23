@@ -364,6 +364,9 @@ namespace CharacterApp
         private void RefreshSheetList_Click(object sender, RoutedEventArgs e)
             => RefreshSheetList();
 
+        private static readonly System.Collections.Generic.HashSet<string> _validColTypes
+            = new() { "text", "number", "toggle" };
+
         private void AddSheet_Click(object sender, RoutedEventArgs e)
         {
             if (Application.Current.MainWindow is not MainWindow mw) return;
@@ -375,23 +378,52 @@ namespace CharacterApp
                 return;
             }
 
-            // Проверка на дублирование имени
             if (mw.GetCustomSheetNames().Contains(name))
             {
                 mw.ShowNotification($"Лист «{name}» уже существует", NotificationType.Warning);
                 return;
             }
 
-            var cols = new System.Collections.Generic.List<Models.CustomSheetColumn>();
+            var cols   = new System.Collections.Generic.List<Models.CustomSheetColumn>();
+            var errors = new System.Collections.Generic.List<string>();
             char[] seps = { '\n', '\r' };
+            int lineNum = 0;
+
             foreach (var line in TbSheetColumns.Text.Split(seps, StringSplitOptions.RemoveEmptyEntries))
             {
                 var ln = line.Trim();
                 if (string.IsNullOrEmpty(ln)) continue;
-                var ci    = ln.IndexOf(':');
-                var hdr   = ci > 0 ? ln[..ci].Trim()            : ln;
-                var ctype = ci > 0 ? ln[(ci + 1)..].Trim().ToLower() : "text";
+                lineNum++;
+
+                var ci = ln.IndexOf(':');
+                if (ci <= 0)
+                {
+                    errors.Add($"Строка {lineNum}: нужен формат «Название:тип»");
+                    continue;
+                }
+
+                var hdr   = ln[..ci].Trim();
+                var ctype = ln[(ci + 1)..].Trim().ToLower();
+
+                if (string.IsNullOrEmpty(hdr))
+                {
+                    errors.Add($"Строка {lineNum}: название колонки пустое");
+                    continue;
+                }
+
+                if (!_validColTypes.Contains(ctype))
+                {
+                    errors.Add($"Строка {lineNum}: тип «{ctype}» неверный — только text, number, toggle");
+                    continue;
+                }
+
                 cols.Add(new Models.CustomSheetColumn { Header = hdr, ColumnType = ctype });
+            }
+
+            if (errors.Count > 0)
+            {
+                mw.ShowNotification(errors[0], NotificationType.Warning);
+                return;
             }
 
             if (cols.Count == 0)
@@ -403,12 +435,72 @@ namespace CharacterApp
             var newSheet = new Models.CustomSheet { Name = name, Columns = cols };
             mw.AddCustomSheet(newSheet);
             LbCustomSheets.Items.Add(name);
-            // Запоминаем полное описание листа
             _config.SavedCustomSheets.RemoveAll(s => s.Name == name);
             _config.SavedCustomSheets.Add(newSheet);
             TbSheetName.Clear();
             TbSheetColumns.Clear();
             mw.ShowNotification($"Лист \u00ab{name}\u00bb добавлен", NotificationType.Success);
+        }
+
+        private void LbCustomSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (Application.Current.MainWindow is not MainWindow mw) return;
+
+            if (LbCustomSheets.SelectedItem is string name)
+            {
+                BdrEditSheet.Visibility = Visibility.Visible;
+                TbRenameSheetName.Text  = name;
+
+                var sheet = mw.GetCustomSheet(name);
+                if (sheet != null)
+                    TbRenameColumns.Text = string.Join("\n", sheet.Columns.Select(c => c.Header));
+            }
+            else
+            {
+                BdrEditSheet.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ApplyRename_Click(object sender, RoutedEventArgs e)
+        {
+            if (Application.Current.MainWindow is not MainWindow mw) return;
+            if (LbCustomSheets.SelectedItem is not string oldName) return;
+
+            var newName = TbRenameSheetName.Text.Trim();
+            if (string.IsNullOrEmpty(newName))
+            {
+                mw.ShowNotification("Укажите название листа", NotificationType.Warning);
+                return;
+            }
+
+            if (newName != oldName && mw.GetCustomSheetNames().Contains(newName))
+            {
+                mw.ShowNotification($"Лист «{newName}» уже существует", NotificationType.Warning);
+                return;
+            }
+
+            var newHeaders = new System.Collections.Generic.List<string>();
+            char[] seps = { '\n', '\r' };
+            foreach (var line in TbRenameColumns.Text.Split(seps, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var ln = line.Trim();
+                if (!string.IsNullOrEmpty(ln)) newHeaders.Add(ln);
+            }
+
+            if (newHeaders.Count == 0)
+            {
+                mw.ShowNotification("Укажите хотя бы один заголовок колонки", NotificationType.Warning);
+                return;
+            }
+
+            mw.UpdateCustomSheet(oldName, newName, newHeaders);
+
+            // Обновляем список
+            int idx = LbCustomSheets.Items.IndexOf(oldName);
+            if (idx >= 0) LbCustomSheets.Items[idx] = newName;
+            LbCustomSheets.SelectedItem = newName;
+
+            mw.ShowNotification($"Лист «{oldName}» обновлён", NotificationType.Success);
         }
 
         private void RemoveSheet_Click(object sender, RoutedEventArgs e)

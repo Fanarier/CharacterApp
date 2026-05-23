@@ -296,7 +296,6 @@ namespace CharacterApp
             _attacksPage.FillCharacter(c);
             foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
-            _inventoryPage.SaveTo(c);
             // Journal & Resources (only if pages were opened)
             if (_journalPage   != null) c.JournalEntries = _journalPage.GetEntries();
             if (_resourcesPage != null) { c.HpData = _resourcesPage.GetHpData(); c.Resources = _resourcesPage.GetResources(); }
@@ -314,7 +313,6 @@ namespace CharacterApp
             _attacksPage.ApplyCharacter(c);
             RebuildCustomPages(c);
             _statsPage.ApplyCharacter(c);
-            _inventoryPage.LoadFrom(c);
             // Journal & Resources — apply lazily (create page if needed)
             _journalPage ??= new JournalPage();
             _journalPage.LoadEntries(c.JournalEntries ?? new());
@@ -549,11 +547,11 @@ namespace CharacterApp
                 var btn  = new Button
                 {
                     Content = sheet.Name,
-                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                     Tag     = "custom:" + sheet.Name,
                     Style   = (Style)FindResource("SidebarNavButton")
                 };
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
+                EnsureCustomSectionHeader();
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
@@ -564,7 +562,7 @@ namespace CharacterApp
             // Удаляем старые кастомные кнопки из сайдбара
             var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
             foreach (System.Windows.UIElement ch in MenuStack.Children)
-                if (ch is Button btn && btn.Tag is string tag && tag.StartsWith("custom:", System.StringComparison.Ordinal))
+                if (ch is FrameworkElement fe && fe.Tag is string tag && tag.StartsWith("custom:", System.StringComparison.Ordinal))
                     toRemove.Add(ch);
             foreach (var el in toRemove) MenuStack.Children.Remove(el);
             _customPages.Clear();
@@ -591,15 +589,73 @@ namespace CharacterApp
                 var btn  = new Button
                 {
                     Content = sheet.Name,
-                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                     Tag     = "custom:" + sheet.Name,
                     Style   = (Style)FindResource("SidebarNavButton")
                 };
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
-                // Вставляем перед кнопкой Настройки
+                if (c.CustomSheets.IndexOf(sheet) == 0) EnsureCustomSectionHeader();
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
+        }
+
+
+        // ── Секция кастомных листов в сайдбаре ──────────────────────────────
+
+
+        // ── Секция кастомных листов в сайдбаре ──────────────────────────────
+
+        private void EnsureCustomSectionHeader()
+        {
+            foreach (System.Windows.UIElement ch in MenuStack.Children)
+                if (ch is FrameworkElement fe && fe.Tag?.ToString() == "custom:_section")
+                    return;
+
+            var sep = new System.Windows.Shapes.Rectangle
+            {
+                Height  = 1,
+                Margin  = new System.Windows.Thickness(10, 6, 10, 0),
+                Opacity = 0.5
+            };
+            sep.SetResourceReference(System.Windows.Shapes.Rectangle.FillProperty, "BorderMedBrush");
+
+            var label = new TextBlock
+            {
+                Text       = "КАСТОМНЫЕ ЛИСТЫ",
+                FontSize   = 10,
+                FontWeight = System.Windows.FontWeights.SemiBold,
+                Margin     = new System.Windows.Thickness(16, 4, 0, 2),
+                Opacity    = 0.55
+            };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+
+            var panel = new StackPanel
+            {
+                Tag    = "custom:_section",
+                Margin = new System.Windows.Thickness(0, 4, 0, 0)
+            };
+            panel.Children.Add(sep);
+            panel.Children.Add(label);
+
+            int idx = MenuStack.Children.Count - 1;
+            MenuStack.Children.Insert(idx, panel);
+        }
+
+        private void RemoveCustomSectionHeaderIfEmpty()
+        {
+            bool hasCustom = false;
+            foreach (System.Windows.UIElement ch in MenuStack.Children)
+                if (ch is Button b && b.Tag is string t &&
+                    t.StartsWith("custom:", System.StringComparison.Ordinal))
+                { hasCustom = true; break; }
+
+            if (hasCustom) return;
+
+            var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
+            foreach (System.Windows.UIElement ch in MenuStack.Children)
+                if (ch is FrameworkElement fe && fe.Tag?.ToString() == "custom:_section")
+                    toRemove.Add(ch);
+            foreach (var el in toRemove) MenuStack.Children.Remove(el);
         }
 
         public void AddCustomSheet(CustomSheet sheet)
@@ -618,11 +674,11 @@ namespace CharacterApp
             var btn  = new Button
             {
                 Content = sheet.Name,
-                Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                 Tag     = "custom:" + sheet.Name,
                 Style   = (Style)FindResource("SidebarNavButton")
             };
             btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
+            EnsureCustomSectionHeader();
             int idx = MenuStack.Children.Count - 1;
             MenuStack.Children.Insert(idx, btn);
 
@@ -644,6 +700,7 @@ namespace CharacterApp
                 if (ch is Button btn && btn.Tag?.ToString() == "custom:" + name)
                     toRemove.Add(ch);
             foreach (var el in toRemove) MenuStack.Children.Remove(el);
+            RemoveCustomSectionHeaderIfEmpty();
 
             // 4. Если есть открытый файл — немедленно пересохраняем JSON персонажа
             //    чтобы CustomSheets в файле тоже обновился (без этого при загрузке
@@ -672,7 +729,6 @@ namespace CharacterApp
             _attacksPage.FillCharacter(c);
             foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
-            _inventoryPage.SaveTo(c);
             return c;
         }
 
@@ -688,6 +744,63 @@ namespace CharacterApp
         /// <summary>Возвращает имена всех активных кастомных листов.</summary>
         public System.Collections.Generic.IEnumerable<string> GetCustomSheetNames()
             => _customPages.Keys;
+
+        public Models.CustomSheet? GetCustomSheet(string name)
+            => _customPages.TryGetValue(name, out var page) ? page.Sheet : null;
+
+        public void UpdateCustomSheet(string oldName, string newName,
+                                      System.Collections.Generic.List<string> newHeaders)
+        {
+            if (!_customPages.TryGetValue(oldName, out var page)) return;
+
+            // 1. Обновляем заголовки колонок
+            page.UpdateHeaders(newHeaders);
+
+            // 2. Если имя изменилось — перепривязываем всё
+            if (oldName != newName)
+            {
+                page.UpdateTitle(newName);
+                _customPages.Remove(oldName);
+                _customPages[newName] = page;
+
+                // Заменяем кнопку в сайдбаре
+                for (int i = 0; i < MenuStack.Children.Count; i++)
+                {
+                    if (MenuStack.Children[i] is Button b && b.Tag?.ToString() == "custom:" + oldName)
+                    {
+                        var capturedName = newName;
+                        var newBtn = new Button
+                        {
+                            Content = newName,
+                            Tag     = "custom:" + newName,
+                            Style   = (Style)FindResource("SidebarNavButton")
+                        };
+                        newBtn.Click += (_, _) =>
+                        {
+                            MainFrame.Navigate(_customPages[capturedName]);
+                            HighlightActiveButton("custom:" + capturedName);
+                        };
+                        MenuStack.Children.RemoveAt(i);
+                        MenuStack.Children.Insert(i, newBtn);
+                        break;
+                    }
+                }
+            }
+
+            // 3. Обновляем конфиг
+            if (_autoSaveConfig != null)
+            {
+                var saved = _autoSaveConfig.SavedCustomSheets.FirstOrDefault(s => s.Name == oldName);
+                if (saved != null)
+                {
+                    saved.Name = newName;
+                    for (int i = 0; i < System.Math.Min(newHeaders.Count, saved.Columns.Count); i++)
+                        saved.Columns[i].Header = newHeaders[i];
+                }
+                PersistAutoSaveConfig();
+            }
+            MarkUnsaved();
+        }
 
         public void SetPageVisible(string pageKey, bool visible)
         {
