@@ -142,6 +142,7 @@ namespace CharacterApp
             SyncCb(CbShowPassive,      "PassiveSkills");
             SyncCb(CbShowProf,         "Proficiencies");
             SyncCb(CbShowAttacks,      "Attacks");
+            SyncCb(CbShowInventory,    "Inventory");
 
             // Восстанавливаем список кастомных листов из реального состояния MainWindow
             RefreshSheetList();
@@ -176,7 +177,7 @@ namespace CharacterApp
             foreach (CheckBox cb in new CheckBox[]
             {
                 CbShowMainPage, CbShowDetails, CbShowEquipment, CbShowStats,
-                CbShowActiveSkills, CbShowPassive, CbShowProf, CbShowAttacks
+                CbShowActiveSkills, CbShowPassive, CbShowProf, CbShowAttacks, CbShowInventory
             })
                 if (cb.IsChecked != true && cb.Tag is string key)
                     _config.HiddenPages.Add(key);

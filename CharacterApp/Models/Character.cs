@@ -134,6 +134,7 @@ namespace CharacterApp.Models
         public string PhotoPath { get; set; } = "";
 
         // ── Предыстория ───────────────────────────────────────────────────────
+        public string Race        { get; set; } = "";
         public string Backstory    { get; set; } = "";
         public string Worldview    { get; set; } = "";
         public string HeightWeight { get; set; } = "";

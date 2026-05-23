@@ -299,6 +299,7 @@ namespace CharacterApp
             // Journal & Resources (only if pages were opened)
             if (_journalPage   != null) c.JournalEntries = _journalPage.GetEntries();
             if (_resourcesPage != null) { c.HpData = _resourcesPage.GetHpData(); c.Resources = _resourcesPage.GetResources(); }
+            _inventoryPage.SaveTo(c);
             return c;
         }
 
@@ -318,6 +319,7 @@ namespace CharacterApp
             _journalPage.LoadEntries(c.JournalEntries ?? new());
             _resourcesPage ??= new ResourcesPage();
             _resourcesPage.LoadData(c.HpData, c.Resources);
+            _inventoryPage.LoadFrom(c);
             UpdateTitle(c.CharacterName);
         }
 
@@ -433,6 +435,7 @@ namespace CharacterApp
             if (!Confirm("Сбросить все данные персонажа?\nНесохранённые изменения будут потеряны.", "Сброс данных")) return;
 
             DistributeCharacter(new Character());
+            _inventoryPage.ResetAll();
             _lastJsonFilePath  = string.Empty;
             _hasUnsavedChanges = false;
             TitleBarText.Text  = "Espires Games";

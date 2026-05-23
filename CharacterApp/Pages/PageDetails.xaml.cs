@@ -17,6 +17,7 @@ namespace CharacterApp.Pages
         public void ApplyCharacter(Character c)
         {
             _loading = true;
+            RaceTextBox.Text         = c.Race ?? "";
             BackstoryTextBox.Text    = c.Backstory;
             WorldviewTextBox.Text    = c.Worldview;
             HeightWeightTextBox.Text = c.HeightWeight;
@@ -36,6 +37,7 @@ namespace CharacterApp.Pages
 
         public void FillCharacter(Character c)
         {
+            c.Race         = RaceTextBox.Text.Trim();
             c.Backstory    = BackstoryTextBox.Text.Trim();
             c.Worldview    = WorldviewTextBox.Text.Trim();
             c.HeightWeight = HeightWeightTextBox.Text.Trim();

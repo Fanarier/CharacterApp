@@ -152,6 +152,7 @@
                         <CheckBox x:Name="CbShowPassive"      Content="Пассивные навыки" IsChecked="True" Margin="6,4" Tag="PassiveSkills" Checked="PageVisibility_Changed" Unchecked="PageVisibility_Changed"/>
                         <CheckBox x:Name="CbShowProf"         Content="Владения"        IsChecked="True" Margin="6,4" Tag="Proficiencies" Checked="PageVisibility_Changed" Unchecked="PageVisibility_Changed"/>
                         <CheckBox x:Name="CbShowAttacks"      Content="Атаки"           IsChecked="True" Margin="6,4" Tag="Attacks"       Checked="PageVisibility_Changed" Unchecked="PageVisibility_Changed"/>
+                        <CheckBox x:Name="CbShowInventory"    Content="Инвентарь"       IsChecked="True" Margin="6,4" Tag="Inventory"     Checked="PageVisibility_Changed" Unchecked="PageVisibility_Changed"/>
                     </WrapPanel>
                 </StackPanel>
             </GroupBox>

@@ -393,14 +393,47 @@ namespace CharacterApp.Pages
         {
             if (_selected == null) return;
             _selected.Quantity = Math.Max(1, _selected.Quantity - 1);
+            _suppressDetailUpdate = true;
             TbDetailQty.Text = _selected.Quantity.ToString();
+            _suppressDetailUpdate = false;
             RebuildList(); Mark();
         }
         private void QtyPlus_Click(object s, RoutedEventArgs e)
         {
             if (_selected == null) return;
             _selected.Quantity++;
+            _suppressDetailUpdate = true;
             TbDetailQty.Text = _selected.Quantity.ToString();
+            _suppressDetailUpdate = false;
+            RebuildList(); Mark();
+        }
+
+        // Direct text input for quantity
+        private void QtyText_PreviewInput(object s, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            // Allow digits only
+            e.Handled = !e.Text.All(char.IsDigit);
+        }
+
+        private void QtyText_Changed(object s, TextChangedEventArgs e)
+        {
+            if (_suppressDetailUpdate || _selected == null) return;
+            if (int.TryParse(TbDetailQty.Text, out var v) && v >= 1)
+            {
+                _selected.Quantity = v;
+                RebuildList(); Mark();
+            }
+        }
+
+        private void QtyText_LostFocus(object s, RoutedEventArgs e)
+        {
+            if (_selected == null) return;
+            // Clamp and normalize on focus loss
+            if (!int.TryParse(TbDetailQty.Text, out var v) || v < 1) v = 1;
+            _selected.Quantity = v;
+            _suppressDetailUpdate = true;
+            TbDetailQty.Text = v.ToString();
+            _suppressDetailUpdate = false;
             RebuildList(); Mark();
         }
 
