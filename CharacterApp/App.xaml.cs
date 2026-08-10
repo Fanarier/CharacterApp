@@ -14,8 +14,19 @@ namespace CharacterApp
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                          "CharacterApp");
 
+        // Старые отдельные файлы темы и языка. Больше не пишутся — читаются
+        // один раз при миграции в config.json и удаляются.
         public static string ThemeConfigFile    => Path.Combine(DataDir, "theme.config");
         public static string LanguageConfigFile => Path.Combine(DataDir, "language.config");
+
+        private static AppSettings? _settings;
+
+        /// <summary>
+        /// Настройки приложения — один экземпляр на весь процесс.
+        /// Раньше AppSettings.Load() вызывался из App трижды и ещё раз из
+        /// MainWindow, то есть по памяти гуляли четыре независимые копии.
+        /// </summary>
+        public static AppSettings Settings => _settings ??= AppSettings.Load();
 
         /// <summary>Текущий кастомный акцентный цвет (сохраняется в памяти на сессию).</summary>
         public static string CurrentAccentHex { get; set; } = "";
@@ -27,39 +38,40 @@ namespace CharacterApp
             // Создаём папку если нет
             Directory.CreateDirectory(DataDir);
 
-            // Миграция старых файлов из рабочей папки
-            MigrateIfNeeded("theme.config",    ThemeConfigFile);
-            MigrateIfNeeded("language.config", LanguageConfigFile);
-            MigrateIfNeeded("appsettings.json",
-                Path.Combine(DataDir, "appsettings.json"));
+            // Ловим всё, что не поймали локально: без этого падение выглядит
+            // как «приложение просто закрылось» и разбираться не с чем
+            DispatcherUnhandledException += (_, args) =>
+            {
+                Helpers.Log.Error("необработанное исключение в UI-потоке", args.Exception);
+                System.Windows.MessageBox.Show(
+                    "Произошла ошибка:\n\n" + args.Exception.Message +
+                    "\n\nПодробности записаны в:\n" + Helpers.Log.FilePath,
+                    "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                args.Handled = true;   // не роняем приложение — данные ещё в памяти
+            };
+            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+                Helpers.Log.Error("необработанное исключение вне UI-потока",
+                                  args.ExceptionObject as Exception);
+
+            Helpers.Log.Info("=== запуск " +
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Version + " ===");
+
+            // Единственное чтение настроек за запуск (внутри — миграция старых файлов)
+            var settings = Settings;
 
             // Тема
-            string theme = "Light";
-            if (File.Exists(ThemeConfigFile))
-            {
-                var t = File.ReadAllText(ThemeConfigFile).Trim();
-                if (!string.IsNullOrEmpty(t)) theme = t;
-            }
-            try
-            {
-                var themeUri = new Uri($"Themes/{theme}Theme.xaml", UriKind.Relative);
-                ReplaceMergedDictionaryByFolder("Themes/", themeUri);
-            }
-            catch { }
+            ApplyTheme(settings.SelectedTheme);
 
             // Язык
-            string lang = "ru";
-            if (File.Exists(LanguageConfigFile))
-            {
-                var l = File.ReadAllText(LanguageConfigFile).Trim();
-                if (!string.IsNullOrEmpty(l)) lang = l;
-            }
-            LoadLanguage(lang);
+            LoadLanguage(settings.SelectedLanguage);
 
             EnsureCoreResources();
 
-            // Акцентный цвет — восстанавливаем из настроек
-            var settings = AppSettings.Load();
+            // Шрифт
+            Resources["AppFontFamily"] = new System.Windows.Media.FontFamily(settings.AppFontFamily);
+            Resources["AppFontSize"]   = settings.AppFontSize;
+
+            // Акцентный цвет
             if (!string.IsNullOrWhiteSpace(settings.AccentColorHex))
             {
                 CurrentAccentHex = settings.AccentColorHex;
@@ -70,35 +82,76 @@ namespace CharacterApp
             main.Show();
         }
 
-        private static void MigrateIfNeeded(string oldRelative, string newPath)
+        /// <summary>
+        /// Подтягивает конфиг совсем старых версий из папки рядом с exe.
+        /// Вызывается только при первом запуске (пока нет config.json):
+        /// раньше это делалось на каждом старте, и файлы, оставшиеся в bin,
+        /// возвращались в %AppData% сразу после того, как их оттуда удаляли —
+        /// из-за чего тема и язык откатывались к старым значениям.
+        /// </summary>
+        internal static void ImportConfigsFromExeFolder()
+        {
+            CopyIfMissing("theme.config",     ThemeConfigFile);
+            CopyIfMissing("language.config",  LanguageConfigFile);
+            CopyIfMissing("appsettings.json", Path.Combine(DataDir, "appsettings.json"));
+        }
+
+        private static void CopyIfMissing(string oldRelative, string newPath)
         {
             if (File.Exists(oldRelative) && !File.Exists(newPath))
             {
-                try { File.Copy(oldRelative, newPath); } catch { }
+                try { File.Copy(oldRelative, newPath); Helpers.Log.Info($"мигрирован {oldRelative} → {newPath}"); }
+                catch (Exception ex) { Helpers.Log.Warn($"миграция {oldRelative} не удалась", ex); }
             }
         }
 
-        private void ReplaceMergedDictionaryByFolder(string folderMarker, Uri newDictUri)
+        /// <summary>Подключает словарь темы ("Light" / "Dark").</summary>
+        public static void ApplyTheme(string themeName)
         {
-            var dicts = Resources.MergedDictionaries;
-            var old = dicts.FirstOrDefault(d => d.Source != null &&
-                d.Source.OriginalString.Contains(folderMarker, StringComparison.OrdinalIgnoreCase));
-            if (old != null) dicts.Remove(old);
-            dicts.Add(new ResourceDictionary { Source = newDictUri });
+            if (themeName != "Light" && themeName != "Dark") themeName = "Light";
+            try
+            {
+                ReplaceMergedDictionary("Themes/",
+                    new Uri($"Themes/{themeName}Theme.xaml", UriKind.Relative));
+            }
+            catch (Exception ex) { Helpers.Log.Warn($"не удалось применить тему '{themeName}'", ex); }
+        }
+
+        /// <summary>
+        /// Меняет словарь ресурсов на месте, сохраняя его позицию в списке.
+        /// Раньше старт удалял словарь и дописывал новый в конец, а страница
+        /// настроек — вставляла в начало: порядок словарей зависел от того,
+        /// каким путём пришли. Теперь он одинаковый всегда.
+        /// </summary>
+        private static void ReplaceMergedDictionary(string folderMarker, Uri newDictUri)
+        {
+            var dicts = Current.Resources.MergedDictionaries;
+            var fresh = new ResourceDictionary { Source = newDictUri };
+
+            for (int i = 0; i < dicts.Count; i++)
+            {
+                if (dicts[i].Source != null &&
+                    dicts[i].Source.OriginalString.Contains(folderMarker, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Remove + Insert, а не присваивание по индексу: так WPF
+                    // гарантированно пересчитывает ресурсы у живых элементов
+                    dicts.RemoveAt(i);
+                    dicts.Insert(i, fresh);
+                    return;
+                }
+            }
+            dicts.Add(fresh);
         }
 
         public static void LoadLanguage(string langCode)
         {
+            if (string.IsNullOrWhiteSpace(langCode)) langCode = "ru";
             try
             {
-                var dicts = Current.Resources.MergedDictionaries;
-                var old = dicts.FirstOrDefault(d => d.Source != null &&
-                    d.Source.OriginalString.Contains("Strings/Strings.", StringComparison.OrdinalIgnoreCase));
-                if (old != null) dicts.Remove(old);
-                var uri = new Uri($"Strings/Strings.{langCode}.xaml", UriKind.Relative);
-                dicts.Add(new ResourceDictionary { Source = uri });
+                ReplaceMergedDictionary("Strings/Strings.",
+                    new Uri($"Strings/Strings.{langCode}.xaml", UriKind.Relative));
             }
-            catch { }
+            catch (Exception ex) { Helpers.Log.Warn($"не удалось загрузить язык '{langCode}'", ex); }
         }
 
         private static Color Lighten(Color c, float amt) => Color.FromRgb(
@@ -138,7 +191,21 @@ namespace CharacterApp
                 };
                 foreach (var (k, v) in pairs) res[k] = v;
             }
-            catch { }
+            catch (Exception ex) { Helpers.Log.Warn($"не удалось применить акцентный цвет '{hex}'", ex); }
+        }
+
+        public static void ApplyFontSettings(string family, double size)
+        {
+            try
+            {
+                var res = Current.Resources;
+                res["AppFontFamily"] = new System.Windows.Media.FontFamily(family);
+                res["AppFontSize"]   = size;
+
+                // Apply to default TextBox/TextBlock styles if they use DynamicResource
+                // (themes should reference {DynamicResource AppFontFamily} and {DynamicResource AppFontSize})
+            }
+            catch (Exception ex) { Helpers.Log.Warn($"не удалось применить шрифт '{family}' {size}", ex); }
         }
 
         private void EnsureCoreResources()
@@ -150,7 +217,7 @@ namespace CharacterApp
             {
                 try { dicts.Insert(0, new ResourceDictionary
                     { Source = new Uri("Resources/CoreResources.xaml", UriKind.Relative) }); }
-                catch { }
+                catch (Exception ex) { Helpers.Log.Error("не удалось загрузить CoreResources.xaml", ex); }
             }
         }
     }

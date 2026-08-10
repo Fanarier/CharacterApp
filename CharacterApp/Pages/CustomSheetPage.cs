@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -54,15 +54,20 @@ namespace CharacterApp.Pages
 
             var root = new Grid();
             root.Margin = new Thickness(12);
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // заголовок
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // поиск
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // кнопки
+
+            BuildSearchBar();
 
             Grid.SetRow(_headerBlock, 0);
-            Grid.SetRow(_grid,        1);
-            Grid.SetRow(btnPanel,     2);
+            Grid.SetRow(_searchBar,   1);
+            Grid.SetRow(_grid,        2);
+            Grid.SetRow(btnPanel,     3);
 
             root.Children.Add(_headerBlock);
+            root.Children.Add(_searchBar);
             root.Children.Add(_grid);
             root.Children.Add(btnPanel);
 
@@ -74,6 +79,44 @@ namespace CharacterApp.Pages
             };
 
             _grid.ItemsSource = Rows;
+        }
+
+        private readonly Controls.SearchFilterBar _searchBar = new();
+
+        /// <summary>
+        /// Строка поиска для кастомного листа. Колонки здесь произвольные,
+        /// а ячейки лежат в списке Cells по индексу, а не в свойствах объекта —
+        /// поэтому используем вариант с собственным доступом к тексту.
+        /// </summary>
+        private void BuildSearchBar()
+        {
+            var headers = _sheet.Columns.Select(c => c.Header).ToList();
+
+            _searchBar.AttachCustom(Rows, headers, (item, colIndex) =>
+            {
+                if (item is not CustomRowEntry row) return Array.Empty<string>();
+
+                // −1 — искать по всем колонкам
+                if (colIndex < 0) return CellTexts(row);
+
+                if (colIndex >= _sheet.Columns.Count) return Array.Empty<string>();
+                return new[] { CellText(row, colIndex) };
+            });
+        }
+
+        private IEnumerable<string> CellTexts(CustomRowEntry row)
+        {
+            for (int i = 0; i < _sheet.Columns.Count; i++)
+                yield return CellText(row, i);
+        }
+
+        /// <summary>Текст ячейки; для колонок-галочек — «да» / пусто.</summary>
+        private string CellText(CustomRowEntry row, int colIndex)
+        {
+            if (_sheet.Columns[colIndex].ColumnType == "toggle")
+                return colIndex < row.BoolCells.Count && row.BoolCells[colIndex] ? "да" : "";
+
+            return colIndex < row.Cells.Count ? row.Cells[colIndex] ?? "" : "";
         }
 
         private DataGrid BuildGrid()
@@ -185,11 +228,12 @@ namespace CharacterApp.Pages
             }
         }
 
+
         // ── Переименование ───────────────────────────────────────────────────
         public void UpdateTitle(string newTitle)
         {
-            _sheet.Name      = newTitle;
-            Title            = newTitle;
+            _sheet.Name       = newTitle;
+            Title             = newTitle;
             _headerBlock.Text = newTitle;
         }
 
@@ -262,11 +306,10 @@ namespace CharacterApp.Pages
 
         public void FilterItems(string query)
         {
-            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Rows);
-            if (string.IsNullOrWhiteSpace(query))
-            { view.Filter = null; return; }
-            view.Filter = obj => obj is CustomRowEntry row &&
-                row.Cells.Any(c => c?.Contains(query, StringComparison.OrdinalIgnoreCase) == true);
+            // Раньше здесь ставился собственный фильтр на ту же коллекцию, что
+            // и у строки поиска на странице — они затирали друг друга.
+            // Теперь запрос из бокового меню просто попадает в эту строку.
+            _searchBar.SetSearchText(query ?? "");
         }
 
         public void ResetAll() => Rows.Clear();

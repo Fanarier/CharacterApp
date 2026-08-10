@@ -1,10 +1,11 @@
-<Page x:Class="CharacterApp.Pages.AttacksPage"
+﻿<Page x:Class="CharacterApp.Pages.AttacksPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="{DynamicResource AttacksHeader}">
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -15,8 +16,10 @@
                    Foreground="{DynamicResource TextBrush}"
                    Margin="4,0,4,12"/>
 
+        <ContentControl x:Name="SearchBarHost" Grid.Row="1" Margin="0,0,0,4"/>
+
         <DataGrid x:Name="AttacksGrid"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   Style="{StaticResource SkillsGridStyle}"
                   RowStyle="{StaticResource SkillsRowStyle}"
                   AutoGenerateColumns="False"
@@ -34,7 +37,7 @@
             <DataGrid.Columns>
 
                 <!-- 1. Тип атаки -->
-                <DataGridTemplateColumn Header="Тип" Width="160">
+                <DataGridTemplateColumn Header="Тип" Width="160" SortMemberPath="AttackType">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding AttackType}"
@@ -52,7 +55,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- 2. Описание -->
-                <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="200">
+                <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="200" SortMemberPath="Description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Description}"
@@ -88,7 +91,7 @@
         </DataGrid>
 
         <!-- Кнопки -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal"
+        <StackPanel Grid.Row="3" Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button Content="{DynamicResource BtnAddSkill}"    Click="BtnAdd_Click"    Margin="6" Padding="12,7"/>
             <Button Content="{DynamicResource BtnRemoveSkill}" Click="BtnRemove_Click" Margin="6" Padding="12,7"/>

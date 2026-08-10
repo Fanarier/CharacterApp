@@ -1,0 +1,39 @@
+<Window x:Class="CharacterApp.ColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Выбор цвета текста" Width="360" Height="320"
+        ResizeMode="NoResize" WindowStyle="SingleBorderWindow"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <StackPanel Margin="16">
+        <TextBlock Text="Выберите цвет текста" FontSize="14" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12"/>
+
+        <!-- Preset palette -->
+        <WrapPanel x:Name="PalettePanel" Margin="0,0,0,12"/>
+
+        <!-- HEX input -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="HEX:" VerticalAlignment="Center" Margin="0,0,8,0"
+                       Foreground="{DynamicResource TextBrush}"/>
+            <TextBox x:Name="TbHex" Width="90" Text="#FFFFFF"
+                     TextChanged="TbHex_TextChanged"/>
+            <Border x:Name="PreviewBorder" Width="32" Height="24" CornerRadius="4"
+                    Margin="8,0,0,0" BorderBrush="{DynamicResource BorderMedBrush}"
+                    BorderThickness="1">
+                <Border.Background>
+                    <SolidColorBrush x:Name="PreviewColor" Color="White"/>
+                </Border.Background>
+            </Border>
+            <TextBlock x:Name="TbHexError" Text="⚠" Foreground="#F07070"
+                       VerticalAlignment="Center" Margin="6,0,0,0"
+                       Visibility="Collapsed"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Применить" Click="Ok_Click" Padding="16,8" MinHeight="0" Margin="0,0,8,0"/>
+            <Button Content="Отмена"    Click="Cancel_Click" Padding="16,8" MinHeight="0"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

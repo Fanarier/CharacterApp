@@ -1,4 +1,4 @@
-<Page x:Class="CharacterApp.Pages.ActiveSkillsPage"
+﻿<Page x:Class="CharacterApp.Pages.ActiveSkillsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="clr-namespace:CharacterApp.Pages"
@@ -30,6 +30,7 @@
   <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -42,8 +43,10 @@
 
         <!-- IMPORTANT: ItemsSource задаётся через привязку к DataContext.Skills.
              Не добавляй вручную <DataGrid.Items> в XAML — приведёт к ошибке. -->
+        <ContentControl x:Name="SearchBarHost" Grid.Row="1" Margin="0,0,0,4"/>
+
         <DataGrid x:Name="SkillsGrid"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   Style="{StaticResource SkillsGridStyle}" RowStyle="{StaticResource SkillsRowStyle}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
@@ -59,7 +62,7 @@
 
             <DataGrid.Columns>
                 <!-- Column 1: название навыка (редактируемое) -->
-                <DataGridTemplateColumn Header="Название" Width="200">
+                <DataGridTemplateColumn Header="Название" Width="200" SortMemberPath="SkillName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding SkillName}" Foreground="{DynamicResource TextBrush}"
@@ -75,7 +78,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Column 2: выбор категории -->
-                <DataGridTemplateColumn Header="Категория" Width="180">
+                <DataGridTemplateColumn Header="Категория" Width="180" SortMemberPath="CategoryDisplay">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CategoryDisplay}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
@@ -92,7 +95,7 @@
                 </DataGridTemplateColumn>
 
                 <!-- Column 3: описание/название -->
-                <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="240">
+                <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="240" SortMemberPath="Description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Padding="6,4"/>
@@ -132,7 +135,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button x:Name="BtnAdd" Content="{DynamicResource BtnAddSkill}" Click="BtnAdd_Click" Margin="6" Padding="10,6" />
             <Button x:Name="BtnRemove" Content="{DynamicResource BtnRemoveSkill}" Click="BtnRemove_Click" Margin="6" Padding="10,6" />
             <Button x:Name="BtnReset" Content="{DynamicResource BtnResetSkills}" Click="BtnReset_Click" Margin="6" Padding="10,6" />

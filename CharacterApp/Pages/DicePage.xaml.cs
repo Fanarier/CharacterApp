@@ -129,33 +129,59 @@ namespace CharacterApp.Pages
             // ── Actual roll ───────────────────────────────────────────────────
             int finalTotal;
             string formula, detail, modeLabel = "";
-            bool isAdvDis = _mode != "normal" && formulaStr == null;
+
+            // Преимущество/помеха теперь работают и для бросков по формуле.
+            // Раньше здесь стояло `formulaStr == null`, из-за чего формула
+            // всегда кидалась обычным броском, даже с включённым режимом.
+            bool isAdvDis = _mode != "normal";
+
+            // «Натуралка» — значение одного зачтённого кубика без модификатора.
+            // Нужна для крита/провала: раньше считали finalTotal - mod, из-за чего
+            // 2d20 с суммой 20 подсвечивалось как крит, а натуральная 20
+            // в мультиброске не замечалась вовсе. Для нескольких кубиков
+            // понятия крита нет — оставляем null.
+            int? natural = null;
+
+            string modStr = mod > 0 ? $"+{mod}" : mod < 0 ? $"{mod}" : "";
+            string countStr = count > 1 ? $"{count}" : "";
+            string poolText = $"{countStr}d{sides}{modStr}";
 
             if (isAdvDis)
             {
-                int d1 = _rng.Next(1, sides + 1);
-                int d2 = _rng.Next(1, sides + 1);
-                int chosen = _mode == "adv" ? Math.Max(d1, d2) : Math.Min(d1, d2);
-                int dropped = _mode == "adv" ? Math.Min(d1, d2) : Math.Max(d1, d2);
+                bool adv = _mode == "adv";
 
-                finalTotal = chosen + mod;
-                string modStr = mod != 0 ? (mod > 0 ? $"+{mod}" : $"{mod}") : "";
-                formula    = $"d{sides}{modStr} ({(_mode == "adv" ? "ADV" : "DIS")})";
-                modeLabel  = _mode == "adv" ? "ПРЕИМУЩЕСТВО" : "ПОМЕХА";
-                detail     = mod != 0 ? $"Выбрано {chosen} {(mod > 0 ? "+" : "")}{mod}" : $"Выбрано {chosen}";
+                // Кидаем весь пул дважды и берём лучший/худший ИТОГ.
+                // Игрок видит оба броска целиком — как в Roll20 и Owlbear.
+                var poolA = RollPool(count, sides);
+                var poolB = RollPool(count, sides);
+                int sumA  = poolA.Sum() + mod;
+                int sumB  = poolB.Sum() + mod;
 
-                // Show die comparison
-                ShowAdvDisUI(d1, d2, chosen, dropped);
-                AddHistory(formula, $"🎲 {d1}  vs  🎲 {d2}  →  {detail}", finalTotal, _mode == "adv" ? "ADV" : "DIS");
+                bool firstWins = adv ? sumA >= sumB : sumA <= sumB;
+                finalTotal = firstWins ? sumA : sumB;
+
+                // Крит имеет смысл только когда в пуле один кубик
+                if (count == 1) natural = (firstWins ? poolA : poolB)[0];
+
+                formula   = $"{poolText} ({(adv ? "ADV" : "DIS")})";
+                modeLabel = adv ? "ПРЕИМУЩЕСТВО" : "ПОМЕХА";
+                detail    = $"Выбрано {finalTotal} из {sumA} и {sumB}";
+
+                ShowAdvDisUI(sumA, sumB, firstWins,
+                             BreakdownText(poolA, mod, count),
+                             BreakdownText(poolB, mod, count));
+
+                AddHistory(formula,
+                           $"🎲 {sumA} {BreakdownText(poolA, mod, count)}  vs  " +
+                           $"🎲 {sumB} {BreakdownText(poolB, mod, count)}",
+                           finalTotal, adv ? "ADV" : "DIS");
             }
             else
             {
-                var rolls = Enumerable.Range(0, count)
-                                      .Select(_ => _rng.Next(1, sides + 1)).ToList();
+                var rolls  = RollPool(count, sides);
                 finalTotal = rolls.Sum() + mod;
-                string countStr = count > 1 ? $"{count}" : "";
-                string modStr   = mod > 0 ? $"+{mod}" : mod < 0 ? $"{mod}" : "";
-                formula = formulaStr ?? $"{countStr}d{sides}{modStr}";
+                if (count == 1) natural = rolls[0];
+                formula = formulaStr ?? poolText;
 
                 detail = count > 1
                     ? $"[{string.Join(" + ", rolls)}]{modStr}"
@@ -169,9 +195,9 @@ namespace CharacterApp.Pages
             TbRollResult.Text   = finalTotal.ToString();
             TbRollDetail.Text   = string.IsNullOrEmpty(detail) ? formula : $"{formula}  →  {detail}";
 
-            // Color result by magnitude (relative to sides)
-            bool isCrit = sides == 20 && finalTotal - mod == 20;
-            bool isFail = sides == 20 && finalTotal - mod == 1;
+            // Крит/провал — только для одиночного d20 по натуральному значению
+            bool isCrit = sides == 20 && natural == 20;
+            bool isFail = sides == 20 && natural == 1;
             SetResultColor(isCrit ? "crit" : isFail ? "fail" : (_mode == "adv" ? "adv" : _mode == "dis" ? "dis" : "normal"));
 
             if (!string.IsNullOrEmpty(modeLabel))
@@ -264,7 +290,31 @@ namespace CharacterApp.Pages
                 dse.Color = c1;
         }
 
-        private void ShowAdvDisUI(int d1, int d2, int chosen, int _dropped)
+        /// <summary>Список бросков пула: count кубиков по sides граней.</summary>
+        private static List<int> RollPool(int count, int sides)
+            => Enumerable.Range(0, count).Select(_ => _rng.Next(1, sides + 1)).ToList();
+
+        /// <summary>
+        /// Расшифровка броска пула: "[3 + 5] +2". Для одного кубика без
+        /// модификатора возвращает пустую строку — там расшифровывать нечего.
+        /// </summary>
+        private static string BreakdownText(List<int> rolls, int mod, int count)
+        {
+            if (count == 1 && mod == 0) return "";
+            string modStr = mod > 0 ? $" +{mod}" : mod < 0 ? $" {mod}" : "";
+            return count > 1
+                ? $"[{string.Join(" + ", rolls)}]{modStr}"
+                : $"[{rolls[0]}]{modStr}";
+        }
+
+        /// <summary>
+        /// Показывает оба броска. Раньше принимала два отдельных кубика и
+        /// сравнивала их по значению — при равных числах «берётся» подсвечивалось
+        /// у обоих. Теперь победитель передаётся явно, а под суммой выводится
+        /// разбивка по кубикам, чтобы бросок по формуле было видно целиком.
+        /// </summary>
+        private void ShowAdvDisUI(int d1, int d2, bool firstWins,
+                                  string breakdown1 = "", string breakdown2 = "")
         {
             AdvDisRow.Visibility = Visibility.Visible;
 
@@ -274,10 +324,17 @@ namespace CharacterApp.Pages
 
             TbDie1.Text       = d1.ToString();
             TbDie2.Text       = d2.ToString();
-            TbDie1Label.Text  = d1 == chosen ? (advMode ? "БЕРЁТСЯ ✓" : "ОТБРОС ✗") : (advMode ? "ОТБРОС ✗" : "БЕРЁТСЯ ✓");
-            TbDie2Label.Text  = d2 == chosen ? (advMode ? "БЕРЁТСЯ ✓" : "ОТБРОС ✗") : (advMode ? "ОТБРОС ✗" : "БЕРЁТСЯ ✓");
+            TbDie1Label.Text  = firstWins ? "БЕРЁТСЯ ✓" : "ОТБРОС ✗";
+            TbDie2Label.Text  = firstWins ? "ОТБРОС ✗"  : "БЕРЁТСЯ ✓";
 
-            bool d1wins = d1 == chosen;
+            TbDie1Breakdown.Text       = breakdown1;
+            TbDie2Breakdown.Text       = breakdown2;
+            TbDie1Breakdown.Visibility = string.IsNullOrEmpty(breakdown1)
+                ? Visibility.Collapsed : Visibility.Visible;
+            TbDie2Breakdown.Visibility = string.IsNullOrEmpty(breakdown2)
+                ? Visibility.Collapsed : Visibility.Visible;
+
+            bool d1wins = firstWins;
             TbDie1.Foreground = new SolidColorBrush(d1wins ? winCol : loseCol);
             TbDie2.Foreground = new SolidColorBrush(d1wins ? loseCol : winCol);
 

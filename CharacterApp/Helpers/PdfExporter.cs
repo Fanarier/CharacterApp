@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CharacterApp.Models;
 using Microsoft.Win32;
 using QuestPDF.Fluent;
@@ -69,7 +70,12 @@ namespace CharacterApp.Helpers
                     if (_c.Skills?.Count > 0)     Skills(col, "Активные навыки",   _c.Skills);
                     if (_c.PassiveSkills?.Count > 0) Skills(col, "Пассивные навыки", _c.PassiveSkills);
                     if (_c.Attacks?.Count > 0)    Attacks(col);
+                    Traits(col);
+                    HumanoidTraits(col);
+                    Proficiencies(col);
                     Equipment(col);
+                    Inventory(col);
+                    CustomSheets(col);
                     TextBlock(col, "Предыстория",  _c.Backstory);
                     TextBlock(col, "Мировоззрение",_c.Worldview);
                     TextBlock(col, "Внешность",    _c.Appearance);
@@ -322,6 +328,162 @@ namespace CharacterApp.Helpers
         }
 
         // ── Attacks ───────────────────────────────────────────────────────────
+        // ── Черты 4 / 9 / 18 уровня ──────────────────────────────────────────
+        void Traits(ColumnDescriptor col)
+        {
+            var rows = new (string Label, TraitData? Data)[]
+            {
+                ("Черта (4 уровень)",  _c.Trait4),
+                ("Черта (9 уровень)",  _c.Trait9),
+                ("Черта (18 уровень)", _c.Trait18),
+            };
+            if (rows.All(r => string.IsNullOrWhiteSpace(r.Data?.Description))) return;
+
+            SH(col, "Черты", Blue);
+            col.Item().Table(t =>
+            {
+                t.ColumnsDefinition(cd => { cd.RelativeColumn(2); cd.RelativeColumn(5); cd.ConstantColumn(24); });
+                t.Header(h =>
+                {
+                    HC(h, "Черта"); HC(h, "Описание"); HC(h, "✓");
+                });
+                bool alt = false;
+                foreach (var (label, data) in rows)
+                {
+                    string bg = alt ? AltRow : "#FFFFFF";
+                    DC(t, bg, label);
+                    DC(t, bg, data?.Description ?? "");
+                    DC(t, bg, data?.IsAcquired == true ? "✓" : "");
+                    alt = !alt;
+                }
+            });
+        }
+
+        // ── Черты гуманоидов ─────────────────────────────────────────────────
+        void HumanoidTraits(ColumnDescriptor col)
+        {
+            var list = _c.HumanoidTraits;
+            if (list == null || list.Count == 0) return;
+
+            SH(col, "Черты гуманоидов", Blue);
+            col.Item().Table(t =>
+            {
+                t.ColumnsDefinition(cd => { cd.RelativeColumn(2); cd.RelativeColumn(5); cd.ConstantColumn(24); });
+                t.Header(h => { HC(h, "Название"); HC(h, "Описание"); HC(h, "✓"); });
+                bool alt = false;
+                foreach (var tr in list)
+                {
+                    string bg = alt ? AltRow : "#FFFFFF";
+                    DC(t, bg, tr.Name);
+                    DC(t, bg, tr.Description);
+                    DC(t, bg, tr.IsAcquired ? "✓" : "");
+                    alt = !alt;
+                }
+            });
+        }
+
+        // ── Владения и языки ─────────────────────────────────────────────────
+        void Proficiencies(ColumnDescriptor col)
+        {
+            var list = _c.Proficiencies;
+            if (list == null || list.Count == 0) return;
+
+            SH(col, "Владения и языки", Blue);
+            col.Item().Table(t =>
+            {
+                t.ColumnsDefinition(cd => { cd.RelativeColumn(2); cd.RelativeColumn(5); cd.ConstantColumn(60); });
+                t.Header(h => { HC(h, "Тип"); HC(h, "Описание"); HC(h, "Уровень"); });
+                bool alt = false;
+                foreach (var p in list)
+                {
+                    string bg = alt ? AltRow : "#FFFFFF";
+                    DC(t, bg, p.TypeIndex == 1 ? "Язык" : "Владение");
+                    DC(t, bg, p.Description);
+                    // Уровень владения 0..3 — ромбиками, как на экране
+                    DC(t, bg, new string('◆', Math.Clamp(p.Rating, 0, 3))
+                            + new string('◇', 3 - Math.Clamp(p.Rating, 0, 3)));
+                    alt = !alt;
+                }
+            });
+        }
+
+        // ── Инвентарь и деньги ───────────────────────────────────────────────
+        void Inventory(ColumnDescriptor col)
+        {
+            var list = _c.Inventory;
+            bool hasCoins = _c.GoldCoins != 0 || _c.SilverCoins != 0 || _c.CopperCoins != 0;
+            if ((list == null || list.Count == 0) && !hasCoins) return;
+
+            SH(col, "Инвентарь", Blue);
+
+            if (hasCoins)
+                col.Item().PaddingBottom(4).Text(
+                    $"Золото: {_c.GoldCoins}    Серебро: {_c.SilverCoins}    Медь: {_c.CopperCoins}")
+                   .FontSize(10).Bold();
+
+            if (list == null || list.Count == 0) return;
+
+            col.Item().Table(t =>
+            {
+                t.ColumnsDefinition(cd =>
+                {
+                    cd.RelativeColumn(3); cd.ConstantColumn(40);
+                    cd.RelativeColumn(2); cd.RelativeColumn(5);
+                });
+                t.Header(h => { HC(h, "Предмет"); HC(h, "Кол-во"); HC(h, "Редкость"); HC(h, "Описание"); });
+                bool alt = false;
+                foreach (var it in list)
+                {
+                    string bg = alt ? AltRow : "#FFFFFF";
+                    DC(t, bg, it.Name + (it.Equipped ? "  (надет)" : ""));
+                    DC(t, bg, it.Quantity.ToString());
+                    DC(t, bg, it.Rarity);
+                    DC(t, bg, string.IsNullOrWhiteSpace(it.Notes)
+                              ? it.Description
+                              : $"{it.Description}\n{it.Notes}");
+                    alt = !alt;
+                }
+            });
+        }
+
+        // ── Пользовательские листы ───────────────────────────────────────────
+        void CustomSheets(ColumnDescriptor col)
+        {
+            var sheets = _c.CustomSheets;
+            if (sheets == null || sheets.Count == 0) return;
+
+            foreach (var sheet in sheets)
+            {
+                if (sheet.Columns == null || sheet.Columns.Count == 0) continue;
+                SH(col, sheet.Name, Purple);
+                col.Item().Table(t =>
+                {
+                    t.ColumnsDefinition(cd =>
+                    {
+                        foreach (var _ in sheet.Columns) cd.RelativeColumn();
+                    });
+                    t.Header(h =>
+                    {
+                        foreach (var c in sheet.Columns) HC(h, c.Header);
+                    });
+                    bool alt = false;
+                    foreach (var row in sheet.Rows ?? new List<CustomSheetRow>())
+                    {
+                        string bg = alt ? AltRow : "#FFFFFF";
+                        for (int i = 0; i < sheet.Columns.Count; i++)
+                        {
+                            var cell = row.Cells != null && i < row.Cells.Count ? row.Cells[i] : "";
+                            // toggle-колонки в файле хранятся как "True"/"False"
+                            if (sheet.Columns[i].ColumnType == "toggle")
+                                cell = bool.TryParse(cell, out var on) && on ? "✓" : "";
+                            DC(t, bg, cell);
+                        }
+                        alt = !alt;
+                    }
+                });
+            }
+        }
+
         void Attacks(ColumnDescriptor col)
         {
             SH(col, "Атаки", Blue);
@@ -449,6 +611,11 @@ namespace CharacterApp.Helpers
             t.Cell().Padding(3).Text(label).FontSize(10).FontColor("#555");
             t.Cell().Padding(3).Text(value).FontSize(11).Bold();
         }
+
+        /// <summary>Ячейка шапки таблицы — чтобы не повторять оформление в каждом разделе.</summary>
+        static void HC(TableCellDescriptor h, string text) =>
+            h.Cell().Background(Purple).Padding(4)
+             .Text(text ?? "").Bold().FontSize(10).FontColor(Colors.White);
 
         static void DC(TableDescriptor t, string bg, string text) =>
             t.Cell().Background(bg).Padding(4).BorderBottom(0.5f).BorderColor(Line)

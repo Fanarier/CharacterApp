@@ -108,6 +108,31 @@
                 </StackPanel>
             </GroupBox>
 
+
+            <!-- ══ Шрифт ════════════════════════════════════════════════════════ -->
+            <GroupBox Header="Шрифт интерфейса" Margin="5" Padding="10">
+                <StackPanel>
+                    <TextBlock Text="Шрифт:" Margin="0,0,0,4"
+                               Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <ComboBox x:Name="CbFontFamily" Width="200" Height="30"
+                                  SelectionChanged="FontFamily_Changed"/>
+                        <Button Content="По умолчанию" Margin="8,0,0,0" Padding="10,0"
+                                Height="30" MinHeight="0" Click="FontDefault_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="Размер шрифта:" Margin="0,0,0,4"
+                               Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Slider x:Name="SlFontSize" Minimum="10" Maximum="20" Width="160"
+                                TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="FontSize_Changed" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TbFontSizeLabel" Text="13 пт"
+                                   Margin="8,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
             <GroupBox Header="{DynamicResource LanguageBtn}" Margin="5" Padding="10">
                 <StackPanel HorizontalAlignment="Center">
                     <ComboBox x:Name="LanguageComboBox" Width="200" SelectedValuePath="Tag">

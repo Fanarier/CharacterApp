@@ -456,6 +456,13 @@
                                         <TextBlock x:Name="TbDie1"
                                                    FontSize="28" FontWeight="Bold"
                                                    HorizontalAlignment="Center"/>
+                                        <!-- Разбивка по кубикам для бросков по формуле -->
+                                        <TextBlock x:Name="TbDie1Breakdown"
+                                                   FontSize="10" Visibility="Collapsed"
+                                                   HorizontalAlignment="Center"
+                                                   TextAlignment="Center" TextWrapping="Wrap"
+                                                   MaxWidth="150" Margin="0,2,0,0"
+                                                   Foreground="{DynamicResource TextDimBrush}"/>
                                     </StackPanel>
                                 </Border>
                                 <TextBlock Text="vs" VerticalAlignment="Center" Margin="4,0"
@@ -470,6 +477,12 @@
                                         <TextBlock x:Name="TbDie2"
                                                    FontSize="28" FontWeight="Bold"
                                                    HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="TbDie2Breakdown"
+                                                   FontSize="10" Visibility="Collapsed"
+                                                   HorizontalAlignment="Center"
+                                                   TextAlignment="Center" TextWrapping="Wrap"
+                                                   MaxWidth="150" Margin="0,2,0,0"
+                                                   Foreground="{DynamicResource TextDimBrush}"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

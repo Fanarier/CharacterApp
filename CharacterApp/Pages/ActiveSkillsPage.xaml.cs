@@ -1,9 +1,10 @@
-using System.Windows.Data;
+﻿using System.Windows.Data;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using CharacterApp.Controls;
 using CharacterApp.Models;
 
 namespace CharacterApp.Pages
@@ -11,12 +12,18 @@ namespace CharacterApp.Pages
     public partial class ActiveSkillsPage : Page, IPageSearchable
     {
         public ObservableCollection<SkillEntry> Skills { get; } = new ObservableCollection<SkillEntry>();
+        private readonly SearchFilterBar _searchBar = new();
 
         public ActiveSkillsPage()
         {
             InitializeComponent();
             DataContext = this;
+            // Loaded срабатывает при каждом показе страницы, а строку поиска
+            // достаточно собрать один раз — иначе фильтры дублируются
+            Loaded += (_, _) => { if (!_searchReady) { _searchReady = true; InitSearch(); } };
         }
+
+        private bool _searchReady;
 
         public void FillCharacter(Character c)
         {
@@ -49,6 +56,14 @@ namespace CharacterApp.Pages
 
         public void ResetAll() => Skills.Clear();
 
+        private void InitSearch()
+        {
+            _searchBar.AddDropdownFilter("Категория:", new[] { "Все категории", "Классовый (К)", "Расовый (P)" },
+                (item, val) => item is SkillEntry se && se.CategoryDisplay == val);
+            _searchBar.Attach(SkillsGrid, Skills);
+            SearchBarHost.Content = _searchBar;
+        }
+
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             var item = new SkillEntry { SkillName = "Новый навык", CategoryIndex = 0, Description = "", IsActiveSymbol = false };
@@ -78,14 +93,10 @@ namespace CharacterApp.Pages
 
         public void FilterItems(string query)
         {
-            var view = CollectionViewSource.GetDefaultView(Skills);
-            if (string.IsNullOrWhiteSpace(query))
-                view.Filter = null;
-            else
-                view.Filter = obj => obj is SkillEntry s &&
-                    (s.SkillName?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
-                     s.Description?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
-                     s.CategoryDisplay?.Contains(query, StringComparison.OrdinalIgnoreCase) == true);
+            // Раньше здесь ставился собственный фильтр на ту же коллекцию, что
+            // и у строки поиска на странице — они затирали друг друга.
+            // Теперь запрос из бокового меню просто попадает в эту строку.
+            _searchBar.SetSearchText(query ?? "");
         }
 
     }

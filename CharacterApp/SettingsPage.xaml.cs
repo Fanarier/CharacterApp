@@ -1,8 +1,7 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,27 +10,46 @@ using System.Windows.Media.Animation;
 
 namespace CharacterApp
 {
-    public class AutoSaveConfig
-    {
-        public bool   Enabled          { get; set; } = false;
-        public int    IntervalMinutes  { get; set; } = 5;
-        public string Folder           { get; set; } = string.Empty;
-        public string FilePattern      { get; set; } = "autosave_{0:yyyyMMdd_HHmmss}.json";
-        public bool   LoadLastOnStart  { get; set; } = false;
-        public string LastFilePath     { get; set; } = string.Empty;
-        public System.Collections.Generic.List<string> HiddenPages   { get; set; } = new();
-        public System.Collections.Generic.List<string> CustomSheetNames { get; set; } = new();
-        // Полные описания кастомных листов (колонки) для восстановления при старте
-        public System.Collections.Generic.List<Models.CustomSheet> SavedCustomSheets { get; set; } = new();
-    }
+    // Класс AutoSaveConfig удалён: он дублировал AppSettings поле в поле,
+    // писался во второй файл (appsettings.json) и синхронизировался вручную
+    // в обе стороны. Теперь единственный источник — AppSettings в config.json,
+    // а страница настроек правит тот же самый объект, что живёт в MainWindow.
+    // Старый appsettings.json по-прежнему читается один раз при миграции,
+    // см. AppSettings.MigrateOldSettings.
 
     public partial class SettingsPage : Page
     {
-        private static string ThemeConfigFile    => App.ThemeConfigFile;
-        private static string LanguageConfigFile => App.LanguageConfigFile;
-        private static string SettingsFile       => Path.Combine(App.DataDir, "appsettings.json");
-        private static readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = true };
-        private AutoSaveConfig _config = new();
+        /// <summary>
+        /// Тот же экземпляр настроек, что и у MainWindow — не копия.
+        /// Именно свойство, а не поле: страница создаётся внутри конструктора
+        /// MainWindow, и снимок, взятый в этот момент, мог бы устареть.
+        /// Статическое, потому что обращения идут и из статических обработчиков
+        /// (шрифт, акцентный цвет), а источник всё равно один — MainWindow.Instance.
+        /// </summary>
+        private static AppSettings _config =>
+            MainWindow.Instance?.Settings ?? _fallbackConfig;
+        private static readonly AppSettings _fallbackConfig = new();
+
+        /// <summary>
+        /// Записывает настройки. Раньше цвет, шрифт и тема каждый раз делали
+        /// свой AppSettings.Load(), правили копию и сохраняли её — чужие
+        /// несохранённые правки при этом затирались.
+        ///
+        /// Сохраняем сам объект, а не через Application.Current.MainWindow:
+        /// если каст к MainWindow не проходил, вызов молча превращался
+        /// в no-op и настройки не записывались вообще.
+        /// </summary>
+        private static void SaveConfig()
+        {
+            try { _config.Save(); }
+            catch (Exception ex)
+            {
+                Helpers.Log.Error("не удалось сохранить настройки", ex);
+                (Application.Current.MainWindow as MainWindow)
+                    ?.ShowNotification("Не удалось сохранить настройки: " + ex.Message,
+                                       NotificationType.Error);
+            }
+        }
 
         private static readonly string[] _langCodes = { "ru", "en", "jp" };
 
@@ -40,89 +58,70 @@ namespace CharacterApp
             InitializeComponent();
             InitThemeSelection();
             InitLanguageSelection();
-            LoadSettings();
             ApplyToUI();
-            // Обновляем список кастомных листов каждый раз при открытии страницы
-            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) { RefreshSheetList(); InitAccentColorPanel(); } };
+            // Обновляем страницу каждый раз при открытии: настройки могли
+            // измениться в другом месте (кастомные листы, автосейв)
+            IsVisibleChanged += (_, e) =>
+            {
+                if (!(bool)e.NewValue) return;
+                ApplyToUI();
+                InitAccentColorPanel();
+                InitFontSettings();
+            };
         }
 
         private void InitThemeSelection()
         {
-            string theme = "Light";
-            if (File.Exists(ThemeConfigFile))
-            {
-                var t = File.ReadAllText(ThemeConfigFile).Trim();
-                if (t == "Dark" || t == "Light") theme = t;
-            }
-            RbLight.IsChecked = theme == "Light";
+            var theme = _config.SelectedTheme;
+            RbLight.IsChecked = theme != "Dark";
             RbDark.IsChecked  = theme == "Dark";
         }
 
         private async void ConfirmTheme_Click(object sender, RoutedEventArgs e)
         {
             string selectedTheme = RbDark.IsChecked == true ? "Dark" : "Light";
-            try { File.WriteAllText(ThemeConfigFile, selectedTheme); }
-            catch (Exception ex)
-            {
-                (Application.Current.MainWindow as MainWindow)
-                    ?.ShowNotification("Ошибка темы: " + ex.Message, NotificationType.Error);
-                return;
-            }
+
+            _config.SelectedTheme = selectedTheme;
+            SaveConfig();
+
             if (Application.Current.MainWindow is Window win)
             {
-                win.BeginAnimation(Window.OpacityProperty, new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.3)));
+                win.BeginAnimation(Window.OpacityProperty,
+                    new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.3)));
                 await Task.Delay(300);
-                var dicts = Application.Current.Resources.MergedDictionaries;
-                var langDicts  = dicts.Where(d => d.Source != null && d.Source.OriginalString.Contains("Strings/Strings.")).ToList();
-                var themeDicts = dicts.Where(d => d.Source != null && d.Source.OriginalString.StartsWith("Themes/")).ToList();
-                foreach (var td in themeDicts) dicts.Remove(td);
-                dicts.Insert(0, new ResourceDictionary { Source = new Uri($"Themes/{selectedTheme}Theme.xaml", UriKind.Relative) });
-                foreach (var ld in langDicts) if (!dicts.Contains(ld)) dicts.Add(ld);
-                win.BeginAnimation(Window.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.5)));
+
+                // Замена словаря на месте — языковые словари трогать не нужно
+                App.ApplyTheme(selectedTheme);
+
+                win.BeginAnimation(Window.OpacityProperty,
+                    new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.5)));
             }
         }
 
         private void InitLanguageSelection()
         {
-            string code = "ru";
-            if (File.Exists(LanguageConfigFile))
-            {
-                var txt = File.ReadAllText(LanguageConfigFile).Trim();
-                if (_langCodes.Contains(txt)) code = txt;
-            }
+            var code = _config.SelectedLanguage;
+            if (!_langCodes.Contains(code)) code = "ru";
             LanguageComboBox.SelectedValue = code;
         }
 
         private void ApplyLanguage_Click(object sender, RoutedEventArgs e)
         {
             if (LanguageComboBox.SelectedValue is not string code) return;
-            try { File.WriteAllText(LanguageConfigFile, code); }
-            catch (Exception ex)
-            {
-                (Application.Current.MainWindow as MainWindow)
-                    ?.ShowNotification("Ошибка языка: " + ex.Message, NotificationType.Error);
-            }
+
+            _config.SelectedLanguage = code;
+            SaveConfig();
+
             App.LoadLanguage(code);
             LanguageComboBox.SelectedValue = code;
         }
 
-        private void LoadSettings()
-        {
-            if (!File.Exists(SettingsFile)) { _config = new(); return; }
-            try
-            {
-                var fromFile = JsonSerializer.Deserialize<AutoSaveConfig>(File.ReadAllText(SettingsFile));
-                if (fromFile != null) _config = fromFile;
-            }
-            catch { _config = new(); }
-        }
-
         private void ApplyToUI()
         {
-            CbEnableAutoSave.IsChecked  = _config.Enabled;
-            TbAutoSaveInterval.Text     = _config.IntervalMinutes.ToString();
-            TbAutoSaveFolder.Text       = _config.Folder;
-            TbAutoSavePattern.Text      = _config.FilePattern;
+            CbEnableAutoSave.IsChecked  = _config.AutoSaveEnabled;
+            TbAutoSaveInterval.Text     = _config.AutoSaveIntervalMinutes.ToString();
+            TbAutoSaveFolder.Text       = _config.AutoSaveFolder;
+            TbAutoSavePattern.Text      = _config.AutoSaveFilePattern;
             CbLoadLastOnStart.IsChecked = _config.LoadLastOnStart;
 
             // Восстанавливаем видимость страниц
@@ -166,11 +165,12 @@ namespace CharacterApp
 
         private void SaveSettings_Click(object sender, RoutedEventArgs e)
         {
-            _config.Enabled = CbEnableAutoSave.IsChecked == true;
-            if (int.TryParse(TbAutoSaveInterval.Text, out var mins)) _config.IntervalMinutes = mins;
-            _config.Folder           = TbAutoSaveFolder.Text;
-            _config.FilePattern      = TbAutoSavePattern.Text;
-            _config.LoadLastOnStart  = CbLoadLastOnStart.IsChecked == true;
+            _config.AutoSaveEnabled = CbEnableAutoSave.IsChecked == true;
+            if (int.TryParse(TbAutoSaveInterval.Text, out var mins))
+                _config.AutoSaveIntervalMinutes = mins;
+            _config.AutoSaveFolder      = TbAutoSaveFolder.Text;
+            _config.AutoSaveFilePattern = TbAutoSavePattern.Text;
+            _config.LoadLastOnStart     = CbLoadLastOnStart.IsChecked == true;
 
             // Сохраняем скрытые страницы
             _config.HiddenPages.Clear();
@@ -186,20 +186,31 @@ namespace CharacterApp
             _config.CustomSheetNames.Clear();
             foreach (var item in LbCustomSheets.Items)
                 _config.CustomSheetNames.Add(item.ToString()!);
-            try
-            {
-                File.WriteAllText(SettingsFile, JsonSerializer.Serialize(_config, _jsonOpts));
-                var mw = Application.Current.MainWindow as MainWindow;
-                mw?.ShowNotification("Настройки сохранены", NotificationType.Success);
-                mw?.LoadAutoSaveConfig();
-                mw?.ApplyAutoSaveSettings();
-                mw?.PersistAutoSaveConfig();  // синхронизируем SavedCustomSheets
-            }
-            catch (Exception ex)
-            {
-                (Application.Current.MainWindow as MainWindow)
-                    ?.ShowNotification("Ошибка: " + ex.Message, NotificationType.Error);
-            }
+
+            var mw = Application.Current.MainWindow as MainWindow;
+            // _config — тот же объект, что и mw.Settings, отдельная запись не нужна
+            SaveConfig();
+            mw?.ApplyAutoSaveSettings();
+            mw?.ShowNotification("Настройки сохранены", NotificationType.Success);
+
+            WarnIfRiskyAutoSavePattern(mw);
+        }
+
+        /// <summary>
+        /// Чистка старых автосейвов работает по маске, выведенной из шаблона имени.
+        /// Если шаблон начинается сразу с даты, маска получается вида "*.json" —
+        /// отличить свои снимки от чужих файлов невозможно, и чистка отключается.
+        /// Молча копить снимки без предупреждения нечестно.
+        /// </summary>
+        private void WarnIfRiskyAutoSavePattern(MainWindow? mw)
+        {
+            if (mw == null || !_config.AutoSaveEnabled) return;
+            var mask = MainWindow.BuildAutoSaveMask(_config.AutoSaveFilePattern);
+            if (string.IsNullOrEmpty(mask) || mask.StartsWith("*", StringComparison.Ordinal))
+                mw.ShowNotification(
+                    "Шаблон без своего префикса — старые автосейвы удаляться не будут. " +
+                    "Добавь текст в начало, например autosave_{0:yyyyMMdd_HHmmss}.json",
+                    NotificationType.Warning);
         }
 
         private void Back_Click(object sender, RoutedEventArgs e) => NavigationService?.GoBack();
@@ -217,7 +228,7 @@ namespace CharacterApp
             AccentColorPanel.Children.Clear();
 
             // Подставляем текущий цвет из настроек
-            var savedHex = AppSettings.Load().AccentColorHex;
+            var savedHex = _config.AccentColorHex;
             if (!string.IsNullOrWhiteSpace(savedHex))
                 TbAccentHex.Text = savedHex;
             else if (string.IsNullOrWhiteSpace(TbAccentHex.Text))
@@ -272,7 +283,7 @@ namespace CharacterApp
                 AccentPreview.Background =
                     new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
             }
-            catch { }
+            catch { /* пользователь ещё дописывает hex в поле — это нормально */ }
         }
 
         private static void ApplyAccent(string hex)
@@ -322,15 +333,19 @@ namespace CharacterApp
                 foreach (var kv in newValues) res[kv.Key] = kv.Value;
 
                 // 3. Сохраняем для следующей сессии
-                App.CurrentAccentHex = hex;
-                var cfg = AppSettings.Load();
-                cfg.AccentColorHex = hex;
-                cfg.Save();
+                App.CurrentAccentHex   = hex;
+                _config.AccentColorHex = hex;
+                SaveConfig();
 
                 // 4. Перестраиваем динамически созданные табы персонажей
                 (Application.Current.MainWindow as MainWindow)?.RebuildCharacterTabs();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                CharacterApp.Helpers.Log.Warn($"не удалось применить акцентный цвет '{hex}'", ex);
+                (Application.Current.MainWindow as MainWindow)
+                    ?.ShowNotification("Не удалось применить цвет: " + ex.Message, NotificationType.Error);
+            }
         }
 
         private static Color Lighten(Color c, float amt) => Color.FromRgb(
@@ -434,10 +449,10 @@ namespace CharacterApp
             }
 
             var newSheet = new Models.CustomSheet { Name = name, Columns = cols };
+            // AddCustomSheet сам пишет лист в настройки и сохраняет их —
+            // раньше здесь была вторая, отдельная копия списка
             mw.AddCustomSheet(newSheet);
             LbCustomSheets.Items.Add(name);
-            _config.SavedCustomSheets.RemoveAll(s => s.Name == name);
-            _config.SavedCustomSheets.Add(newSheet);
             TbSheetName.Clear();
             TbSheetColumns.Clear();
             mw.ShowNotification($"Лист \u00ab{name}\u00bb добавлен", NotificationType.Success);
@@ -509,11 +524,57 @@ namespace CharacterApp
             if (Application.Current.MainWindow is not MainWindow mw) return;
             if (LbCustomSheets.SelectedItem is string name)
             {
-                mw.RemoveCustomSheet(name);
+                mw.RemoveCustomSheet(name);   // сам чистит список в настройках
                 LbCustomSheets.Items.Remove(name);
-                _config.SavedCustomSheets.RemoveAll(s => s.Name == name);
                 mw.ShowNotification($"Лист \u00ab{name}\u00bb удалён", NotificationType.Info);
             }
         }
+        // ── Font settings ──────────────────────────────────────────────────────
+        private void InitFontSettings()
+        {
+            CbFontFamily.SelectionChanged -= FontFamily_Changed;
+            CbFontFamily.Items.Clear();
+
+            var fonts = new[] {
+                "Segoe UI", "Arial", "Calibri", "Cambria", "Century Gothic",
+                "Comic Sans MS", "Consolas", "Courier New", "Georgia",
+                "Impact", "Palatino Linotype", "Tahoma", "Times New Roman",
+                "Trebuchet MS", "Verdana"
+            };
+            foreach (var f in fonts) CbFontFamily.Items.Add(f);
+
+            CbFontFamily.SelectedItem = _config.AppFontFamily;
+            SlFontSize.Value          = _config.AppFontSize;
+            TbFontSizeLabel.Text      = $"{_config.AppFontSize:0} пт";
+            CbFontFamily.SelectionChanged += FontFamily_Changed;
+        }
+
+        private void FontFamily_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (CbFontFamily?.SelectedItem is not string family) return;
+            _config.AppFontFamily = family;
+            SaveConfig();
+            App.ApplyFontSettings(family, _config.AppFontSize);
+        }
+
+        private void FontSize_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+        {
+            double sz = Math.Round(e.NewValue);
+            if (TbFontSizeLabel == null) return;
+            TbFontSizeLabel.Text = $"{sz:0} пт";
+            _config.AppFontSize = sz;
+            SaveConfig();
+            App.ApplyFontSettings(_config.AppFontFamily, sz);
+        }
+
+        private void FontDefault_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _config.AppFontFamily = "Segoe UI";
+            _config.AppFontSize   = 13;
+            SaveConfig();
+            App.ApplyFontSettings("Segoe UI", 13);
+            InitFontSettings();
+        }
+
     }
 }

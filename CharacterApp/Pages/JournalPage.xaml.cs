@@ -1,4 +1,4 @@
-// Pages/JournalPage.xaml.cs
+﻿// Pages/JournalPage.xaml.cs
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -26,12 +26,64 @@ namespace CharacterApp.Pages
         public JournalPage()
         {
             InitializeComponent();
+            Loaded += (_, _) => RegisterColorFields(new System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            {
+                ["JRN_Title"]    = TbTitle,   // заголовок тоже поле записи, был пропущен
+                ["JRN_Tags"]     = TbTags,
+                ["JRN_Content"]  = TbContent,
+            });
             LbEntries.ItemsSource = _entries;
         }
 
         // ── Public API — called by MainWindow on save/load ───────────────────
         public System.Collections.Generic.List<JournalEntry> GetEntries()
             => _entries.ToList();
+
+
+        // ── Цвета полей ──────────────────────────────────────────────────────
+        private CharacterApp.Models.Character? _currentChar;
+        private System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            _colorFields = new();
+
+        private void RegisterColorFields(
+            System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox> fields)
+        {
+            _colorFields = fields;
+            var mw = () => App.Current.MainWindow as MainWindow;
+            foreach (var (name, tb) in _colorFields)
+                TextColorHelper.Register(tb, name, () => _currentChar, () => mw()?.MarkUnsaved());
+            // Страницу могли открыть уже ПОСЛЕ загрузки персонажа: тогда
+            // ApplyColors отработал на пустом словаре и цвета не применились.
+            // Красим сразу после регистрации, если персонаж уже известен.
+            if (_currentChar != null) TextColorHelper.Apply(_colorFields, _currentChar);
+        }
+
+        /// <summary>
+        /// Привязывает страницу к персонажу и красит поля в сохранённые цвета.
+        /// Вызывается из MainWindow — раньше ApplyColors и CollectColors были
+        /// объявлены, но их никто не звал: цвет в журнале выбирался и тут же
+        /// пропадал при сохранении.
+        /// </summary>
+        public void SetCharacter(CharacterApp.Models.Character c)
+        {
+            _currentChar = c;
+            if (_colorFields.Count > 0) TextColorHelper.Apply(_colorFields, c);
+        }
+
+        public void CollectColors(CharacterApp.Models.Character c)
+        {
+            foreach (var (key, tb) in _colorFields)
+            {
+                var src = System.Windows.DependencyPropertyHelper
+                    .GetValueSource(tb, System.Windows.Controls.TextBox.ForegroundProperty)
+                    .BaseValueSource;
+                if (src == System.Windows.BaseValueSource.Local &&
+                    tb.Foreground is System.Windows.Media.SolidColorBrush b)
+                    c.FieldColors[key] = $"#{b.Color.R:X2}{b.Color.G:X2}{b.Color.B:X2}";
+                else
+                    c.FieldColors.Remove(key);
+            }
+        }
 
         public void LoadEntries(System.Collections.Generic.List<JournalEntry> list)
         {

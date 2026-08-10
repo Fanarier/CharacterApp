@@ -1,4 +1,4 @@
-using CharacterApp.Dialogs;
+﻿using CharacterApp.Dialogs;
 using CharacterApp.Models;
 using CharacterApp.Pages;
 using Microsoft.Win32;
@@ -19,8 +19,6 @@ namespace CharacterApp
 {
     public partial class MainWindow : Window
     {
-        private static readonly System.Text.Json.JsonSerializerOptions _jsonSaveOpts
-            = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
         public static MainWindow Instance { get; private set; } = null!;
 
         // ── Команды (Ctrl+S / Ctrl+O) ────────────────────────────────────────
@@ -65,7 +63,6 @@ namespace CharacterApp
         private string _lastJsonFilePath = string.Empty;
         private bool   _hasUnsavedChanges = false;
 
-        private AutoSaveConfig _autoSaveConfig = new AutoSaveConfig();
         private AppSettings    _appSettings    = new AppSettings();
         private readonly DispatcherTimer _autoSaveTimer;
 
@@ -77,6 +74,11 @@ namespace CharacterApp
         public MainWindow()
         {
             Instance = this;
+
+            // Общий на всё приложение экземпляр настроек. Берём до создания
+            // страниц: SettingsPage читает его через MainWindow.Instance.Settings
+            _appSettings = App.Settings;
+
             InitializeComponent();
 
             _mainPage      = new PageMain();
@@ -101,18 +103,23 @@ namespace CharacterApp
 
             MainFrame.Navigate(_mainPage);
             HighlightActiveButton("builtin:MainPage");
-            InitCharacterSlots();
 
-            // Загружаем единые настройки и синхронизируем в AutoSaveConfig
-            _appSettings    = AppSettings.Load();
-            SyncSettingsToAutoSaveConfig();
             _autoSaveTimer      = new DispatcherTimer();
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
             ApplyAutoSaveSettings();
-            RestoreCustomSheetsFromSettings();
 
-            // Загружаем последний файл если включена настройка
-            if (_appSettings.LoadLastOnStart
+            // Восстанавливаем табы персонажей из прошлой сессии
+            bool sessionRestored = InitCharacterSlots();
+
+            // Если сессия восстановилась, листы уже созданы из самого персонажа.
+            // Дёргать настройки поверх нельзя — иначе в меню приедут листы
+            // другого персонажа, оставшиеся там с прошлого раза.
+            if (!sessionRestored) RestoreCustomSheetsFromSettings();
+
+            // Загружаем последний файл если включена настройка.
+            // Если сессия восстановлена — в ней уже актуальнее, не перетираем.
+            if (!sessionRestored
+                && _appSettings.LoadLastOnStart
                 && !string.IsNullOrEmpty(_appSettings.LastFilePath)
                 && System.IO.File.Exists(_appSettings.LastFilePath))
             {
@@ -121,32 +128,12 @@ namespace CharacterApp
             }
         }
 
-        // Синхронизация нового AppSettings → старый AutoSaveConfig (обратная совместимость)
-        private void SyncSettingsToAutoSaveConfig()
-        {
-            _autoSaveConfig.Enabled         = _appSettings.AutoSaveEnabled;
-            _autoSaveConfig.IntervalMinutes  = _appSettings.AutoSaveIntervalMinutes;
-            _autoSaveConfig.Folder           = _appSettings.AutoSaveFolder;
-            _autoSaveConfig.FilePattern      = _appSettings.AutoSaveFilePattern;
-            _autoSaveConfig.LoadLastOnStart  = _appSettings.LoadLastOnStart;
-            _autoSaveConfig.LastFilePath     = _appSettings.LastFilePath;
-            _autoSaveConfig.HiddenPages      = _appSettings.HiddenPages;
-            _autoSaveConfig.CustomSheetNames = _appSettings.CustomSheetNames;
-            _autoSaveConfig.SavedCustomSheets = _appSettings.SavedCustomSheets;
-        }
-
-        private void SyncAutoSaveConfigToSettings()
-        {
-            _appSettings.AutoSaveEnabled         = _autoSaveConfig.Enabled;
-            _appSettings.AutoSaveIntervalMinutes = _autoSaveConfig.IntervalMinutes;
-            _appSettings.AutoSaveFolder          = _autoSaveConfig.Folder;
-            _appSettings.AutoSaveFilePattern     = _autoSaveConfig.FilePattern;
-            _appSettings.LoadLastOnStart         = _autoSaveConfig.LoadLastOnStart;
-            _appSettings.LastFilePath            = _autoSaveConfig.LastFilePath;
-            _appSettings.HiddenPages             = _autoSaveConfig.HiddenPages;
-            _appSettings.CustomSheetNames        = _autoSaveConfig.CustomSheetNames;
-            _appSettings.SavedCustomSheets       = _autoSaveConfig.SavedCustomSheets;
-        }
+        /// <summary>
+        /// Единственный объект настроек приложения. Страница настроек правит
+        /// его напрямую и вызывает SaveSettings() — копий и ручной синхронизации
+        /// между двумя классами и двумя файлами больше нет.
+        /// </summary>
+        public AppSettings Settings => _appSettings;
 
         // ── Заголовок и маркер несохранённых данных ───────────────────────────
 
@@ -161,18 +148,30 @@ namespace CharacterApp
 
         public void MarkUnsaved()
         {
-            if (_hasUnsavedChanges) return;
-            _hasUnsavedChanges = true;
-            var current = TitleBarText.Text;
-            if (!current.EndsWith(" *")) TitleBarText.Text = current + " *";
+            // Во время восстановления слота страницы дёргают TextChanged —
+            // это не правки пользователя, флаг ставить нельзя
+            if (_slotsRestoring || _hasUnsavedChanges) return;
+            SetUnsavedFlag(true);
         }
 
-        private void MarkSaved()
+        private void MarkSaved() => SetUnsavedFlag(false);
+
+        /// <summary>Единая точка правды: флаг + «звёздочка» в заголовке + состояние слота.</summary>
+        private void SetUnsavedFlag(bool dirty)
         {
-            _hasUnsavedChanges = false;
-           
-            if (TitleBarText.Text.EndsWith(" *"))
-                TitleBarText.Text = TitleBarText.Text[..^2];
+            _hasUnsavedChanges = dirty;
+
+            var text = TitleBarText.Text;
+            bool hasMarker = text.EndsWith(" *", StringComparison.Ordinal);
+            if (dirty && !hasMarker)       TitleBarText.Text = text + " *";
+            else if (!dirty && hasMarker)  TitleBarText.Text = text[..^2];
+
+            if (_activeSlotIndex >= 0 && _activeSlotIndex < _characterSlots.Count
+             && _characterSlots[_activeSlotIndex].HasChanges != dirty)
+            {
+                _characterSlots[_activeSlotIndex].HasChanges = dirty;
+                RebuildCharacterTabs();   // перерисовать звёздочку на табе
+            }
         }
 
         // ── AutoSave ─────────────────────────────────────────────────────────
@@ -189,67 +188,44 @@ namespace CharacterApp
                 var c    = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Character>(json);
                 if (c == null) return;
                 c.NormalizeItemsFromLegacy();
+                Helpers.CharacterAssets.Internalize(c, path);
                 _lastJsonFilePath = path;
+                _slotsRestoring = true;
                 DistributeCharacter(c);
+                _slotsRestoring = false;
                 UpdateTitle(c.CharacterName);
                 MarkSaved();
+                SyncActiveSlot();
             }
             catch (Exception ex)
             {
+                Helpers.Log.Error($"не удалось открыть последний файл {path}", ex);
                 ShowNotification("Ошибка загрузки: " + ex.Message, NotificationType.Error);
             }
         }
 
         private void SaveLastFilePath(string path)
         {
-            if (_autoSaveConfig == null) return;
-            if (!string.IsNullOrEmpty(path)) _autoSaveConfig.LastFilePath = path;
-            PersistAutoSaveConfig();
+            if (!string.IsNullOrEmpty(path)) _appSettings.LastFilePath = path;
+            SaveSettings();
         }
 
-        public void PersistAutoSaveConfig()
+        /// <summary>Записывает настройки на диск (%AppData%\CharacterApp\config.json).</summary>
+        public void SaveSettings()
         {
-            if (_autoSaveConfig == null) return;
-            // Save to old file for backward compat
-            var sf = System.IO.Path.Combine(App.DataDir, "appsettings.json");
-            try
-            {
-                var json = System.Text.Json.JsonSerializer.Serialize(
-                    _autoSaveConfig, _jsonSaveOpts);
-                System.IO.File.WriteAllText(sf, json);
-            }
-            catch { }
-            // Also sync to unified settings and save
-            SyncAutoSaveConfigToSettings();
-            try { _appSettings.Save(); } catch { }
-        }
-
-        public void LoadAutoSaveConfig()
-        {
-            var SettingsFile = System.IO.Path.Combine(App.DataDir, "appsettings.json");
-            if (File.Exists(SettingsFile))
-            {
-                try
-                {
-                    var jsonText = File.ReadAllText(SettingsFile);
-                    _autoSaveConfig = System.Text.Json.JsonSerializer
-                                          .Deserialize<AutoSaveConfig>(jsonText)
-                                      ?? new AutoSaveConfig();
-                }
-                catch { _autoSaveConfig = new AutoSaveConfig(); }
-            }
-            else { _autoSaveConfig = new AutoSaveConfig(); }
+            try { _appSettings.Save(); }
+            catch (Exception ex) { Helpers.Log.Error("не удалось сохранить настройки", ex); }
         }
 
         public void ApplyAutoSaveSettings()
         {
             _autoSaveTimer.Stop();
-            if (_autoSaveConfig.Enabled
-             && _autoSaveConfig.IntervalMinutes > 0
-             && !string.IsNullOrEmpty(_autoSaveConfig.Folder)
-             && Directory.Exists(_autoSaveConfig.Folder))
+            if (_appSettings.AutoSaveEnabled
+             && _appSettings.AutoSaveIntervalMinutes > 0
+             && !string.IsNullOrEmpty(_appSettings.AutoSaveFolder)
+             && Directory.Exists(_appSettings.AutoSaveFolder))
             {
-                _autoSaveTimer.Interval = TimeSpan.FromMinutes(_autoSaveConfig.IntervalMinutes);
+                _autoSaveTimer.Interval = TimeSpan.FromMinutes(_appSettings.AutoSaveIntervalMinutes);
                 _autoSaveTimer.Start();
             }
         }
@@ -262,17 +238,24 @@ namespace CharacterApp
             try
             {
                 var character = CollectCharacter();
+                var filename  = string.Format(_appSettings.AutoSaveFilePattern, DateTime.Now);
+                var path      = Path.Combine(_appSettings.AutoSaveFolder, filename);
+                // Общая папка ресурсов на все автосейвы — иначе на каждый снимок
+                // создавалась бы своя копия портрета
+                Helpers.CharacterAssets.Externalize(character, path, "autosave" + Helpers.CharacterAssets.AssetsSuffix);
                 var json      = JsonConvert.SerializeObject(character, Formatting.Indented);
-                var filename  = string.Format(_autoSaveConfig.FilePattern, DateTime.Now);
-                var path      = Path.Combine(_autoSaveConfig.Folder, filename);
-                File.WriteAllText(path, json);
-                SaveLastFilePath(path);
+                WriteFileSafely(path, json, keepBackup: false);
 
-                var files = new DirectoryInfo(_autoSaveConfig.Folder)
-                    .GetFiles("*.json")
-                    .OrderByDescending(f => f.CreationTimeUtc)
-                    .Skip(5);
-                foreach (var f in files) try { f.Delete(); } catch { }
+                // Здесь раньше стоял SaveLastFilePath(path): автосейв объявлял себя
+                // «последним файлом», и при включённой загрузке последнего при старте
+                // открывался снимок, а не рабочий файл персонажа. Снимок — резервная
+                // копия, а не рабочий документ, LastFilePath он менять не должен.
+
+                PruneOldAutoSaves();
+
+                // Слепок сессии — чтобы при падении не потерялись соседние табы
+                SyncActiveSlot();
+                PersistCharacterSlots();
 
                 ShowNotification($"Автосохранено: {filename}", NotificationType.Success);
             }
@@ -280,6 +263,47 @@ namespace CharacterApp
             {
                 ShowNotification("Ошибка автосохранения: " + ex.Message, NotificationType.Error);
             }
+        }
+
+        private const int MaxAutoSaveFiles = 5;
+
+        /// <summary>
+        /// Превращает шаблон имени автосейва в маску поиска:
+        /// "autosave_{0:yyyyMMdd_HHmmss}.json" → "autosave_*.json".
+        /// Нужно чтобы чистка НЕ трогала посторонние .json в той же папке.
+        /// </summary>
+        internal static string BuildAutoSaveMask(string pattern)
+        {
+            if (string.IsNullOrWhiteSpace(pattern)) return "";
+            // Заменяем все плейсхолдеры {...} на одну звёздочку
+            var mask = System.Text.RegularExpressions.Regex.Replace(pattern, @"\{[^}]*\}", "*");
+            // Схлопываем "**" → "*"
+            while (mask.Contains("**")) mask = mask.Replace("**", "*");
+            return mask;
+        }
+
+        /// <summary>Удаляет старые автосейвы, оставляя MaxAutoSaveFiles свежих.</summary>
+        private void PruneOldAutoSaves()
+        {
+            var mask = BuildAutoSaveMask(_appSettings.AutoSaveFilePattern);
+
+            // Защита от катастрофы: если из шаблона получилась маска без собственного
+            // префикса (например "*.json" или "*"), чистку не делаем вообще —
+            // иначе рискуем стереть сохранения персонажей, лежащие в этой же папке.
+            if (string.IsNullOrEmpty(mask) || mask.StartsWith("*", StringComparison.Ordinal))
+                return;
+
+            try
+            {
+                var stale = new DirectoryInfo(_appSettings.AutoSaveFolder)
+                    .GetFiles(mask)
+                    .OrderByDescending(f => f.LastWriteTimeUtc)
+                    .Skip(MaxAutoSaveFiles);
+                foreach (var f in stale)
+                    try { f.Delete(); }
+                    catch (Exception ex) { Helpers.Log.Warn($"не удалось удалить старый автосейв {f.Name}", ex); }
+            }
+            catch (Exception ex) { Helpers.Log.Warn("чистка автосейвов не удалась", ex); }
         }
 
         // ── Сохранение / загрузка ─────────────────────────────────────────────
@@ -297,8 +321,8 @@ namespace CharacterApp
             foreach (var kv in _customPages) kv.Value.FillCharacter(c);
             _statsPage.FillCharacter(c);
             // Journal & Resources (only if pages were opened)
-            if (_journalPage   != null) c.JournalEntries = _journalPage.GetEntries();
-            if (_resourcesPage != null) { c.HpData = _resourcesPage.GetHpData(); c.Resources = _resourcesPage.GetResources(); }
+            if (_journalPage   != null) { c.JournalEntries = _journalPage.GetEntries(); _journalPage.CollectColors(c); }
+            if (_resourcesPage != null) { _resourcesPage.CollectColors(c); c.HpData = _resourcesPage.GetHpData(); c.Resources = _resourcesPage.GetResources(); }
             _inventoryPage.SaveTo(c);
             return c;
         }
@@ -314,12 +338,14 @@ namespace CharacterApp
             _attacksPage.ApplyCharacter(c);
             RebuildCustomPages(c);
             _statsPage.ApplyCharacter(c);
+            _inventoryPage.LoadFrom(c);
             // Journal & Resources — apply lazily (create page if needed)
             _journalPage ??= new JournalPage();
             _journalPage.LoadEntries(c.JournalEntries ?? new());
+            _journalPage.SetCharacter(c);
             _resourcesPage ??= new ResourcesPage();
             _resourcesPage.LoadData(c.HpData, c.Resources);
-            _inventoryPage.LoadFrom(c);
+            _resourcesPage.SetCharacter(c);
             UpdateTitle(c.CharacterName);
         }
 
@@ -340,6 +366,8 @@ namespace CharacterApp
                 DoSave(_lastJsonFilePath);
                 SaveLastFilePath(_lastJsonFilePath);
                 MarkSaved();
+                SyncActiveSlot();
+                PersistCharacterSlots();
                 ShowNotification("Данные сохранены!", NotificationType.Success);
             }
             else
@@ -357,37 +385,122 @@ namespace CharacterApp
                 DoSave(_lastJsonFilePath);
                 SaveLastFilePath(_lastJsonFilePath);   // ← запоминаем путь
                 MarkSaved();
+                SyncActiveSlot();
+                PersistCharacterSlots();
                 ShowNotification("Данные сохранены!", NotificationType.Success);
             }
         }
 
         public void LoadAll()
         {
-            var dlg = new OpenFileDialog { Filter = "JSON файлы (*.json)|*.json" };
-            if (dlg.ShowDialog() == true)
+            // Загрузка затирает текущего персонажа в активном табе.
+            // Раньше это происходило молча — открыл файл и потерял правки.
+            if (_hasUnsavedChanges)
             {
+                var r = ConfirmYNC(
+                    "В текущем персонаже есть несохранённые изменения.\nСохранить перед загрузкой другого?",
+                    "Загрузка");
+                if (r == ConfirmDialog.ConfirmResult.Cancel) return;
+                if (r == ConfirmDialog.ConfirmResult.Yes)
+                {
+                    SaveAll();
+                    // Не сохранилось (отменили диалог выбора файла) — не рискуем
+                    if (_hasUnsavedChanges) return;
+                }
+            }
+
+            var dlg = new OpenFileDialog { Filter = "JSON файлы (*.json)|*.json" };
+            if (dlg.ShowDialog() != true) return;
+
+            var previousPath = _lastJsonFilePath;
+            try
+            {
+                var json      = File.ReadAllText(dlg.FileName);
+                var character = JsonConvert.DeserializeObject<Character>(json) ?? new Character();
+                character.NormalizeItemsFromLegacy();
+                // Относительные пути к картинкам → абсолютные для текущей машины
+                Helpers.CharacterAssets.Internalize(character, dlg.FileName);
+
+                // Путь запоминаем только после успешного чтения: иначе битый файл
+                // становился «последним» и Ctrl+S затирал бы его текущим персонажем
                 _lastJsonFilePath = dlg.FileName;
-                SaveLastFilePath(_lastJsonFilePath);   // ← запоминаем путь
-                try
+                SaveLastFilePath(_lastJsonFilePath);
+
+                _slotsRestoring = true;
+                DistributeCharacter(character);
+                _slotsRestoring = false;
+                MarkSaved();
+                SyncActiveSlot();
+                RebuildCharacterTabs();
+                PersistCharacterSlots();
+                ShowNotification("Данные загружены!", NotificationType.Success);
+            }
+            catch (Exception ex)
+            {
+                _lastJsonFilePath = previousPath;
+                Helpers.Log.Error($"не удалось загрузить {dlg.FileName}", ex);
+
+                // Рядом может лежать резервная копия с прошлого сохранения
+                var bak = dlg.FileName + ".bak";
+                if (File.Exists(bak) &&
+                    Confirm($"Файл не читается:\n{ex.Message}\n\n" +
+                            "Рядом есть резервная копия предыдущего сохранения. Загрузить её?",
+                            "Файл повреждён"))
                 {
-                    var json      = File.ReadAllText(_lastJsonFilePath);
-                    var character = JsonConvert.DeserializeObject<Character>(json) ?? new Character();
-                    character.NormalizeItemsFromLegacy();
-                    DistributeCharacter(character);
-                    MarkSaved();
-                    ShowNotification("Данные загружены!", NotificationType.Success);
+                    LoadFromPath(bak);
+                    // Работаем с копией, но пишем по-прежнему в основной файл,
+                    // чтобы случайно не сделать .bak рабочим документом
+                    _lastJsonFilePath = dlg.FileName;
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    ShowNotification("Ошибка при загрузке: " + ex.Message, NotificationType.Error);
-                }
+
+                ShowNotification("Ошибка при загрузке: " + ex.Message, NotificationType.Error);
             }
         }
 
         private void DoSave(string path)
         {
-            var json = JsonConvert.SerializeObject(CollectCharacter(), Formatting.Indented);
-            File.WriteAllText(path, json);
+            var character = CollectCharacter();
+            // Копируем портрет и иконки предметов в <имя>_assets рядом с JSON
+            // и заменяем абсолютные пути на относительные — файл станет переносимым
+            Helpers.CharacterAssets.Externalize(character, path);
+            var json = JsonConvert.SerializeObject(character, Formatting.Indented);
+
+            WriteFileSafely(path, json);
+        }
+
+        /// <summary>
+        /// Записывает файл персонажа так, чтобы его нельзя было потерять.
+        ///
+        /// Раньше здесь был File.WriteAllText прямо поверх существующего файла:
+        /// если запись обрывалась (питание, антивирус, кончилось место), от
+        /// персонажа оставался огрызок, а прежней версии уже не существовало.
+        ///
+        /// Теперь: пишем во временный файл → проверяем, что он читается →
+        /// прежнюю версию отводим в .bak → подменяем основной файл.
+        /// В худшем случае у пользователя останется .bak с прошлым сохранением.
+        /// </summary>
+        private static void WriteFileSafely(string path, string json, bool keepBackup = true)
+        {
+            var tmp = path + ".tmp";
+            var bak = path + ".bak";
+
+            File.WriteAllText(tmp, json);
+
+            // Дешёвая проверка: файл на диске и он не пустой
+            var written = new FileInfo(tmp);
+            if (!written.Exists || written.Length == 0)
+                throw new IOException($"Временный файл {tmp} не записался");
+
+            // Для автосейвов бэкап не нужен — там и так хранится пять снимков
+            if (keepBackup && File.Exists(path))
+            {
+                try { File.Copy(path, bak, overwrite: true); }
+                catch (Exception ex) { Helpers.Log.Warn("не удалось обновить .bak", ex); }
+            }
+
+            // Move с overwrite на одном томе атомарен
+            File.Move(tmp, path, overwrite: true);
         }
 
 
@@ -434,11 +547,15 @@ namespace CharacterApp
         {
             if (!Confirm("Сбросить все данные персонажа?\nНесохранённые изменения будут потеряны.", "Сброс данных")) return;
 
+            _slotsRestoring = true;
             DistributeCharacter(new Character());
-            _inventoryPage.ResetAll();
+            _slotsRestoring = false;
             _lastJsonFilePath  = string.Empty;
-            _hasUnsavedChanges = false;
             TitleBarText.Text  = "Espires Games";
+            SetUnsavedFlag(false);
+            SyncActiveSlot();
+            RebuildCharacterTabs();
+            PersistCharacterSlots();
             ShowNotification("Данные сброшены", NotificationType.Info);
         }
 
@@ -453,16 +570,58 @@ namespace CharacterApp
         private void Minimize_Click (object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
         private void Maximize_Click (object sender, RoutedEventArgs e) =>
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-        private void Close_Click    (object sender, RoutedEventArgs e)
+        private void Close_Click    (object sender, RoutedEventArgs e) => Close();
+
+        /// <summary>
+        /// Единая точка выхода: срабатывает и на крестик, и на Alt+F4,
+        /// и на закрытие из таскбара, и на завершение сессии Windows.
+        /// </summary>
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            if (_hasUnsavedChanges)
+            base.OnClosing(e);
+            if (e.Cancel || _closeConfirmed) return;
+
+            // Активный слот мог быть не единственным с правками
+            SyncActiveSlot();
+            bool dirty = _hasUnsavedChanges || _characterSlots.Any(s => s.HasChanges);
+            if (!dirty) { PersistCharacterSlots(); return; }
+
+            // NB: у ObservableCollection есть свойство Count, поэтому Linq-Count(предикат)
+            // напрямую не вызвать — считаем через Where
+            var dirtyNames = _characterSlots.Where(s => s.HasChanges)
+                                            .Select(s => s.DisplayName).ToList();
+
+            string msg;
+            if (!_hasUnsavedChanges)
             {
-                var r = ConfirmYNC("Есть несохранённые изменения. Сохранить перед выходом?", "Выход");
-                if (r == ConfirmDialog.ConfirmResult.Cancel) return;
-                if (r == ConfirmDialog.ConfirmResult.Yes) SaveAll();
+                // Активный чист, но правки есть в других табах — сохранить их
+                // одной кнопкой нельзя, поэтому честно предупреждаем
+                msg = "Несохранённые изменения есть у:\n• "
+                    + string.Join("\n• ", dirtyNames)
+                    + "\n\nТабы восстановятся при следующем запуске,\nно в файлы .json они не записаны. Выйти?";
+                if (!Confirm(msg, "Выход")) { e.Cancel = true; return; }
             }
-            Close();
+            else
+            {
+                msg = dirtyNames.Count > 1
+                    ? "Есть несохранённые изменения в нескольких персонажах.\nСохранить активного перед выходом?"
+                    : "Есть несохранённые изменения. Сохранить перед выходом?";
+
+                var r = ConfirmYNC(msg, "Выход");
+                if (r == ConfirmDialog.ConfirmResult.Cancel) { e.Cancel = true; return; }
+                if (r == ConfirmDialog.ConfirmResult.Yes)
+                {
+                    SaveAll();
+                    // Пользователь мог нажать "Отмена" в диалоге выбора файла
+                    if (_hasUnsavedChanges) { e.Cancel = true; return; }
+                }
+            }
+
+            _closeConfirmed = true;
+            PersistCharacterSlots();
         }
+
+        private bool _closeConfirmed = false;
 
         public async void ShowNotification(string message, NotificationType type = NotificationType.Info)
         {
@@ -537,11 +696,11 @@ namespace CharacterApp
 
         // ── Пользовательские листы ──────────────────────────────────────────
 
-        // Восстанавливает кастомные страницы из appsettings (без загрузки JSON персонажа)
+        // Восстанавливает кастомные страницы из настроек (без загрузки JSON персонажа)
         private void RestoreCustomSheetsFromSettings()
         {
-            if (_autoSaveConfig?.SavedCustomSheets == null) return;
-            foreach (var sheet in _autoSaveConfig.SavedCustomSheets)
+            if (_appSettings.SavedCustomSheets == null) return;
+            foreach (var sheet in _appSettings.SavedCustomSheets)
             {
                 if (_customPages.ContainsKey(sheet.Name)) continue;
                 var page = new CustomSheetPage(sheet);
@@ -550,11 +709,11 @@ namespace CharacterApp
                 var btn  = new Button
                 {
                     Content = sheet.Name,
+                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                     Tag     = "custom:" + sheet.Name,
                     Style   = (Style)FindResource("SidebarNavButton")
                 };
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
-                EnsureCustomSectionHeader();
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
@@ -565,23 +724,19 @@ namespace CharacterApp
             // Удаляем старые кастомные кнопки из сайдбара
             var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
             foreach (System.Windows.UIElement ch in MenuStack.Children)
-                if (ch is FrameworkElement fe && fe.Tag is string tag && tag.StartsWith("custom:", System.StringComparison.Ordinal))
+                if (ch is Button btn && btn.Tag is string tag && tag.StartsWith("custom:", System.StringComparison.Ordinal))
                     toRemove.Add(ch);
             foreach (var el in toRemove) MenuStack.Children.Remove(el);
             _customPages.Clear();
 
-            // Создаём страницы и кнопки по данным Character
-            // Синхронизируем SavedCustomSheets: добавляем листы из JSON
-            // (Clear не делаем — чтобы не потерять листы которые ещё не в JSON)
-            if (_autoSaveConfig != null)
-            {
-                foreach (var sheet in c.CustomSheets)
-                {
-                    _autoSaveConfig.SavedCustomSheets.RemoveAll(s => s.Name == sheet.Name);
-                    _autoSaveConfig.SavedCustomSheets.Add(sheet);
-                }
-                PersistAutoSaveConfig();
-            }
+            // Список листов в настройках — это снимок ТЕКУЩЕГО персонажа,
+            // а не копилка. Раньше здесь стояло «Clear не делаем», и листы
+            // накапливались: созданные у одного персонажа всплывали в меню
+            // при загрузке другого. Кастомные листы принадлежат персонажу,
+            // а от потери несохранённых их бережёт session.json.
+            _appSettings.SavedCustomSheets.Clear();
+            _appSettings.SavedCustomSheets.AddRange(c.CustomSheets);
+            SaveSettings();
 
             foreach (var sheet in c.CustomSheets)
             {
@@ -592,73 +747,15 @@ namespace CharacterApp
                 var btn  = new Button
                 {
                     Content = sheet.Name,
+                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                     Tag     = "custom:" + sheet.Name,
                     Style   = (Style)FindResource("SidebarNavButton")
                 };
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
-                if (c.CustomSheets.IndexOf(sheet) == 0) EnsureCustomSectionHeader();
+                // Вставляем перед кнопкой Настройки
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
-        }
-
-
-        // ── Секция кастомных листов в сайдбаре ──────────────────────────────
-
-
-        // ── Секция кастомных листов в сайдбаре ──────────────────────────────
-
-        private void EnsureCustomSectionHeader()
-        {
-            foreach (System.Windows.UIElement ch in MenuStack.Children)
-                if (ch is FrameworkElement fe && fe.Tag?.ToString() == "custom:_section")
-                    return;
-
-            var sep = new System.Windows.Shapes.Rectangle
-            {
-                Height  = 1,
-                Margin  = new System.Windows.Thickness(10, 6, 10, 0),
-                Opacity = 0.5
-            };
-            sep.SetResourceReference(System.Windows.Shapes.Rectangle.FillProperty, "BorderMedBrush");
-
-            var label = new TextBlock
-            {
-                Text       = "КАСТОМНЫЕ ЛИСТЫ",
-                FontSize   = 10,
-                FontWeight = System.Windows.FontWeights.SemiBold,
-                Margin     = new System.Windows.Thickness(16, 4, 0, 2),
-                Opacity    = 0.55
-            };
-            label.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-
-            var panel = new StackPanel
-            {
-                Tag    = "custom:_section",
-                Margin = new System.Windows.Thickness(0, 4, 0, 0)
-            };
-            panel.Children.Add(sep);
-            panel.Children.Add(label);
-
-            int idx = MenuStack.Children.Count - 1;
-            MenuStack.Children.Insert(idx, panel);
-        }
-
-        private void RemoveCustomSectionHeaderIfEmpty()
-        {
-            bool hasCustom = false;
-            foreach (System.Windows.UIElement ch in MenuStack.Children)
-                if (ch is Button b && b.Tag is string t &&
-                    t.StartsWith("custom:", System.StringComparison.Ordinal))
-                { hasCustom = true; break; }
-
-            if (hasCustom) return;
-
-            var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
-            foreach (System.Windows.UIElement ch in MenuStack.Children)
-                if (ch is FrameworkElement fe && fe.Tag?.ToString() == "custom:_section")
-                    toRemove.Add(ch);
-            foreach (var el in toRemove) MenuStack.Children.Remove(el);
         }
 
         public void AddCustomSheet(CustomSheet sheet)
@@ -668,24 +765,28 @@ namespace CharacterApp
             _customPages[sheet.Name] = page;
 
             // Запоминаем в конфиге чтобы восстановить при следующем запуске
-            _autoSaveConfig.SavedCustomSheets.RemoveAll(s => s.Name == sheet.Name);
-            _autoSaveConfig.SavedCustomSheets.Add(sheet);
-            PersistAutoSaveConfig();
+            _appSettings.SavedCustomSheets.RemoveAll(s => s.Name == sheet.Name);
+            _appSettings.SavedCustomSheets.Add(sheet);
+            SaveSettings();
 
             // Кнопка в сайдбар
             var name = sheet.Name;
             var btn  = new Button
             {
                 Content = sheet.Name,
+                Margin  = new System.Windows.Thickness(0, 4, 0, 4),
                 Tag     = "custom:" + sheet.Name,
                 Style   = (Style)FindResource("SidebarNavButton")
             };
             btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
-            EnsureCustomSectionHeader();
             int idx = MenuStack.Children.Count - 1;
             MenuStack.Children.Insert(idx, btn);
 
             MarkUnsaved();
+            // Кладём лист в сессию сразу: если приложение закроют, не сохранив
+            // персонажа, при следующем запуске лист вернётся вместе с табом
+            SyncActiveSlot();
+            PersistCharacterSlots();
         }
 
         public void RemoveCustomSheet(string name)
@@ -694,8 +795,8 @@ namespace CharacterApp
             _customPages.Remove(name);
 
             // 2. Убираем из конфига + сохраняем конфиг сразу
-            _autoSaveConfig?.SavedCustomSheets?.RemoveAll(s => s.Name == name);
-            PersistAutoSaveConfig();
+            _appSettings.SavedCustomSheets.RemoveAll(s => s.Name == name);
+            SaveSettings();
 
             // 3. Убираем кнопку из сайдбара
             var toRemove = new System.Collections.Generic.List<System.Windows.UIElement>();
@@ -703,7 +804,6 @@ namespace CharacterApp
                 if (ch is Button btn && btn.Tag?.ToString() == "custom:" + name)
                     toRemove.Add(ch);
             foreach (var el in toRemove) MenuStack.Children.Remove(el);
-            RemoveCustomSectionHeaderIfEmpty();
 
             // 4. Если есть открытый файл — немедленно пересохраняем JSON персонажа
             //    чтобы CustomSheets в файле тоже обновился (без этого при загрузке
@@ -717,23 +817,14 @@ namespace CharacterApp
             {
                 MarkUnsaved();
             }
+
+            // Обновляем сессию, иначе удалённый лист вернётся после перезапуска
+            SyncActiveSlot();
+            PersistCharacterSlots();
         }
 
-        // Собирает текущий Character из всех страниц
-        private Character GetCurrentCharacter()
-        {
-            var c = new Character();
-            _mainPage.FillCharacter(c);
-            _detailsPage.FillCharacter(c);
-            _equipmentPage.FillCharacter(c);
-            _skillsPage.FillCharacter(c);
-            _passivePage.FillCharacter(c);
-            _profPage.FillCharacter(c);
-            _attacksPage.FillCharacter(c);
-            foreach (var kv in _customPages) kv.Value.FillCharacter(c);
-            _statsPage.FillCharacter(c);
-            return c;
-        }
+        // GetCurrentCharacter() удалён: это был неиспользуемый дубликат CollectCharacter(),
+        // причём без журнала и трекера ресурсов — ловушка для будущего рефакторинга.
 
         public static System.Collections.Generic.IEnumerable<string> GetBuiltinPageNames()
 
@@ -745,8 +836,6 @@ namespace CharacterApp
               "ActiveSkills", "PassiveSkills", "Proficiencies", "Attacks" };
 
         /// <summary>Возвращает имена всех активных кастомных листов.</summary>
-        public System.Collections.Generic.IEnumerable<string> GetCustomSheetNames()
-            => _customPages.Keys;
 
         public Models.CustomSheet? GetCustomSheet(string name)
             => _customPages.TryGetValue(name, out var page) ? page.Sheet : null;
@@ -756,54 +845,48 @@ namespace CharacterApp
         {
             if (!_customPages.TryGetValue(oldName, out var page)) return;
 
-            // 1. Обновляем заголовки колонок
             page.UpdateHeaders(newHeaders);
 
-            // 2. Если имя изменилось — перепривязываем всё
             if (oldName != newName)
             {
                 page.UpdateTitle(newName);
                 _customPages.Remove(oldName);
                 _customPages[newName] = page;
 
-                // Заменяем кнопку в сайдбаре
                 for (int i = 0; i < MenuStack.Children.Count; i++)
                 {
                     if (MenuStack.Children[i] is Button b && b.Tag?.ToString() == "custom:" + oldName)
                     {
-                        var capturedName = newName;
-                        var newBtn = new Button
+                        var cap = newName;
+                        var nb  = new Button
                         {
                             Content = newName,
                             Tag     = "custom:" + newName,
                             Style   = (Style)FindResource("SidebarNavButton")
                         };
-                        newBtn.Click += (_, _) =>
+                        nb.Click += (_, _) =>
                         {
-                            MainFrame.Navigate(_customPages[capturedName]);
-                            HighlightActiveButton("custom:" + capturedName);
+                            MainFrame.Navigate(_customPages[cap]);
+                            HighlightActiveButton("custom:" + cap);
                         };
                         MenuStack.Children.RemoveAt(i);
-                        MenuStack.Children.Insert(i, newBtn);
+                        MenuStack.Children.Insert(i, nb);
                         break;
                     }
                 }
             }
 
-            // 3. Обновляем конфиг
-            if (_autoSaveConfig != null)
-            {
-                var saved = _autoSaveConfig.SavedCustomSheets.FirstOrDefault(s => s.Name == oldName);
-                if (saved != null)
-                {
-                    saved.Name = newName;
-                    for (int i = 0; i < System.Math.Min(newHeaders.Count, saved.Columns.Count); i++)
-                        saved.Columns[i].Header = newHeaders[i];
-                }
-                PersistAutoSaveConfig();
-            }
+            // Раньше правка листа жила только в памяти: после перезапуска
+            // возвращались старое имя и старые колонки
+            _appSettings.SavedCustomSheets.RemoveAll(s => s.Name == oldName || s.Name == newName);
+            _appSettings.SavedCustomSheets.Add(page.Sheet);
+            SaveSettings();
+
             MarkUnsaved();
         }
+
+        public System.Collections.Generic.IEnumerable<string> GetCustomSheetNames()
+            => _customPages.Keys;
 
         public void SetPageVisible(string pageKey, bool visible)
         {
@@ -941,6 +1024,45 @@ namespace CharacterApp
             return tcs.Task;
         }
 
+        /// <summary>
+        /// Текст, по которому ищется кнопка меню.
+        /// Раньше здесь первым делом брался Tag ("builtin:Inventory"), и поиск
+        /// работал по служебным английским идентификаторам: запрос «Инвентарь»
+        /// не находил ничего, а «Inv» находил. Теперь ищем по видимой надписи,
+        /// а тег добавляем хвостом — на случай, если кто-то по привычке
+        /// вбивает латиницу.
+        /// </summary>
+        private static string GetButtonSearchText(Button btn)
+        {
+            string visible = string.Empty;
+
+            if (btn.Content is StackPanel sp)
+            {
+                foreach (UIElement spChild in sp.Children)
+                    if (spChild is TextBlock spTb) { visible = spTb.Text; break; }
+            }
+            else
+            {
+                visible = btn.Content?.ToString() ?? string.Empty;
+            }
+
+            var tag = btn.Tag?.ToString() ?? string.Empty;
+            // Отрезаем префикс "builtin:" / "custom:" — он в поиске только шумит
+            int colon = tag.IndexOf(':');
+            if (colon >= 0) tag = tag[(colon + 1)..];
+
+            return visible + " " + tag;
+        }
+
+        /// <summary>Скрыта ли страница пользователем в настройках.</summary>
+        private bool IsPageHiddenByUser(string? tag)
+        {
+            if (string.IsNullOrEmpty(tag) || !tag.StartsWith("builtin:", StringComparison.Ordinal))
+                return false;
+            var key = tag["builtin:".Length..];
+            return _appSettings.HiddenPages?.Contains(key) == true;
+        }
+
         private void TbMenuSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             var query    = TbMenuSearch.Text?.Trim() ?? string.Empty;
@@ -950,24 +1072,29 @@ namespace CharacterApp
             if (MainFrame.Content is Pages.IPageSearchable searchablePage)
                 searchablePage.FilterItems(query);
 
+            bool searching = !string.IsNullOrEmpty(query);
+
             foreach (var child in MenuStack.Children)
             {
                 if (child is Button btn)
                 {
-                    string contentText = btn.Tag?.ToString() ?? string.Empty;
-                    if (string.IsNullOrEmpty(contentText) && btn.Content is StackPanel sp)
-                        foreach (UIElement spChild in sp.Children)
-                            if (spChild is TextBlock spTb) { contentText = spTb.Text; break; }
-                    if (string.IsNullOrEmpty(contentText))
-                        contentText = btn.Content?.ToString() ?? string.Empty;
+                    // Страницу, скрытую в настройках, поиск показывать не должен
+                    if (IsPageHiddenByUser(btn.Tag?.ToString()))
+                    {
+                        btn.Visibility = Visibility.Collapsed;
+                        continue;
+                    }
 
-                    bool visible = string.IsNullOrEmpty(query) ||
-                                   contentText.Contains(query, StringComparison.OrdinalIgnoreCase);
+                    bool visible = !searching ||
+                        GetButtonSearchText(btn).Contains(query, StringComparison.OrdinalIgnoreCase);
                     btn.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
                     if (visible) anyVisible = true;
                 }
-                else if (child is TextBlock tb2)
-                    tb2.Visibility = string.IsNullOrEmpty(query) ? Visibility.Visible : Visibility.Collapsed;
+                else if (child is TextBlock tb2 && tb2.Tag?.ToString() != "NoResults")
+                    tb2.Visibility = searching ? Visibility.Collapsed : Visibility.Visible;
+                else if (child is Separator or Border)
+                    // Заголовок «Меню» и разделители при поиске только мешают
+                    ((UIElement)child).Visibility = searching ? Visibility.Collapsed : Visibility.Visible;
             }
 
             // Показываем/скрываем плашку "Ничего не найдено"
@@ -1000,12 +1127,23 @@ namespace CharacterApp
                 ShowNotification("Проверка обновлений...", NotificationType.Info);
                 var client   = new GitHubClient(new ProductHeaderValue("CharacterApp"));
                 var releases = await client.Repository.Release.GetAll(GitHubOwner, GitHubRepo);
-                var latest   = releases.FirstOrDefault();
-                if (latest == null) { ShowNotification("Релизы не найдены", NotificationType.Info); return; }
 
-                var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-                if (!Version.TryParse(latest.TagName.TrimStart('v'), out var latestVersion))
-                { ShowNotification("Не удалось распознать версию релиза", NotificationType.Warning); return; }
+                // GitHub отдаёт релизы по дате, а не по версии: берём максимальную
+                // из тех, чей тег вообще парсится, и пропускаем черновики/пререлизы
+                var candidates = releases
+                    .Where(r => !r.Draft && !r.Prerelease)
+                    .Select(r => new { Release = r, Ver = ParseTag(r.TagName) })
+                    .Where(x => x.Ver != null)
+                    .OrderByDescending(x => x.Ver)
+                    .ToList();
+
+                if (candidates.Count == 0)
+                { ShowNotification("Релизы не найдены", NotificationType.Info); return; }
+
+                var latest        = candidates[0].Release;
+                var latestVersion = candidates[0].Ver!;
+                var currentVersion = NormalizeVersion(
+                    Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0));
 
                 if (latestVersion <= currentVersion)
                 { ShowNotification("У вас уже установлена последняя версия", NotificationType.Success); return; }
@@ -1027,17 +1165,132 @@ namespace CharacterApp
             }
         }
 
+        /// <summary>"v1.2.3" / "1.2" / "release-1.2.3" → Version, иначе null.</summary>
+        private static Version? ParseTag(string? tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) return null;
+            var m = System.Text.RegularExpressions.Regex.Match(tag, @"\d+(\.\d+)*");
+            if (!m.Success) return null;
+            return Version.TryParse(NormalizeTagNumbers(m.Value), out var v)
+                ? NormalizeVersion(v) : null;
+        }
+
+        /// <summary>Version.Parse требует минимум две компоненты: "2" → "2.0".</summary>
+        private static string NormalizeTagNumbers(string s)
+            => s.Contains('.') ? s : s + ".0";
+
+        /// <summary>
+        /// Приводит к виду Major.Minor.Build, чтобы 1.2.0 и 1.2.0.0 сравнивались как равные
+        /// (у Version отсутствующая компонента равна −1 и ломает сравнение).
+        /// </summary>
+        private static Version NormalizeVersion(Version v)
+            => new Version(v.Major, v.Minor, Math.Max(v.Build, 0));
+
         // ══════════════════════════════════════════════════════════════════════
         // MULTI-CHARACTER SUPPORT
         // ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>Инициализирует первый слот при старте.</summary>
-        private void InitCharacterSlots()
+        /// <summary>Файл сессии — табы персонажей между запусками.</summary>
+        private static string SessionFile => Path.Combine(App.DataDir, "session.json");
+
+        private bool _slotsRestoring = false;
+
+        /// <summary>Восстанавливает слоты из прошлой сессии либо создаёт один пустой.</summary>
+        /// <returns>true, если сессия была восстановлена с данными.</returns>
+        private bool InitCharacterSlots()
         {
             _characterSlots.Clear();
-            _characterSlots.Add(new CharacterSlot { DisplayName = "Персонаж 1" });
-            _activeSlotIndex = 0;
+            bool restored = false;
+
+            try
+            {
+                if (File.Exists(SessionFile))
+                {
+                    var json = File.ReadAllText(SessionFile);
+                    var state = JsonConvert.DeserializeObject<SessionState>(json);
+                    if (state?.Slots is { Count: > 0 })
+                    {
+                        foreach (var s in state.Slots)
+                        {
+                            s.SavedCharacter?.NormalizeItemsFromLegacy();
+                            // В сессии пути обычно абсолютные, но если туда попал
+                            // относительный (снимок сделан сразу после сохранения),
+                            // разворачиваем его относительно файла персонажа
+                            if (s.SavedCharacter != null && !string.IsNullOrEmpty(s.FilePath))
+                                Helpers.CharacterAssets.Internalize(s.SavedCharacter, s.FilePath);
+                            _characterSlots.Add(s);
+                        }
+                        _activeSlotIndex = Math.Clamp(state.ActiveIndex, 0, _characterSlots.Count - 1);
+                        restored = _characterSlots.Any(s => s.SavedCharacter != null);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Битый session.json не должен мешать запуску — уводим в бэкап,
+                // чтобы данные можно было достать руками, и стартуем с чистого листа
+                _characterSlots.Clear();
+                restored = false;
+                _activeSlotIndex = 0;
+                try { File.Move(SessionFile, SessionFile + ".bad", true); } catch { }
+                Helpers.Log.Error("session.json не восстановился, файл сохранён как session.json.bad", ex);
+            }
+
+            if (_characterSlots.Count == 0)
+            {
+                _characterSlots.Add(new CharacterSlot { DisplayName = "Персонаж 1" });
+                _activeSlotIndex = 0;
+            }
+
+            // Разливаем активного персонажа по страницам
+            if (restored)
+            {
+                _slotsRestoring = true;
+                var slot = _characterSlots[_activeSlotIndex];
+                _lastJsonFilePath = slot.FilePath ?? "";
+                DistributeCharacter(slot.SavedCharacter ?? new Character());
+                _slotsRestoring = false;
+                SetUnsavedFlag(slot.HasChanges);
+            }
+
             RebuildCharacterTabs();
+            return restored;
+        }
+
+        /// <summary>Записывает текущее состояние страниц в активный слот.</summary>
+        private void SyncActiveSlot()
+        {
+            if (_activeSlotIndex < 0 || _activeSlotIndex >= _characterSlots.Count) return;
+            var slot = _characterSlots[_activeSlotIndex];
+            slot.SavedCharacter = CollectCharacter();
+            slot.FilePath       = _lastJsonFilePath;
+            slot.HasChanges     = _hasUnsavedChanges;
+            slot.DisplayName    = string.IsNullOrWhiteSpace(slot.SavedCharacter.CharacterName)
+                ? slot.DisplayName
+                : slot.SavedCharacter.CharacterName;
+        }
+
+        /// <summary>Сохраняет все слоты в %AppData%\CharacterApp\session.json.</summary>
+        public void PersistCharacterSlots()
+        {
+            if (_slotsRestoring) return;
+            try
+            {
+                Directory.CreateDirectory(App.DataDir);
+                var state = new SessionState
+                {
+                    ActiveIndex = _activeSlotIndex,
+                    Slots       = _characterSlots.ToList()
+                };
+                // Пишем через временный файл — обрыв записи не убьёт сессию
+                var tmp = SessionFile + ".tmp";
+                File.WriteAllText(tmp, JsonConvert.SerializeObject(state, Formatting.Indented));
+                File.Move(tmp, SessionFile, true);
+            }
+            catch (Exception ex)
+            {
+                Helpers.Log.Error("не удалось сохранить session.json (табы персонажей)", ex);
+            }
         }
 
         /// <summary>Сохраняет текущего персонажа в активный слот, переключается на targetIdx.</summary>
@@ -1047,9 +1300,7 @@ namespace CharacterApp
             if (targetIdx < 0 || targetIdx >= _characterSlots.Count) return;
 
             // Save current
-            _characterSlots[_activeSlotIndex].SavedCharacter = CollectCharacter();
-            _characterSlots[_activeSlotIndex].FilePath       = _lastJsonFilePath;
-            _characterSlots[_activeSlotIndex].HasChanges     = _hasUnsavedChanges;
+            SyncActiveSlot();
 
             // Switch
             _activeSlotIndex  = targetIdx;
@@ -1058,17 +1309,20 @@ namespace CharacterApp
 
             // Rebuild pages for new character
             var c = slot.SavedCharacter ?? new Character();
+            _slotsRestoring = true;
             DistributeCharacter(c);
-            MarkSaved();
+            _slotsRestoring = false;
+
+            // Восстанавливаем «звёздочку» именно этого персонажа, а не гасим её
+            SetUnsavedFlag(slot.HasChanges);
             RebuildCharacterTabs();
+            PersistCharacterSlots();
         }
 
         /// <summary>Добавляет новый пустой слот.</summary>
         public void AddCharacterSlot()
         {
-            // Save current first
-            if (_characterSlots.Count > 0)
-                _characterSlots[_activeSlotIndex].SavedCharacter = CollectCharacter();
+            SyncActiveSlot();
 
             int num = _characterSlots.Count + 1;
             _characterSlots.Add(new CharacterSlot { DisplayName = $"Персонаж {num}" });
@@ -1083,13 +1337,23 @@ namespace CharacterApp
                 ShowNotification("Нельзя удалить единственного персонажа", NotificationType.Warning);
                 return;
             }
+
+            var victim = _characterSlots[_activeSlotIndex];
+            var warn = victim.HasChanges
+                ? $"Закрыть «{victim.DisplayName}»?\nЕсть несохранённые изменения — они будут потеряны."
+                : $"Закрыть «{victim.DisplayName}»?";
+            if (!Confirm(warn, "Закрытие персонажа")) return;
+
             _characterSlots.RemoveAt(_activeSlotIndex);
             _activeSlotIndex = Math.Max(0, _activeSlotIndex - 1);
-            var c = _characterSlots[_activeSlotIndex].SavedCharacter ?? new Character();
-            _lastJsonFilePath = _characterSlots[_activeSlotIndex].FilePath ?? "";
-            DistributeCharacter(c);
-            MarkSaved();
+            var slot = _characterSlots[_activeSlotIndex];
+            _lastJsonFilePath = slot.FilePath ?? "";
+            _slotsRestoring = true;
+            DistributeCharacter(slot.SavedCharacter ?? new Character());
+            _slotsRestoring = false;
+            SetUnsavedFlag(slot.HasChanges);
             RebuildCharacterTabs();
+            PersistCharacterSlots();
         }
 
         /// <summary>Обновляет имя таба активного слота по имени персонажа.</summary>
@@ -1129,14 +1393,47 @@ namespace CharacterApp
 
                 var lbl = new TextBlock
                 {
-                    Text           = slot.DisplayName,
+                    // Звёздочка показывает несохранённые правки конкретного таба
+                    Text           = slot.DisplayName + (slot.HasChanges ? " *" : ""),
                     FontSize       = 11.5,
                     Foreground     = active ? Brushes.White : (Brush)FindResource("TextMutedBrush"),
                     TextTrimming   = TextTrimming.CharacterEllipsis,
                     VerticalAlignment = VerticalAlignment.Center,
                     MaxWidth       = 120,
                 };
-                tab.Child = lbl;
+
+                // Крестик закрытия — только на активном табе и только если табов больше одного
+                if (active && _characterSlots.Count > 1)
+                {
+                    var row = new StackPanel { Orientation = Orientation.Horizontal };
+                    row.Children.Add(lbl);
+
+                    var closeBtn = new TextBlock
+                    {
+                        Text              = "✕",
+                        FontSize          = 10,
+                        Margin            = new Thickness(6, 0, 0, 0),
+                        Foreground        = Brushes.White,
+                        Opacity           = 0.7,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Cursor            = System.Windows.Input.Cursors.Hand,
+                        ToolTip           = "Закрыть персонажа",
+                    };
+                    closeBtn.MouseEnter += (_, _) => closeBtn.Opacity = 1.0;
+                    closeBtn.MouseLeave += (_, _) => closeBtn.Opacity = 0.7;
+                    closeBtn.MouseLeftButtonDown += (_, ev) =>
+                    {
+                        ev.Handled = true;          // не даём табу перехватить клик
+                        RemoveActiveSlot();
+                    };
+                    row.Children.Add(closeBtn);
+                    tab.Child = row;
+                }
+                else
+                {
+                    tab.Child = lbl;
+                }
+
                 tab.MouseLeftButtonDown += (_, _) => SwitchToSlot(idx);
                 CharacterTabsPanel.Children.Add(tab);
             }
@@ -1172,5 +1469,12 @@ namespace CharacterApp
         public string?    FilePath       { get; set; }
         public bool       HasChanges     { get; set; }
         public Character? SavedCharacter { get; set; }
+    }
+
+    /// <summary>Состояние сессии — что лежало в табах при прошлом выходе.</summary>
+    public class SessionState
+    {
+        public int                 ActiveIndex { get; set; }
+        public List<CharacterSlot> Slots       { get; set; } = new();
     }
 }

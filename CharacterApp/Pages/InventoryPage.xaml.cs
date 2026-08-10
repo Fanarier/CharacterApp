@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -34,14 +34,70 @@ namespace CharacterApp.Pages
         public InventoryPage()
         {
             InitializeComponent();
+            Loaded += (_, _) => RegisterColorFields();
             _items.CollectionChanged += (_, _) => RefreshStats();
             BuildRarityFilter();
             BuildRarityPicker();
         }
 
         // ── ISaveLoad helpers ─────────────────────────────────────────────────
+
+        // ── Цвета полей ──────────────────────────────────────────────────────
+        private CharacterApp.Models.Character? _currentChar;
+        private System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            _colorFields = new();
+
+        private void RegisterColorFields(
+            System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox> fields)
+        {
+            _colorFields = fields;
+            var mw = () => App.Current.MainWindow as MainWindow;
+            foreach (var (name, tb) in _colorFields)
+                TextColorHelper.Register(tb, name, () => _currentChar, () => mw()?.MarkUnsaved());
+            // Страницу могли открыть уже ПОСЛЕ загрузки персонажа: тогда
+            // ApplyColors отработал на пустом словаре и цвета не применились.
+            // Красим сразу после регистрации, если персонаж уже известен.
+            if (_currentChar != null) TextColorHelper.Apply(_colorFields, _currentChar);
+        }
+
+        private void ApplyColors(CharacterApp.Models.Character c)
+        {
+            _currentChar = c;
+            TextColorHelper.Apply(_colorFields, c);
+        }
+
+        private void CollectColors(CharacterApp.Models.Character c)
+        {
+            foreach (var (key, tb) in _colorFields)
+            {
+                var src = System.Windows.DependencyPropertyHelper
+                    .GetValueSource(tb, System.Windows.Controls.TextBox.ForegroundProperty)
+                    .BaseValueSource;
+                if (src == System.Windows.BaseValueSource.Local &&
+                    tb.Foreground is System.Windows.Media.SolidColorBrush b)
+                    c.FieldColors[key] = $"#{b.Color.R:X2}{b.Color.G:X2}{b.Color.B:X2}";
+                else
+                    c.FieldColors.Remove(key);
+            }
+        }
+
+
+        private void RegisterColorFields()
+        {
+            if (_colorFields.Count > 0) return;
+            RegisterColorFields(new System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            {
+                ["INV_Gold"] = TbGold,
+                ["INV_Silver"] = TbSilver,
+                ["INV_Copper"] = TbCopper,
+                ["INV_Name"] = TbDetailName,
+                ["INV_Desc"] = TbDetailDesc,
+                ["INV_Notes"] = TbDetailNotes,
+            });
+        }
         public void SaveTo(Character c)
         {
+            CollectColors(c);
             c.Inventory.Clear();
             c.Inventory.AddRange(_items);
             c.GoldCoins   = int.TryParse(TbGold.Text,   out var g)  ? g  : 0;
@@ -51,6 +107,7 @@ namespace CharacterApp.Pages
 
         public void LoadFrom(Character c)
         {
+            ApplyColors(c);
             _items.Clear();
             foreach (var item in c.Inventory) { item.PropertyChanged += Item_Changed; _items.Add(item); }
             TbGold.Text   = c.GoldCoins.ToString();
@@ -188,11 +245,11 @@ namespace CharacterApp.Pages
 
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(58) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(56) });
 
             // ── Image thumbnail ──
             var imgBorder = new Border
@@ -216,7 +273,7 @@ namespace CharacterApp.Pages
             }
             else
             {
-                imgBorder.Child = new TextBlock { Text = "🖼", FontSize = 22,
+                imgBorder.Child = new TextBlock { Text = "📦", FontSize = 24,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center };
             }
@@ -240,7 +297,8 @@ namespace CharacterApp.Pages
                 Foreground = (Brush)FindResource("TextMutedBrush"),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(8, 0, 8, 0),
-                TextTrimming = TextTrimming.CharacterEllipsis
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                MaxWidth = 400
             };
             Grid.SetColumn(descBlock, 2);
 
@@ -393,47 +451,14 @@ namespace CharacterApp.Pages
         {
             if (_selected == null) return;
             _selected.Quantity = Math.Max(1, _selected.Quantity - 1);
-            _suppressDetailUpdate = true;
             TbDetailQty.Text = _selected.Quantity.ToString();
-            _suppressDetailUpdate = false;
             RebuildList(); Mark();
         }
         private void QtyPlus_Click(object s, RoutedEventArgs e)
         {
             if (_selected == null) return;
             _selected.Quantity++;
-            _suppressDetailUpdate = true;
             TbDetailQty.Text = _selected.Quantity.ToString();
-            _suppressDetailUpdate = false;
-            RebuildList(); Mark();
-        }
-
-        // Direct text input for quantity
-        private void QtyText_PreviewInput(object s, System.Windows.Input.TextCompositionEventArgs e)
-        {
-            // Allow digits only
-            e.Handled = !e.Text.All(char.IsDigit);
-        }
-
-        private void QtyText_Changed(object s, TextChangedEventArgs e)
-        {
-            if (_suppressDetailUpdate || _selected == null) return;
-            if (int.TryParse(TbDetailQty.Text, out var v) && v >= 1)
-            {
-                _selected.Quantity = v;
-                RebuildList(); Mark();
-            }
-        }
-
-        private void QtyText_LostFocus(object s, RoutedEventArgs e)
-        {
-            if (_selected == null) return;
-            // Clamp and normalize on focus loss
-            if (!int.TryParse(TbDetailQty.Text, out var v) || v < 1) v = 1;
-            _selected.Quantity = v;
-            _suppressDetailUpdate = true;
-            TbDetailQty.Text = v.ToString();
-            _suppressDetailUpdate = false;
             RebuildList(); Mark();
         }
 
@@ -454,7 +479,14 @@ namespace CharacterApp.Pages
                 UpdateDetailImage(_selected);
                 RebuildList(); Mark();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // Раньше молчали — пользователь выбирал файл и ничего не происходило
+                CharacterApp.Helpers.Log.Warn($"не удалось загрузить картинку предмета: {dlg.FileName}", ex);
+                (Application.Current.MainWindow as MainWindow)
+                    ?.ShowNotification("Не удалось загрузить изображение: " + ex.Message,
+                                       NotificationType.Error);
+            }
         }
 
         private void ViewImage_Click(object s, RoutedEventArgs e)

@@ -37,6 +37,12 @@ namespace CharacterApp.Models
     // ── Черта (фиксированная строка) ─────────────────────────────────────────
     public class TraitData
     {
+        /// <summary>
+        /// Название черты. У черт 4/9/18 уровня не используется — там строку
+        /// подписывает сам интерфейс. Нужно чертам гуманоидов, где название
+        /// у каждой своё.
+        /// </summary>
+        public string Name        { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public bool   IsAcquired  { get; set; }
     }
@@ -134,7 +140,7 @@ namespace CharacterApp.Models
         public string PhotoPath { get; set; } = "";
 
         // ── Предыстория ───────────────────────────────────────────────────────
-        public string Race        { get; set; } = "";
+        public string Race         { get; set; } = "";
         public string Backstory    { get; set; } = "";
         public string Worldview    { get; set; } = "";
         public string HeightWeight { get; set; } = "";
@@ -179,6 +185,12 @@ namespace CharacterApp.Models
         public TraitData Trait9  { get; set; } = new TraitData();
         public TraitData Trait18 { get; set; } = new TraitData();
 
+        /// <summary>
+        /// Черты гуманоидов — отдельная подкатегория, доступная не только людям.
+        /// Их может быть до пяти, поэтому список, а не фиксированные слоты.
+        /// </summary>
+        public List<TraitData> HumanoidTraits { get; set; } = new List<TraitData>();
+
         // ── Владения ──────────────────────────────────────────────────────────
         public List<ProficiencyData> Proficiencies { get; set; } = new List<ProficiencyData>();
 
@@ -195,6 +207,9 @@ namespace CharacterApp.Models
         public EquipmentItem? Ornament2Item { get; set; }
         public EquipmentItem? Artifact1Item { get; set; }
         public EquipmentItem? Artifact2Item { get; set; }
+        public EquipmentItem? Weapon1Item   { get; set; }
+        public EquipmentItem? Weapon2Item   { get; set; }
+        public EquipmentItem? ShieldItem    { get; set; }
 
         // ── Экипировка (legacy — только для чтения старых файлов, не сериализуются) ─
         [Newtonsoft.Json.JsonIgnore] public string HeadName        { get; set; } = "";
@@ -240,6 +255,9 @@ namespace CharacterApp.Models
         public int                  GoldCoins    { get; set; }
         public int                  SilverCoins  { get; set; }
         public int                  CopperCoins  { get; set; }
+
+        // ── Цвета текстовых полей (key="ТипСтраницы.ИмяПоля", value="#RRGGBB") ──
+        public Dictionary<string, string> FieldColors { get; set; } = new();
 
         public void NormalizeItemsFromLegacy()
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
@@ -28,6 +28,77 @@ namespace CharacterApp.Pages
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            Loaded += (_, _) => RegisterColorFields(new System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            {
+                ["ST_StrBase"] = StrBase,
+                ["ST_ConBase"] = ConBase,
+                ["ST_IntBase"] = IntBase,
+                ["ST_ChaBase"] = ChaBase,
+                ["ST_DexBase"] = DexBase,
+                ["ST_WisBase"] = WisBase,
+                ["ST_AthTr"] = AthTrain,
+                ["ST_EndTr"] = EndTrain,
+                ["ST_AnaTr"] = AnaTrain,
+                ["ST_HisTr"] = HisTrain,
+                ["ST_MagTr"] = MagTrain,
+                ["ST_NatTr"] = NatTrain,
+                ["ST_RelTr"] = RelTrain,
+                ["ST_TecTr"] = TecTrain,
+                ["ST_AttTr"] = AttTrain,
+                ["ST_SurTr"] = SurTrain,
+                ["ST_MedTr"] = MedTrain,
+                ["ST_InsTr"] = InsTrain,
+                ["ST_AniTr"] = AniTrain,
+                ["ST_MenTr"] = MenTrain,
+                ["ST_AcrTr"] = AcrTrain,
+                ["ST_SlhTr"] = SlhTrain,
+                ["ST_StlTr"] = StlTrain,
+                ["ST_PrfTr"] = PrfTrain,
+                ["ST_ItmTr"] = ItmTrain,
+                ["ST_DecTr"] = DecTrain,
+                ["ST_ChrTr"] = ChrTrain,
+                ["ST_PrsTr"] = PrsTrain,
+            });
+        }
+
+
+        // ── Цвета полей ──────────────────────────────────────────────────────
+        private CharacterApp.Models.Character? _currentChar;
+        private System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            _colorFields = new();
+
+        private void RegisterColorFields(
+            System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox> fields)
+        {
+            _colorFields = fields;
+            var mw = () => App.Current.MainWindow as MainWindow;
+            foreach (var (name, tb) in _colorFields)
+                TextColorHelper.Register(tb, name, () => _currentChar, () => mw()?.MarkUnsaved());
+            // Страницу могли открыть уже ПОСЛЕ загрузки персонажа: тогда
+            // ApplyColors отработал на пустом словаре и цвета не применились.
+            // Красим сразу после регистрации, если персонаж уже известен.
+            if (_currentChar != null) TextColorHelper.Apply(_colorFields, _currentChar);
+        }
+
+        private void ApplyColors(CharacterApp.Models.Character c)
+        {
+            _currentChar = c;
+            TextColorHelper.Apply(_colorFields, c);
+        }
+
+        private void CollectColors(CharacterApp.Models.Character c)
+        {
+            foreach (var (key, tb) in _colorFields)
+            {
+                var src = System.Windows.DependencyPropertyHelper
+                    .GetValueSource(tb, System.Windows.Controls.TextBox.ForegroundProperty)
+                    .BaseValueSource;
+                if (src == System.Windows.BaseValueSource.Local &&
+                    tb.Foreground is System.Windows.Media.SolidColorBrush b)
+                    c.FieldColors[key] = $"#{b.Color.R:X2}{b.Color.G:X2}{b.Color.B:X2}";
+                else
+                    c.FieldColors.Remove(key);
+            }
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -232,6 +303,7 @@ namespace CharacterApp.Pages
             s.DecT = ParseInt(DecTrain.Text); s.DecP = DecProf.Value;
             s.ChrT = ParseInt(ChrTrain.Text); s.ChrP = ChrProf.Value;
             s.PrsT = ParseInt(PrsTrain.Text); s.PrsP = PrsProf.Value;
+            CollectColors(c);
         }
 
         public void ApplyCharacter(Character c)
@@ -269,6 +341,7 @@ namespace CharacterApp.Pages
             PrsTrain.Text = s.PrsT.ToString(); PrsProf.Value = s.PrsP;
 
             RecalcAll();
+            ApplyColors(c);
         }
 
         public void ResetAll()

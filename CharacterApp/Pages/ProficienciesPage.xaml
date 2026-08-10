@@ -101,6 +101,89 @@
                 </Grid>
             </Border>
 
+            <!-- ══ Черты гуманоидов (до 5, добавляются кнопкой) ═══════════════ -->
+            <Grid Margin="4,0,4,8">
+                <TextBlock Text="Черты гуманоидов"
+                           FontSize="16" FontWeight="Bold"
+                           Foreground="{DynamicResource TextBrush}"
+                           HorizontalAlignment="Left"/>
+                <TextBlock x:Name="TbHumanoidCount"
+                           FontSize="12" VerticalAlignment="Center"
+                           HorizontalAlignment="Right"
+                           Foreground="{DynamicResource TextMutedBrush}"/>
+            </Grid>
+
+            <DataGrid x:Name="HumanoidGrid"
+                      Style="{StaticResource SkillsGridStyle}"
+                      RowStyle="{StaticResource SkillsRowStyle}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserResizeRows="False"
+                      HeadersVisibility="Column"
+                      RowHeaderWidth="0"
+                      ItemsSource="{Binding HumanoidTraits}"
+                      Margin="0,0,0,8"
+                      Background="Transparent"
+                      GridLinesVisibility="Horizontal"
+                      SelectionMode="Single"
+                      IsReadOnly="False">
+                <DataGrid.Columns>
+                    <!-- Название -->
+                    <DataGridTemplateColumn Header="Название" Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextBrush}"
+                                           VerticalAlignment="Center" Padding="6,4"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource CellTextBox}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Описание -->
+                    <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Description}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextBrush}"
+                                           VerticalAlignment="Center" Padding="6,4"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource CellTextBox}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="✓" Width="60" IsReadOnly="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsAcquired, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,16">
+                <Button Content="{DynamicResource BtnAddSkill}"    Click="BtnAddHumanoid_Click"    Margin="6" Padding="10,6"/>
+                <Button Content="{DynamicResource BtnRemoveSkill}" Click="BtnRemoveHumanoid_Click" Margin="6" Padding="10,6"/>
+            </StackPanel>
+
             <!-- ══ Владения / Языки (динамическая таблица) ════════════════════ -->
             <TextBlock Text="{DynamicResource ProficienciesTableHeader}"
                        FontSize="16" FontWeight="Bold"

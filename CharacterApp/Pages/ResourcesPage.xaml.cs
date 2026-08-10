@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -49,7 +49,58 @@ namespace CharacterApp.Pages
             "#D04060","#50A8A0","#8070CC","#C09030","#F07070","#70B0F0"
         };
 
-        public ResourcesPage() => InitializeComponent();
+        public ResourcesPage()
+        {
+            InitializeComponent();
+            Loaded += (_, _) => RegisterColorFields();
+        }
+
+
+        // ── Цвета HP-полей ───────────────────────────────────────────────────
+        private CharacterApp.Models.Character? _currentChar;
+        private System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            _colorFields = new();
+
+        public void SetCharacter(CharacterApp.Models.Character c)
+        {
+            _currentChar = c;
+            if (_colorFields.Count > 0)
+                TextColorHelper.Apply(_colorFields, c);
+        }
+
+        public void CollectColors(CharacterApp.Models.Character c)
+        {
+            foreach (var (key, tb) in _colorFields)
+            {
+                var src = System.Windows.DependencyPropertyHelper
+                    .GetValueSource(tb, System.Windows.Controls.TextBox.ForegroundProperty)
+                    .BaseValueSource;
+                if (src == System.Windows.BaseValueSource.Local &&
+                    tb.Foreground is System.Windows.Media.SolidColorBrush b)
+                    c.FieldColors[key] = $"#{b.Color.R:X2}{b.Color.G:X2}{b.Color.B:X2}";
+                else
+                    c.FieldColors.Remove(key);
+            }
+        }
+
+        private void RegisterColorFields()
+        {
+            _colorFields = new System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
+            {
+                ["RES_HpCur"] = TbHpCurrent,
+                ["RES_HpMax"] = TbHpMax,
+                ["RES_HpTmp"] = TbHpTemp,
+            };
+            var mw = () => App.Current.MainWindow as MainWindow;
+            foreach (var (name, tb) in _colorFields)
+                TextColorHelper.Register(tb, name,
+                    () => _currentChar,
+                    () => mw()?.MarkUnsaved());
+            // Страницу могли открыть уже ПОСЛЕ загрузки персонажа: тогда
+            // ApplyColors отработал на пустом словаре и цвета не применились.
+            // Красим сразу после регистрации, если персонаж уже известен.
+            if (_currentChar != null) TextColorHelper.Apply(_colorFields, _currentChar);
+        }
 
         // ── Public API ────────────────────────────────────────────────────────
         public HpData GetHpData() => _hp;
@@ -63,6 +114,7 @@ namespace CharacterApp.Pages
             RefreshHpUI();
             BindDeathSaves();
             RebuildList();
+            if (_currentChar != null) TextColorHelper.Apply(_colorFields, _currentChar);
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -409,7 +461,9 @@ namespace CharacterApp.Pages
                     BorderBrush = res.Color == h ? Brushes.White : Brushes.Transparent,
                     BorderThickness = new Thickness(2),
                 };
-                try { sw.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(h)); } catch { }
+                // Presets — константы в коде, распарсятся всегда; catch на всякий случай
+                try { sw.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(h)); }
+                catch { sw.Background = Brushes.Transparent; }
                 sw.MouseLeftButtonDown += (_, _) =>
                 {
                     res.Color = h;

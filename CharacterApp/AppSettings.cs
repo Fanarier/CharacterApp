@@ -30,8 +30,20 @@ namespace CharacterApp
         public bool   LoadLastOnStart { get; set; } = false;
         public string LastFilePath    { get; set; } = "";
 
+        // ── Шрифт ────────────────────────────────────────────────────────────
+        public string AppFontFamily { get; set; } = "Segoe UI";
+        public double AppFontSize   { get; set; } = 13.0;
+
         // ── Видимость страниц ─────────────────────────────────────────────────
         public List<string> HiddenPages { get; set; } = new();
+
+        /// <summary>
+        /// Старые конфиги (theme.config, language.config, appsettings.json) уже
+        /// разобраны и больше не читаются. Без этого флага получался цикл:
+        /// файлы удалялись из %AppData%, но при следующем запуске копировались
+        /// туда заново из папки с exe и снова перетирали тему и язык.
+        /// </summary>
+        public bool LegacyConfigsImported { get; set; } = false;
 
         // ── Кастомные листы ───────────────────────────────────────────────────
         public List<string>     CustomSheetNames  { get; set; } = new();
@@ -52,9 +64,20 @@ namespace CharacterApp
                 try
                 {
                     var json = File.ReadAllText(ConfigPath);
-                    return JsonSerializer.Deserialize<AppSettings>(json, _opts) ?? new AppSettings();
+                    var loaded = JsonSerializer.Deserialize<AppSettings>(json, _opts) ?? new AppSettings();
+                    // config.json есть — он и есть истина. Старые theme.config /
+                    // language.config только убираем, значения из них не берём:
+                    // они старее того, что пользователь уже сохранил.
+                    AdoptLegacySideFiles(loaded, readValues: false);
+                    return loaded;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    // Битый config.json — уводим в бэкап, иначе он будет молча
+                    // сбрасывать настройки при каждом запуске и никто не поймёт почему
+                    Helpers.Log.Warn("config.json не читается, откатываюсь к настройкам по умолчанию", ex);
+                    try { File.Move(ConfigPath, ConfigPath + ".bad", true); } catch { }
+                }
             }
 
             // Migrate from old files
@@ -69,8 +92,68 @@ namespace CharacterApp
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(this, _opts));
         }
 
+        /// <summary>
+        /// Тема и язык раньше жили в отдельных theme.config и language.config
+        /// рядом с config.json. Забираем их значения внутрь настроек и удаляем
+        /// файлы — но только после успешной записи, иначе при сбое потеряли бы
+        /// и то, и другое. Выполняется ровно один раз за всё время жизни
+        /// настроек: дальше срабатывает флаг LegacyConfigsImported.
+        /// </summary>
+        /// <param name="readValues">
+        /// true — забрать тему и язык из старых файлов (первый запуск, config.json ещё нет);
+        /// false — только убрать файлы, значения оставить как есть в config.json.
+        /// </param>
+        private static void AdoptLegacySideFiles(AppSettings s, bool readValues = true)
+        {
+            if (s.LegacyConfigsImported) return;
+
+            try
+            {
+                if (readValues && File.Exists(App.ThemeConfigFile))
+                {
+                    var t = File.ReadAllText(App.ThemeConfigFile).Trim();
+                    if (t is "Dark" or "Light") s.SelectedTheme = t;
+                }
+                if (readValues && File.Exists(App.LanguageConfigFile))
+                {
+                    var l = File.ReadAllText(App.LanguageConfigFile).Trim();
+                    if (!string.IsNullOrEmpty(l)) s.SelectedLanguage = l;
+                }
+            }
+            catch (Exception ex)
+            {
+                Helpers.Log.Warn("не удалось прочитать theme.config / language.config", ex);
+                return;   // флаг не ставим — попробуем в следующий раз
+            }
+
+            try
+            {
+                s.LegacyConfigsImported = true;
+                s.Save();
+                TryDelete(App.ThemeConfigFile);
+                TryDelete(App.LanguageConfigFile);
+                Helpers.Log.Info($"тема ('{s.SelectedTheme}') и язык ('{s.SelectedLanguage}') " +
+                                 "перенесены в config.json, старые файлы больше не читаются");
+            }
+            catch (Exception ex)
+            {
+                s.LegacyConfigsImported = false;
+                Helpers.Log.Warn("перенос темы и языка отложен: не удалось записать config.json", ex);
+            }
+        }
+
+        private static void TryDelete(string path)
+        {
+            try { if (File.Exists(path)) File.Delete(path); }
+            catch (Exception ex) { Helpers.Log.Warn($"не удалось удалить {path}", ex); }
+        }
+
         private static void MigrateOldSettings(AppSettings s)
         {
+            // config.json ещё нет — значит это первый запуск новой версии.
+            // Только здесь имеет смысл тянуть конфиги из папки с exe.
+            App.ImportConfigsFromExeFolder();
+
             // Migrate old settings.json (theme)
             var oldSettings = Path.Combine(Directory.GetCurrentDirectory(), "settings.json");
             if (File.Exists(oldSettings))
@@ -82,7 +165,7 @@ namespace CharacterApp
                         s.SelectedTheme = t.GetString() ?? "Light";
                     File.Delete(oldSettings);
                 }
-                catch { }
+                catch (Exception ex) { Helpers.Log.Warn("миграция settings.json не удалась", ex); }
             }
 
             // Migrate old appsettings.json (autosave, language, etc.)
@@ -102,19 +185,33 @@ namespace CharacterApp
                     if (r.TryGetProperty("HiddenPages",     out v))
                         foreach (var item in v.EnumerateArray())
                             s.HiddenPages.Add(item.GetString() ?? "");
-                    // Keep old appsettings for now — delete after successful save
+
+                    // Кастомные листы жили только в appsettings.json — без переноса
+                    // пользователь при обновлении потерял бы свои страницы
+                    if (r.TryGetProperty("CustomSheetNames", out v))
+                        foreach (var item in v.EnumerateArray())
+                            s.CustomSheetNames.Add(item.GetString() ?? "");
+
+                    if (r.TryGetProperty("SavedCustomSheets", out v))
+                    {
+                        var sheets = v.Deserialize<List<CustomSheet>>();
+                        if (sheets != null) s.SavedCustomSheets.AddRange(sheets);
+                    }
+
+                    Helpers.Log.Info($"настройки перенесены из appsettings.json " +
+                                     $"(листов: {s.SavedCustomSheets.Count})");
                     File.Delete(oldAuto);
                 }
-                catch { }
+                catch (Exception ex) { Helpers.Log.Warn("миграция appsettings.json не удалась", ex); }
             }
 
-            // Migrate old language files
-            if (File.Exists(App.LanguageConfigFile))
-            {
-                try { s.SelectedLanguage = File.ReadAllText(App.LanguageConfigFile).Trim(); } catch { }
-            }
+            // Миграция не должна ронять запуск, если папка настроек недоступна
+            try { s.Save(); }
+            catch (Exception ex) { Helpers.Log.Error("не удалось записать config.json после миграции", ex); }
 
-            s.Save();
+            // Тема и язык из отдельных файлов — тем же путём, что и для
+            // уже существующего config.json
+            AdoptLegacySideFiles(s);
         }
     }
 }

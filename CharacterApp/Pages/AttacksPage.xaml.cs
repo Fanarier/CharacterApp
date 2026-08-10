@@ -1,9 +1,10 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using CharacterApp.Controls;
 using CharacterApp.Models;
 
 namespace CharacterApp.Pages
@@ -11,12 +12,18 @@ namespace CharacterApp.Pages
     public partial class AttacksPage : Page, ISaveLoad
     {
         public ObservableCollection<AttackEntry> Attacks { get; } = new();
+        private readonly SearchFilterBar _searchBar = new();
 
         public AttacksPage()
         {
             InitializeComponent();
             DataContext = this;
+            // Loaded срабатывает при каждом показе страницы, а строку поиска
+            // достаточно собрать один раз — иначе фильтры дублируются
+            Loaded += (_, _) => { if (!_searchReady) { _searchReady = true; InitSearch(); } };
         }
+
+        private bool _searchReady;
 
         public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
         public void SaveAs()    => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
@@ -49,6 +56,12 @@ namespace CharacterApp.Pages
         }
 
         public void ResetAll() => Attacks.Clear();
+
+        private void InitSearch()
+        {
+            _searchBar.Attach(AttacksGrid, Attacks);
+            SearchBarHost.Content = _searchBar;
+        }
 
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {

@@ -80,6 +80,10 @@ namespace CharacterApp.Pages
         {
             if (c == null) return;
 
+            c.Weapon1Item = GetSlotValue("Weapon1");
+            c.Weapon2Item = GetSlotValue("Weapon2");
+            c.ShieldItem  = GetSlotValue("Shield");
+
             var head = GetSlotValue("Head");
             c.HeadItem = head; c.HeadLocked = GetSlotLocked("Head");
 

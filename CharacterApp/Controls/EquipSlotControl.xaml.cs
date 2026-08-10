@@ -179,7 +179,7 @@ namespace CharacterApp.Controls
                     catch { LockBtnImage.Source = null; }
                 }
             }
-            catch { /* silent */ }
+            catch (Exception ex) { CharacterApp.Helpers.Log.Warn("не удалось обновить иконку замка слота", ex); }
         }
 
         private void ApplyLockState()
@@ -319,7 +319,7 @@ namespace CharacterApp.Controls
                     data.SetData("EquipSlot.Payload", JsonSerializer.Serialize(payload));
                     DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
                 }
-                catch { }
+                catch (Exception ex) { CharacterApp.Helpers.Log.Warn("сбой при начале перетаскивания предмета", ex); }
             }
         }
 
@@ -374,7 +374,7 @@ namespace CharacterApp.Controls
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { CharacterApp.Helpers.Log.Warn("сбой при переносе предмета между слотами", ex); }
         }
 
 

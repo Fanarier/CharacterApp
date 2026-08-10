@@ -66,7 +66,7 @@ namespace CharacterApp
                     return (c.R + c.G + c.B) < 200;
                 }
             }
-            catch { }
+            catch { /* ресурс темы не найден — считаем тему тёмной, см. return ниже */ }
             return true;
         }
 

@@ -1,3 +1,4 @@
+﻿using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Windows;
@@ -13,8 +14,15 @@ namespace CharacterApp.Pages
     public partial class PageMain : Page, ISaveLoad
     {
         private string photoPath = string.Empty;
+        private CharacterApp.Models.Character? _currentChar;
+        private Dictionary<string, TextBox>    _colorFields = new();
 
-        public PageMain() { InitializeComponent(); }
+
+        public PageMain()
+        {
+            InitializeComponent();
+            Loaded += (_, _) => RegisterColorFields();
+        }
 
         public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();
         public void SaveAs()    => (Application.Current.MainWindow as MainWindow)?.SaveAllAs();
@@ -59,6 +67,7 @@ namespace CharacterApp.Pages
             TbMindDev.Text   = c.MindDev.ToString();
             TbSpiritDev.Text = c.SpiritDev.ToString();
             UpdateTriangleChart();
+            ApplyFieldColors(c);
         }
 
         public void FillCharacter(Character c)
@@ -95,6 +104,7 @@ namespace CharacterApp.Pages
             c.BodyDev   = int.TryParse(TbBodyDev.Text,   out var bd) ? bd : 0;
             c.MindDev   = int.TryParse(TbMindDev.Text,   out var md) ? md : 0;
             c.SpiritDev = int.TryParse(TbSpiritDev.Text, out var sd) ? sd : 0;
+            CollectColors(c);
         }
 
         // ── TextChanged хендлеры ─────────────────────────────────────────────
@@ -106,12 +116,92 @@ namespace CharacterApp.Pages
                 mw.UpdateTitle(CharacterNameTextBox.Text.Trim());
         }
 
-        private void HitsTextBox_TextChanged    (object sender, TextChangedEventArgs e) => SetTextColor(HitsTextBox,    Colors.Green,    Colors.Lime);
-        private void SuperHitsTextBox_TextChanged(object sender, TextChangedEventArgs e) => SetTextColor(SuperHitsTextBox, Colors.SeaGreen, Colors.Lime);
-        private void DefenseTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(DefenseTextBox,  Colors.Blue,     Colors.Lime);
-        private void ManaTextBox_TextChanged     (object sender, TextChangedEventArgs e) => SetTextColor(ManaTextBox,     Colors.LightBlue, Colors.Lime);
-        private void StaminaTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(StaminaTextBox,  Colors.LightGreen, Colors.Lime);
-        private void MasteryTextBox_TextChanged  (object sender, TextChangedEventArgs e) => SetTextColor(MasteryTextBox,  Colors.SeaGreen, Colors.Lime);
+        private void RegisterColorFields()
+        {
+            _colorFields = new Dictionary<string, TextBox>
+            {
+                ["CharName"]    = CharacterNameTextBox,
+                ["Class"]       = ClassTextBox,
+                ["Subclass"]    = SubclassTextBox,
+                ["Hits"]        = HitsTextBox,
+                ["Defense"]     = DefenseTextBox,
+                ["SuperHits"]   = SuperHitsTextBox,
+                ["Evasion"]     = EvasionTextBox,
+                ["Speed"]       = SpeedTextBox,
+                ["Mastery"]     = MasteryTextBox,
+                ["Mana"]        = ManaTextBox,
+                ["Stamina"]     = StaminaTextBox,
+
+                // Эти поля были пропущены — правый клик по ним не давал
+                // выбрать цвет, хотя по соседним давал
+                ["Initiative"]  = InitiativeTextBox,
+                ["Carry"]       = CarryTextBox,
+
+                // Треугольник развития
+                ["BodyDev"]     = TbBodyDev,
+                ["MindDev"]     = TbMindDev,
+                ["SpiritDev"]   = TbSpiritDev,
+
+                // Пользовательские поля — и подпись, и значение
+                ["Custom1Lbl"]  = CustomField1Label,
+                ["Custom1Val"]  = CustomField1Value,
+                ["Custom2Lbl"]  = CustomField2Label,
+                ["Custom2Val"]  = CustomField2Value,
+                ["Custom3Lbl"]  = CustomField3Label,
+                ["Custom3Val"]  = CustomField3Value,
+                ["Custom4Lbl"]  = CustomField4Label,
+                ["Custom4Val"]  = CustomField4Value,
+            };
+            foreach (var (name, tb) in _colorFields)
+                TextColorHelper.Register(tb, name,
+                    () => _currentChar,
+                    () => (App.Current.MainWindow as MainWindow)?.MarkUnsaved());
+            // Страницу могли открыть уже ПОСЛЕ загрузки персонажа: тогда
+            // ApplyColors отработал на пустом словаре и цвета не применились.
+            // Красим сразу после регистрации, если персонаж уже известен.
+            if (_currentChar != null) TextColorHelper.Apply(_colorFields, _currentChar);
+        }
+
+        public void ApplyFieldColors(CharacterApp.Models.Character c)
+        {
+            _currentChar = c;
+            TextColorHelper.Apply(_colorFields, c);
+        }
+
+        // ── Цвета полей ──────────────────────────────────────────────────────
+        // ApplyColors удалён: он дублировал ApplyFieldColors и никем не вызывался.
+
+        private void CollectColors(CharacterApp.Models.Character c)
+        {
+            foreach (var (key, tb) in _colorFields)
+            {
+                var src = System.Windows.DependencyPropertyHelper
+                    .GetValueSource(tb, System.Windows.Controls.TextBox.ForegroundProperty)
+                    .BaseValueSource;
+                if (src == System.Windows.BaseValueSource.Local &&
+                    tb.Foreground is System.Windows.Media.SolidColorBrush b)
+                    c.FieldColors[key] =
+                        $"#{b.Color.R:X2}{b.Color.G:X2}{b.Color.B:X2}";
+                else
+                    c.FieldColors.Remove(key);
+            }
+        }
+
+
+        public void ClearFieldColors()
+        {
+            _currentChar = null;
+            foreach (var tb in _colorFields.Values)
+                tb.ClearValue(TextBox.ForegroundProperty);
+        }
+
+
+        private void HitsTextBox_TextChanged    (object sender, TextChangedEventArgs e) { /* color now via right-click */ }
+        private void SuperHitsTextBox_TextChanged(object sender, TextChangedEventArgs e) { /* color now via right-click */ }
+        private void DefenseTextBox_TextChanged  (object sender, TextChangedEventArgs e) { /* color now via right-click */ }
+        private void ManaTextBox_TextChanged     (object sender, TextChangedEventArgs e) { /* color now via right-click */ }
+        private void StaminaTextBox_TextChanged  (object sender, TextChangedEventArgs e) { /* color now via right-click */ }
+        private void MasteryTextBox_TextChanged  (object sender, TextChangedEventArgs e) { /* color now via right-click */ }
 
         // Уже заменён на NumericOnly_PreviewTextInput в xaml — оставлен как fallback
         private static void Mastery_PreviewTextInput(object _, TextCompositionEventArgs e)
