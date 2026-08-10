@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -216,6 +216,8 @@ namespace CharacterApp.Controls
 
                 if (ItemData == null) ItemData = new EquipmentItem { Name = ItemName, ImagePath = ItemImagePath };
                 else { ItemData.Name = ItemName; ItemData.ImagePath = ItemImagePath; }
+                // Выбрана другая картинка — вложенную копию перечитаем при сохранении
+                ItemData.ImageBase64 = string.Empty;
                 UpdateVisual();
             }
         }

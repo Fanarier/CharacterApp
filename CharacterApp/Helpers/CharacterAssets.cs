@@ -1,177 +1,206 @@
 // Helpers/CharacterAssets.cs
-// Делает JSON персонажа переносимым между компьютерами.
+// Картинки персонажа хранятся внутри его файла.
 //
-// Проблема: PhotoPath и EquipmentItem.ImagePath хранились как абсолютные пути
-// (C:\Users\Вася\Downloads\меч.png). Скинул файл кенту — картинки не открылись.
+// Как было: рядом с .json создавалась папка "<имя>_assets", туда копировались
+// портрет и иконки предметов, а в файл писались относительные пути. Передавать
+// персонажа приходилось вместе с папкой — забыл её, и картинок нет.
 //
-// Решение: при сохранении картинки копируются в папку "<имя файла>_assets"
-// рядом с JSON, а в файл пишется относительный путь. При загрузке путь
-// разворачивается обратно в абсолютный. В памяти пути всегда абсолютные,
-// поэтому остальной код приложения трогать не пришлось.
+// Как стало: картинка кодируется в текст и лежит прямо в .json. Один файл —
+// и всё на месте. Предметы инвентаря так хранились с самого начала, теперь
+// то же самое у портрета и экипировки.
 //
-// Старые файлы с абсолютными путями продолжают работать: если путь абсолютный
-// и файл на месте — он просто используется как есть.
+// Интерфейс по-прежнему работает с путями к файлам, поэтому при загрузке
+// картинка распаковывается в кэш приложения и подставляется путь к ней.
+// Это позволило не переписывать отрисовку в каждом контроле.
+//
+// Старые файлы с папкой рядом читаются как раньше: путь на месте — картинка
+// подхватится и при следующем сохранении переедет внутрь файла.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using CharacterApp.Models;
 
 namespace CharacterApp.Helpers
 {
     public static class CharacterAssets
     {
-        public const string AssetsSuffix = "_assets";
-
-        /// <summary>Имя папки ресурсов для конкретного файла персонажа.</summary>
-        public static string AssetsFolderName(string jsonPath)
-            => Path.GetFileNameWithoutExtension(jsonPath) + AssetsSuffix;
+        /// <summary>Куда распаковываются картинки для показа.</summary>
+        public static string CacheDir => Path.Combine(App.DataDir, "imgcache");
 
         // ── Доступ к полям с картинками ──────────────────────────────────────
-        // Ключ = стабильное имя файла в папке ресурсов (чтобы пересохранение
-        // перезаписывало ту же картинку, а не плодило копии).
-        //
-        // ВАЖНО: EquipmentPage.FillCharacter кладёт в Character ССЫЛКИ на те же
-        // объекты EquipmentItem, которые живут в слотах экипировки на экране.
-        // Если менять у них ImagePath напрямую, у контрола на экране путь тоже
-        // станет относительным, File.Exists вернёт false — и картинка предмета
-        // пропадёт сразу после сохранения. Поэтому сеттер не мутирует предмет,
-        // а подставляет в Character его копию.
-        private static IEnumerable<(string Key, Func<string> Get, Action<string> Set)>
-            ImageFields(Character c)
+        // EquipmentPage кладёт в Character ССЫЛКИ на предметы, которые живут
+        // в слотах на экране. Поэтому сеттер не мутирует предмет, а подставляет
+        // его копию — иначе правка пути гасила бы картинку прямо на странице.
+        private static IEnumerable<ImageField> ImageFields(Character c)
         {
-            // PhotoPath — обычная строка в самом Character, копия безопасна
-            yield return ("portrait", () => c.PhotoPath, v => c.PhotoPath = v);
+            yield return new ImageField(
+                () => c.PhotoPath,   v => c.PhotoPath   = v,
+                () => c.PhotoBase64, v => c.PhotoBase64 = v);
 
-            foreach (var (key, get, set) in EquipmentSlots(c))
+            foreach (var (get, set) in EquipmentSlots(c))
             {
                 var item = get();
                 if (item == null) continue;
                 var captured = item;
-                yield return (key,
-                              () => captured.ImagePath,
-                              v => set(WithImagePath(captured, v)));
+                yield return new ImageField(
+                    () => captured.ImagePath,
+                    v => set(WithImage(captured, path: v, data: captured.ImageBase64)),
+                    () => captured.ImageBase64,
+                    v => set(WithImage(captured, path: captured.ImagePath, data: v)));
             }
         }
 
-        /// <summary>Копия предмета с другим путём к картинке. Оригинал не трогаем.</summary>
-        private static EquipmentItem WithImagePath(EquipmentItem src, string imagePath)
+        private readonly record struct ImageField(
+            Func<string> GetPath, Action<string> SetPath,
+            Func<string> GetData, Action<string> SetData);
+
+        private static EquipmentItem WithImage(EquipmentItem src, string path, string data)
             => new EquipmentItem
             {
-                Name      = src.Name,
-                ImagePath = imagePath,
-                Rarity    = src.Rarity,
-                Stats     = src.Stats,
-                Effects   = src.Effects,
+                Name        = src.Name,
+                ImagePath   = path,
+                ImageBase64 = data,
+                Rarity      = src.Rarity,
+                Stats       = src.Stats,
+                Effects     = src.Effects,
             };
 
-        private static IEnumerable<(string Key, Func<EquipmentItem?> Get, Action<EquipmentItem?> Set)>
+        private static IEnumerable<(Func<EquipmentItem?> Get, Action<EquipmentItem?> Set)>
             EquipmentSlots(Character c)
         {
-            yield return ("head",      () => c.HeadItem,      v => c.HeadItem      = v);
-            yield return ("body",      () => c.BodyItem,      v => c.BodyItem      = v);
-            yield return ("hands",     () => c.HandsItem,     v => c.HandsItem     = v);
-            yield return ("belt",      () => c.BeltItem,      v => c.BeltItem      = v);
-            yield return ("legs",      () => c.LegsItem,      v => c.LegsItem      = v);
-            yield return ("ring1",     () => c.Ring1Item,     v => c.Ring1Item     = v);
-            yield return ("ring2",     () => c.Ring2Item,     v => c.Ring2Item     = v);
-            yield return ("amulet",    () => c.AmuletItem,    v => c.AmuletItem    = v);
-            yield return ("ornament1", () => c.Ornament1Item, v => c.Ornament1Item = v);
-            yield return ("ornament2", () => c.Ornament2Item, v => c.Ornament2Item = v);
-            yield return ("artifact1", () => c.Artifact1Item, v => c.Artifact1Item = v);
-            yield return ("artifact2", () => c.Artifact2Item, v => c.Artifact2Item = v);
-            yield return ("weapon1",   () => c.Weapon1Item,   v => c.Weapon1Item   = v);
-            yield return ("weapon2",   () => c.Weapon2Item,   v => c.Weapon2Item   = v);
-            yield return ("shield",    () => c.ShieldItem,    v => c.ShieldItem    = v);
+            yield return (() => c.HeadItem,      v => c.HeadItem      = v);
+            yield return (() => c.BodyItem,      v => c.BodyItem      = v);
+            yield return (() => c.HandsItem,     v => c.HandsItem     = v);
+            yield return (() => c.BeltItem,      v => c.BeltItem      = v);
+            yield return (() => c.LegsItem,      v => c.LegsItem      = v);
+            yield return (() => c.Ring1Item,     v => c.Ring1Item     = v);
+            yield return (() => c.Ring2Item,     v => c.Ring2Item     = v);
+            yield return (() => c.AmuletItem,    v => c.AmuletItem    = v);
+            yield return (() => c.Ornament1Item, v => c.Ornament1Item = v);
+            yield return (() => c.Ornament2Item, v => c.Ornament2Item = v);
+            yield return (() => c.Artifact1Item, v => c.Artifact1Item = v);
+            yield return (() => c.Artifact2Item, v => c.Artifact2Item = v);
+            yield return (() => c.Weapon1Item,   v => c.Weapon1Item   = v);
+            yield return (() => c.Weapon2Item,   v => c.Weapon2Item   = v);
+            yield return (() => c.ShieldItem,    v => c.ShieldItem    = v);
         }
 
-        // ── Сохранение: абсолютный путь → копия в _assets + относительный путь ─
+        // ── Сохранение: файл с диска → текст внутри персонажа ────────────────
         /// <summary>
-        /// Копирует все картинки персонажа рядом с JSON и заменяет пути на относительные.
-        /// Мутирует переданный объект — передавать нужно DTO для сериализации, не живую модель.
+        /// Складывает картинки внутрь объекта персонажа перед записью в файл.
+        /// Мутирует переданный объект — передавать нужно копию для сохранения,
+        /// а не то, что показано на экране.
         /// </summary>
-        /// <param name="folderNameOverride">
-        /// Для автосейвов — общая папка на все снимки, чтобы не плодить по папке на файл.
-        /// </param>
-        public static void Externalize(Character c, string jsonPath, string? folderNameOverride = null)
+        public static void EmbedImages(Character c)
         {
-            if (c == null || string.IsNullOrWhiteSpace(jsonPath)) return;
+            if (c == null) return;
 
-            var baseDir    = Path.GetDirectoryName(Path.GetFullPath(jsonPath));
-            if (string.IsNullOrEmpty(baseDir)) return;
-            var folderName = folderNameOverride ?? AssetsFolderName(jsonPath);
-            var assetsDir  = Path.Combine(baseDir, folderName);
-
-            foreach (var (key, get, set) in ImageFields(c))
+            foreach (var f in ImageFields(c))
             {
-                var src = get();
-                if (string.IsNullOrWhiteSpace(src)) continue;
+                var path = f.GetPath();
+                var data = f.GetData();
 
-                // Уже относительный — значит, уже лежит в _assets, ничего не делаем
-                if (!Path.IsPathRooted(src)) continue;
-
-                var ext    = Path.GetExtension(src);
-                if (string.IsNullOrEmpty(ext)) ext = ".png";
-                var target = Path.Combine(assetsDir, key + ext);
-                var rel    = folderName + "/" + key + ext;
+                // Картинка уже внутри и файл не менялся — перечитывать незачем
+                if (!string.IsNullOrEmpty(data) && !IsFreshFile(path, data)) continue;
+                if (string.IsNullOrWhiteSpace(path)) continue;
 
                 try
                 {
-                    if (File.Exists(src))
-                    {
-                        Directory.CreateDirectory(assetsDir);
-                        // Источник и цель могут совпасть при повторном сохранении
-                        if (!PathsEqual(src, target)) File.Copy(src, target, true);
-                        set(rel);
-                    }
-                    else if (File.Exists(target))
-                    {
-                        // Оригинал удалили, но копия в _assets уцелела — ссылаемся на неё
-                        set(rel);
-                    }
-                    // Иначе оставляем путь как был: вдруг диск просто не подключён
+                    if (!File.Exists(path)) continue;   // диск отключён — старую копию не теряем
+                    f.SetData(Convert.ToBase64String(File.ReadAllBytes(path)));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Не смогли скопировать (нет прав, файл занят) — не ломаем сохранение,
-                    // оставляем абсолютный путь. Хуже, чем было, точно не станет.
+                    Log.Warn($"не удалось вложить картинку {path} в файл персонажа", ex);
                 }
             }
         }
 
-        // ── Загрузка: относительный путь → абсолютный ────────────────────────
-        /// <summary>Разворачивает относительные пути к картинкам в абсолютные.</summary>
-        public static void Internalize(Character c, string jsonPath)
-        {
-            if (c == null || string.IsNullOrWhiteSpace(jsonPath)) return;
-
-            var baseDir = Path.GetDirectoryName(Path.GetFullPath(jsonPath));
-            if (string.IsNullOrEmpty(baseDir)) return;
-
-            foreach (var (_, get, set) in ImageFields(c))
-            {
-                var stored = get();
-                if (string.IsNullOrWhiteSpace(stored)) continue;
-                if (Path.IsPathRooted(stored)) continue;   // старый формат — оставляем
-
-                try
-                {
-                    var full = Path.GetFullPath(
-                        Path.Combine(baseDir, stored.Replace('/', Path.DirectorySeparatorChar)));
-                    if (File.Exists(full)) set(full);
-                }
-                catch { /* мусор в пути — оставляем как есть */ }
-            }
-        }
-
-        private static bool PathsEqual(string a, string b)
+        /// <summary>Файл на диске отличается от того, что уже вложено.</summary>
+        private static bool IsFreshFile(string path, string data)
         {
             try
             {
-                return string.Equals(Path.GetFullPath(a), Path.GetFullPath(b),
-                                     StringComparison.OrdinalIgnoreCase);
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return false;
+                // Дешёвая проверка по размеру: точное сравнение стоило бы чтения файла
+                long onDisk = new FileInfo(path).Length;
+                long stored = (long)(data.Length * 3L / 4) - (data.EndsWith("==") ? 2 : data.EndsWith("=") ? 1 : 0);
+                return Math.Abs(onDisk - stored) > 2;
             }
             catch { return false; }
+        }
+
+        // ── Загрузка: текст внутри персонажа → файл в кэше ───────────────────
+        /// <summary>
+        /// Раскладывает вложенные картинки в кэш и подставляет пути к ним,
+        /// чтобы страницы могли рисовать их как обычные файлы.
+        /// </summary>
+        public static void ExtractImages(Character c)
+        {
+            if (c == null) return;
+
+            foreach (var f in ImageFields(c))
+            {
+                var data = f.GetData();
+                if (string.IsNullOrWhiteSpace(data)) continue;
+
+                var path = WriteToCache(data);
+                if (!string.IsNullOrEmpty(path)) f.SetPath(path);
+            }
+        }
+
+        /// <summary>
+        /// Пишет картинку в кэш. Имя файла — от содержимого, поэтому одна и та же
+        /// картинка не плодит копии, а повторная загрузка персонажа ничего не пишет.
+        /// </summary>
+        private static string WriteToCache(string base64)
+        {
+            try
+            {
+                var bytes = Convert.FromBase64String(base64);
+                var name  = Convert.ToHexString(MD5.HashData(bytes))[..16] + GuessExtension(bytes);
+                var path  = Path.Combine(CacheDir, name);
+
+                if (File.Exists(path) && new FileInfo(path).Length == bytes.Length) return path;
+
+                Directory.CreateDirectory(CacheDir);
+                File.WriteAllBytes(path, bytes);
+                return path;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("не удалось распаковать картинку из файла персонажа", ex);
+                return "";
+            }
+        }
+
+        /// <summary>Расширение по сигнатуре — WPF ориентируется на содержимое, но с ним аккуратнее.</summary>
+        private static string GuessExtension(byte[] b)
+        {
+            if (b.Length > 3 && b[0] == 0xFF && b[1] == 0xD8) return ".jpg";
+            if (b.Length > 7 && b[0] == 0x89 && b[1] == 0x50) return ".png";
+            if (b.Length > 5 && b[0] == 0x47 && b[1] == 0x49) return ".gif";
+            if (b.Length > 1 && b[0] == 0x42 && b[1] == 0x4D) return ".bmp";
+            return ".img";
+        }
+
+        /// <summary>
+        /// Убирает из кэша то, к чему давно не обращались. Вызывается при старте:
+        /// иначе картинки персонажей, которых больше не открывают, копились бы вечно.
+        /// </summary>
+        public static void CleanCache(int keepDays = 30)
+        {
+            try
+            {
+                if (!Directory.Exists(CacheDir)) return;
+                var edge = DateTime.UtcNow.AddDays(-keepDays);
+                foreach (var f in new DirectoryInfo(CacheDir).GetFiles())
+                    if (f.LastAccessTimeUtc < edge && f.LastWriteTimeUtc < edge)
+                        try { f.Delete(); } catch { }
+            }
+            catch (Exception ex) { Log.Warn("не удалось почистить кэш картинок", ex); }
         }
     }
 }

@@ -78,6 +78,9 @@ namespace CharacterApp
                 ApplyAccentOnStartup(settings.AccentColorHex);
             }
 
+            // Кэш распакованных картинок: убираем то, к чему давно не обращались
+            Helpers.CharacterAssets.CleanCache();
+
             var main = new MainWindow();
             main.Show();
         }

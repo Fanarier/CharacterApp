@@ -137,7 +137,11 @@ namespace CharacterApp.Models
         public string CustomField4Label { get; set; } = "";
         public string CustomField4Value { get; set; } = "";
 
+        /// <summary>Путь к портрету на диске — только для текущего сеанса.</summary>
         public string PhotoPath { get; set; } = "";
+
+        /// <summary>Портрет внутри файла персонажа: один файл вместо файла и папки.</summary>
+        public string PhotoBase64 { get; set; } = "";
 
         // ── Предыстория ───────────────────────────────────────────────────────
         public string Race         { get; set; } = "";

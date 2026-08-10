@@ -23,7 +23,8 @@ namespace CharacterApp.Dialogs
                     Rarity = item.Rarity,
                     Stats = item.Stats,
                     Effects = item.Effects,
-                    ImagePath = item.ImagePath
+                    ImagePath   = item.ImagePath,
+                    ImageBase64 = item.ImageBase64
                 }
                 : new EquipmentItem();
 
@@ -46,7 +47,8 @@ namespace CharacterApp.Dialogs
             if (dlg.ShowDialog() == true)
             {
                 TbImagePath.Text = dlg.FileName;
-                _working.ImagePath = dlg.FileName;
+                _working.ImagePath   = dlg.FileName;
+                _working.ImageBase64 = string.Empty;   // картинка сменилась
                 RefreshPreview();
             }
         }

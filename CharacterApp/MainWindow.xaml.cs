@@ -190,7 +190,7 @@ namespace CharacterApp
                 var c    = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Character>(json);
                 if (c == null) return;
                 c.NormalizeItemsFromLegacy();
-                Helpers.CharacterAssets.Internalize(c, path);
+                Helpers.CharacterAssets.ExtractImages(c);
                 _lastJsonFilePath = path;
                 _slotsRestoring = true;
                 DistributeCharacter(c);
@@ -242,9 +242,7 @@ namespace CharacterApp
                 var character = CollectCharacter();
                 var filename  = string.Format(_appSettings.AutoSaveFilePattern, DateTime.Now);
                 var path      = Path.Combine(_appSettings.AutoSaveFolder, filename);
-                // Общая папка ресурсов на все автосейвы — иначе на каждый снимок
-                // создавалась бы своя копия портрета
-                Helpers.CharacterAssets.Externalize(character, path, "autosave" + Helpers.CharacterAssets.AssetsSuffix);
+                Helpers.CharacterAssets.EmbedImages(character);
                 var json      = JsonConvert.SerializeObject(character, Formatting.Indented);
                 WriteFileSafely(path, json, keepBackup: false);
 
@@ -420,8 +418,8 @@ namespace CharacterApp
                 var json      = File.ReadAllText(dlg.FileName);
                 var character = JsonConvert.DeserializeObject<Character>(json) ?? new Character();
                 character.NormalizeItemsFromLegacy();
-                // Относительные пути к картинкам → абсолютные для текущей машины
-                Helpers.CharacterAssets.Internalize(character, dlg.FileName);
+                // Вложенные картинки — в кэш, чтобы страницы могли их нарисовать
+                Helpers.CharacterAssets.ExtractImages(character);
 
                 // Путь запоминаем только после успешного чтения: иначе битый файл
                 // становился «последним» и Ctrl+S затирал бы его текущим персонажем
@@ -463,9 +461,8 @@ namespace CharacterApp
         private void DoSave(string path)
         {
             var character = CollectCharacter();
-            // Копируем портрет и иконки предметов в <имя>_assets рядом с JSON
-            // и заменяем абсолютные пути на относительные — файл станет переносимым
-            Helpers.CharacterAssets.Externalize(character, path);
+            // Картинки уходят внутрь файла: один файл вместо файла и папки
+            Helpers.CharacterAssets.EmbedImages(character);
             var json = JsonConvert.SerializeObject(character, Formatting.Indented);
 
             WriteFileSafely(path, json);
@@ -1337,11 +1334,9 @@ namespace CharacterApp
                         foreach (var s in state.Slots)
                         {
                             s.SavedCharacter?.NormalizeItemsFromLegacy();
-                            // В сессии пути обычно абсолютные, но если туда попал
-                            // относительный (снимок сделан сразу после сохранения),
-                            // разворачиваем его относительно файла персонажа
-                            if (s.SavedCharacter != null && !string.IsNullOrEmpty(s.FilePath))
-                                Helpers.CharacterAssets.Internalize(s.SavedCharacter, s.FilePath);
+                            // Картинки лежат в самой сессии — раскладываем в кэш
+                            if (s.SavedCharacter != null)
+                                Helpers.CharacterAssets.ExtractImages(s.SavedCharacter);
                             _characterSlots.Add(s);
                         }
                         _activeSlotIndex = Math.Clamp(state.ActiveIndex, 0, _characterSlots.Count - 1);
@@ -1401,6 +1396,13 @@ namespace CharacterApp
             try
             {
                 Directory.CreateDirectory(App.DataDir);
+                // Вкладываем картинки и в сессию: кэш со временем чистится,
+                // а по одним путям к нему табы после этого остались бы пустыми.
+                // Повторное вложение почти бесплатно — уже вложенное пропускается.
+                foreach (var slot in _characterSlots)
+                    if (slot.SavedCharacter != null)
+                        Helpers.CharacterAssets.EmbedImages(slot.SavedCharacter);
+
                 var state = new SessionState
                 {
                     ActiveIndex = _activeSlotIndex,
