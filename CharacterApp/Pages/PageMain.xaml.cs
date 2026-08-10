@@ -22,6 +22,11 @@ namespace CharacterApp.Pages
         {
             InitializeComponent();
             Loaded += (_, _) => RegisterColorFields();
+
+            // Треугольник рисуется кистями из ресурсов и запоминает их на момент
+            // отрисовки. После смены акцентного цвета он оставался прежним, пока
+            // персонажа не перезагрузят. Перерисовываем при каждом показе страницы.
+            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) UpdateTriangleChart(); };
         }
 
         public void QuickSave() => (Application.Current.MainWindow as MainWindow)?.SaveAll();

@@ -28,6 +28,9 @@ namespace CharacterApp.Pages
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            // Радар держит кисти, взятые в момент отрисовки: после смены
+            // акцентного цвета он оставался старым до пересчёта характеристик
+            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) RadarChart?.InvalidateVisual(); };
             Loaded += (_, _) => RegisterColorFields(new System.Collections.Generic.Dictionary<string, System.Windows.Controls.TextBox>
             {
                 ["ST_StrBase"] = StrBase,

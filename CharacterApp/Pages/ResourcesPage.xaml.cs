@@ -53,6 +53,11 @@ namespace CharacterApp.Pages
         {
             InitializeComponent();
             Loaded += (_, _) => RegisterColorFields();
+
+            // Карточки ресурсов собираются кодом и берут кисти через FindResource —
+            // то есть запоминают цвета на момент построения. После смены темы
+            // они оставались тёмными на светлом фоне (и наоборот), отсюда «каша».
+            IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) RebuildList(); };
         }
 
 

@@ -1,4 +1,4 @@
-<Page x:Class="CharacterApp.Pages.StatsPage"
+﻿<Page x:Class="CharacterApp.Pages.StatsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:controls="clr-namespace:CharacterApp.Controls"
@@ -20,12 +20,12 @@
         <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" MinWidth="130"/>
+              <ColumnDefinition Width="*" MinWidth="120"/>
               <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
               <ColumnDefinition Width="82"/>
               <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
       <RowDefinition Height="36"/>
@@ -53,16 +53,70 @@
           </Grid>
         </Border>
 
+        <!-- ═══ ЛОВКОСТЬ ═══ -->
+        <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" MinWidth="120"/>
+              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
+              <ColumnDefinition Width="82"/>
+              <ColumnDefinition Width="82"/>
+              <ColumnDefinition Width="54"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="28"/>
+      <RowDefinition Height="28"/>
+      <RowDefinition Height="28"/>
+            </Grid.RowDefinitions>
+      <!-- ─── Ловкость header ─── -->
+      <Border Grid.Row="0" Grid.ColumnSpan="6" Background="{DynamicResource AccentBrush}" Opacity="0.15" CornerRadius="5,5,0,0"/>
+      <Rectangle Grid.Row="0" Grid.ColumnSpan="6" VerticalAlignment="Bottom" Height="1" Fill="{DynamicResource AccentBrush}" Opacity="0.4"/>
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Ловкость" Style="{DynamicResource AttrNameStyle}"/>
+      <TextBox   Grid.Row="0" Grid.Column="1" x:Name="DexBase"      Style="{DynamicResource StatBoxStyle}" TextChanged="AttrBase_Changed" Tag="Dex"/>
+      <TextBlock Grid.Row="0" Grid.Column="2" x:Name="DexMod"       Style="{DynamicResource StatValStyle}"  Text="0"/>
+      <TextBlock Grid.Row="0" Grid.Column="3" Text="Спасбросок"        Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="0" Grid.Column="4" x:Name="DexSaveDot"
+                                   MaxValue="1" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <TextBlock Grid.Row="0" Grid.Column="5" x:Name="DexSaveTotal" Style="{DynamicResource StatValStyle}" Text="0" FontWeight="Bold"/>
+      <!-- Акробатика -->
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="Акробатика" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="1" Grid.Column="1" x:Name="AcrTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Acr"/>
+      <TextBlock Grid.Row="1" Grid.Column="2" x:Name="AcrTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="1" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="1" Grid.Column="4" x:Name="AcrProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <!-- Ловкость рук -->
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Ловкость рук" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="2" Grid.Column="1" x:Name="SlhTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Slh"/>
+      <TextBlock Grid.Row="2" Grid.Column="2" x:Name="SlhTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="2" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="2" Grid.Column="4" x:Name="SlhProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <!-- Скрытность -->
+      <TextBlock Grid.Row="3" Grid.Column="0" Text="Скрытность" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="3" Grid.Column="1" x:Name="StlTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Stl"/>
+      <TextBlock Grid.Row="3" Grid.Column="2" x:Name="StlTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="3" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="3" Grid.Column="4" x:Name="StlProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+          </Grid>
+        </Border>
         <!-- ═══ ТЕЛОСЛОЖЕНИЕ ═══ -->
         <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" MinWidth="130"/>
+              <ColumnDefinition Width="*" MinWidth="120"/>
               <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
               <ColumnDefinition Width="82"/>
               <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
       <RowDefinition Height="36"/>
@@ -89,17 +143,16 @@
                                    ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
           </Grid>
         </Border>
-
         <!-- ═══ ИНТЕЛЛЕКТ ═══ -->
         <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" MinWidth="130"/>
+              <ColumnDefinition Width="*" MinWidth="120"/>
               <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
               <ColumnDefinition Width="82"/>
               <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
       <RowDefinition Height="36"/>
@@ -171,149 +224,21 @@
                                    ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
           </Grid>
         </Border>
-
-        <!-- ═══ ХАРИЗМА ═══ -->
-        <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" MinWidth="130"/>
-              <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="44"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-      <RowDefinition Height="36"/>
-      <RowDefinition Height="28"/>
-      <RowDefinition Height="28"/>
-      <RowDefinition Height="28"/>
-      <RowDefinition Height="28"/>
-      <RowDefinition Height="28"/>
-            </Grid.RowDefinitions>
-      <!-- ─── Харизма header ─── -->
-      <Border Grid.Row="0" Grid.ColumnSpan="6" Background="{DynamicResource AccentBrush}" Opacity="0.15" CornerRadius="5,5,0,0"/>
-      <Rectangle Grid.Row="0" Grid.ColumnSpan="6" VerticalAlignment="Bottom" Height="1" Fill="{DynamicResource AccentBrush}" Opacity="0.4"/>
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="Харизма" Style="{DynamicResource AttrNameStyle}"/>
-      <TextBox   Grid.Row="0" Grid.Column="1" x:Name="ChaBase"      Style="{DynamicResource StatBoxStyle}" TextChanged="AttrBase_Changed" Tag="Cha"/>
-      <TextBlock Grid.Row="0" Grid.Column="2" x:Name="ChaMod"       Style="{DynamicResource StatValStyle}"  Text="0"/>
-      <TextBlock Grid.Row="0" Grid.Column="3" Text="Спасбросок"        Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="0" Grid.Column="4" x:Name="ChaSaveDot"
-                                   MaxValue="1" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <TextBlock Grid.Row="0" Grid.Column="5" x:Name="ChaSaveTotal" Style="{DynamicResource StatValStyle}" Text="0" FontWeight="Bold"/>
-      <!-- Выступление/Лидер -->
-      <TextBlock Grid.Row="1" Grid.Column="0" Text="Выступление/Лидер" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="1" Grid.Column="1" x:Name="PrfTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Prf"/>
-      <TextBlock Grid.Row="1" Grid.Column="2" x:Name="PrfTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="1" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="1" Grid.Column="4" x:Name="PrfProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <!-- Устрашение -->
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Устрашение" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="2" Grid.Column="1" x:Name="ItmTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Itm"/>
-      <TextBlock Grid.Row="2" Grid.Column="2" x:Name="ItmTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="2" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="2" Grid.Column="4" x:Name="ItmProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <!-- Обман -->
-      <TextBlock Grid.Row="3" Grid.Column="0" Text="Обман" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="3" Grid.Column="1" x:Name="DecTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Dec"/>
-      <TextBlock Grid.Row="3" Grid.Column="2" x:Name="DecTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="3" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="3" Grid.Column="4" x:Name="DecProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <!-- Очарование -->
-      <TextBlock Grid.Row="4" Grid.Column="0" Text="Очарование" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="4" Grid.Column="1" x:Name="ChrTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Chr"/>
-      <TextBlock Grid.Row="4" Grid.Column="2" x:Name="ChrTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="4" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="4" Grid.Column="4" x:Name="ChrProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <!-- Убеждение -->
-      <TextBlock Grid.Row="5" Grid.Column="0" Text="Убеждение" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="5" Grid.Column="1" x:Name="PrsTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Prs"/>
-      <TextBlock Grid.Row="5" Grid.Column="2" x:Name="PrsTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="5" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="5" Grid.Column="4" x:Name="PrsProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-          </Grid>
-        </Border>
       </StackPanel>
 
       <!-- Right: Ловкость, Мудрость -->
       <StackPanel Grid.Column="2">
 
-        <!-- ═══ ЛОВКОСТЬ ═══ -->
-        <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" MinWidth="130"/>
-              <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="44"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-      <RowDefinition Height="36"/>
-      <RowDefinition Height="28"/>
-      <RowDefinition Height="28"/>
-      <RowDefinition Height="28"/>
-            </Grid.RowDefinitions>
-      <!-- ─── Ловкость header ─── -->
-      <Border Grid.Row="0" Grid.ColumnSpan="6" Background="{DynamicResource AccentBrush}" Opacity="0.15" CornerRadius="5,5,0,0"/>
-      <Rectangle Grid.Row="0" Grid.ColumnSpan="6" VerticalAlignment="Bottom" Height="1" Fill="{DynamicResource AccentBrush}" Opacity="0.4"/>
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="Ловкость" Style="{DynamicResource AttrNameStyle}"/>
-      <TextBox   Grid.Row="0" Grid.Column="1" x:Name="DexBase"      Style="{DynamicResource StatBoxStyle}" TextChanged="AttrBase_Changed" Tag="Dex"/>
-      <TextBlock Grid.Row="0" Grid.Column="2" x:Name="DexMod"       Style="{DynamicResource StatValStyle}"  Text="0"/>
-      <TextBlock Grid.Row="0" Grid.Column="3" Text="Спасбросок"        Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="0" Grid.Column="4" x:Name="DexSaveDot"
-                                   MaxValue="1" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <TextBlock Grid.Row="0" Grid.Column="5" x:Name="DexSaveTotal" Style="{DynamicResource StatValStyle}" Text="0" FontWeight="Bold"/>
-      <!-- Акробатика -->
-      <TextBlock Grid.Row="1" Grid.Column="0" Text="Акробатика" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="1" Grid.Column="1" x:Name="AcrTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Acr"/>
-      <TextBlock Grid.Row="1" Grid.Column="2" x:Name="AcrTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="1" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="1" Grid.Column="4" x:Name="AcrProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <!-- Ловкость рук -->
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Ловкость рук" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="2" Grid.Column="1" x:Name="SlhTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Slh"/>
-      <TextBlock Grid.Row="2" Grid.Column="2" x:Name="SlhTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="2" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="2" Grid.Column="4" x:Name="SlhProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-      <!-- Скрытность -->
-      <TextBlock Grid.Row="3" Grid.Column="0" Text="Скрытность" Style="{DynamicResource SkillNameStyle}"/>
-      <TextBox   Grid.Row="3" Grid.Column="1" x:Name="StlTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Stl"/>
-      <TextBlock Grid.Row="3" Grid.Column="2" x:Name="StlTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
-      <TextBlock Grid.Row="3" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
-      <controls:IconRatingControl Grid.Row="3" Grid.Column="4" x:Name="StlProf"
-                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
-                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
-          </Grid>
-        </Border>
-
         <!-- ═══ МУДРОСТЬ ═══ -->
         <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" MinWidth="130"/>
+              <ColumnDefinition Width="*" MinWidth="120"/>
               <ColumnDefinition Width="44"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
               <ColumnDefinition Width="82"/>
               <ColumnDefinition Width="82"/>
-              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
       <RowDefinition Height="36"/>
@@ -381,6 +306,79 @@
       <TextBlock Grid.Row="6" Grid.Column="2" x:Name="MenTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
       <TextBlock Grid.Row="6" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
       <controls:IconRatingControl Grid.Row="6" Grid.Column="4" x:Name="MenProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+          </Grid>
+        </Border>
+
+        <!-- ═══ ХАРИЗМА ═══ -->
+        <Border Style="{DynamicResource AttrBlockStyle}" Margin="0,0,0,8">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" MinWidth="120"/>
+              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="54"/>
+              <ColumnDefinition Width="82"/>
+              <ColumnDefinition Width="82"/>
+              <ColumnDefinition Width="54"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="28"/>
+      <RowDefinition Height="28"/>
+      <RowDefinition Height="28"/>
+      <RowDefinition Height="28"/>
+      <RowDefinition Height="28"/>
+            </Grid.RowDefinitions>
+      <!-- ─── Харизма header ─── -->
+      <Border Grid.Row="0" Grid.ColumnSpan="6" Background="{DynamicResource AccentBrush}" Opacity="0.15" CornerRadius="5,5,0,0"/>
+      <Rectangle Grid.Row="0" Grid.ColumnSpan="6" VerticalAlignment="Bottom" Height="1" Fill="{DynamicResource AccentBrush}" Opacity="0.4"/>
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Харизма" Style="{DynamicResource AttrNameStyle}"/>
+      <TextBox   Grid.Row="0" Grid.Column="1" x:Name="ChaBase"      Style="{DynamicResource StatBoxStyle}" TextChanged="AttrBase_Changed" Tag="Cha"/>
+      <TextBlock Grid.Row="0" Grid.Column="2" x:Name="ChaMod"       Style="{DynamicResource StatValStyle}"  Text="0"/>
+      <TextBlock Grid.Row="0" Grid.Column="3" Text="Спасбросок"        Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="0" Grid.Column="4" x:Name="ChaSaveDot"
+                                   MaxValue="1" HorizontalAlignment="Left" Height="28" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <TextBlock Grid.Row="0" Grid.Column="5" x:Name="ChaSaveTotal" Style="{DynamicResource StatValStyle}" Text="0" FontWeight="Bold"/>
+      <!-- Выступление/Лидер -->
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="Выступление/Лидер" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="1" Grid.Column="1" x:Name="PrfTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Prf"/>
+      <TextBlock Grid.Row="1" Grid.Column="2" x:Name="PrfTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="1" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="1" Grid.Column="4" x:Name="PrfProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <!-- Устрашение -->
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Устрашение" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="2" Grid.Column="1" x:Name="ItmTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Itm"/>
+      <TextBlock Grid.Row="2" Grid.Column="2" x:Name="ItmTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="2" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="2" Grid.Column="4" x:Name="ItmProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <!-- Обман -->
+      <TextBlock Grid.Row="3" Grid.Column="0" Text="Обман" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="3" Grid.Column="1" x:Name="DecTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Dec"/>
+      <TextBlock Grid.Row="3" Grid.Column="2" x:Name="DecTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="3" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="3" Grid.Column="4" x:Name="DecProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <!-- Очарование -->
+      <TextBlock Grid.Row="4" Grid.Column="0" Text="Очарование" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="4" Grid.Column="1" x:Name="ChrTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Chr"/>
+      <TextBlock Grid.Row="4" Grid.Column="2" x:Name="ChrTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="4" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="4" Grid.Column="4" x:Name="ChrProf"
+                                   MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
+                                   ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
+      <!-- Убеждение -->
+      <TextBlock Grid.Row="5" Grid.Column="0" Text="Убеждение" Style="{DynamicResource SkillNameStyle}"/>
+      <TextBox   Grid.Row="5" Grid.Column="1" x:Name="PrsTrain" Style="{DynamicResource StatBoxStyle}" Text="0" TextChanged="Skill_Changed" Tag="Prs"/>
+      <TextBlock Grid.Row="5" Grid.Column="2" x:Name="PrsTotal" Style="{DynamicResource StatValStyle}" Text="0"/>
+      <TextBlock Grid.Row="5" Grid.Column="3" Text="Владение"    Style="{DynamicResource LabelStyle}"/>
+      <controls:IconRatingControl Grid.Row="5" Grid.Column="4" x:Name="PrsProf"
                                    MaxValue="3" HorizontalAlignment="Left" Height="26" VerticalAlignment="Center"
                                    ActiveIcon="{DynamicResource IconDiamondActive}" InactiveIcon="{DynamicResource IconDiamondInactive}"/>
           </Grid>

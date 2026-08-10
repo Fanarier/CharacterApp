@@ -1,11 +1,11 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!-- PALETTE - Deep Space x Amethyst -->
     <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#0C0D14" Offset="0"/>
-        <GradientStop Color="#111220" Offset="1"/>
+        <GradientStop Color="#0E0F17" Offset="0"/>
+        <GradientStop Color="#101120" Offset="1"/>
     </LinearGradientBrush>
     <SolidColorBrush x:Key="SidebarBrush"       Color="#09090F"/>
     <SolidColorBrush x:Key="SidebarBottomBrush"       Color="#07070D"/>
@@ -26,22 +26,22 @@
         <GradientStop Color="#CE80DA" Offset="0"/>
         <GradientStop Color="#8E3EA8" Offset="1"/>
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="SidebarSeparatorBrush"       Color="#1AB565C1"/>
-    <SolidColorBrush x:Key="SidebarBottomSeparatorBrush" Color="#18B565C1"/>
+    <SolidColorBrush x:Key="SidebarSeparatorBrush"       Color="#242742"/>
+    <SolidColorBrush x:Key="SidebarBottomSeparatorBrush" Color="#222540"/>
     <!-- Named resources for SidebarNavButtonActive (GradientStop.Color can't use DynamicResource) -->
-    <SolidColorBrush x:Key="NavActiveBgBrush"  Color="#30B565C1"/>
+    <SolidColorBrush x:Key="NavActiveBgBrush"  Color="#2AB565C1"/>
     <SolidColorBrush x:Key="NavActiveBarBrush" Color="#B565C1"/>
-    <SolidColorBrush x:Key="NavHoverBgBrush"   Color="#12B565C1"/>
-    <SolidColorBrush x:Key="SurfaceBrush"       Color="#181926"/>
-    <SolidColorBrush x:Key="Surface2Brush"      Color="#1E2032"/>
-    <SolidColorBrush x:Key="Surface3Brush"      Color="#252840"/>
+    <SolidColorBrush x:Key="NavHoverBgBrush"   Color="#14B565C1"/>
+    <SolidColorBrush x:Key="SurfaceBrush"       Color="#161826"/>
+    <SolidColorBrush x:Key="Surface2Brush"      Color="#1C1E30"/>
+    <SolidColorBrush x:Key="Surface3Brush"      Color="#23263C"/>
     <SolidColorBrush x:Key="TextBrush"          Color="#E8EAFF"/>
-    <SolidColorBrush x:Key="TextMutedBrush"     Color="#7880B0"/>
-    <SolidColorBrush x:Key="TextDimBrush"       Color="#3D4070"/>
+    <SolidColorBrush x:Key="TextMutedBrush"     Color="#8B93BF"/>
+    <SolidColorBrush x:Key="TextDimBrush"       Color="#5A5F8C"/>
     <SolidColorBrush x:Key="AccentBrush"        Color="#B565C1"/>
     <SolidColorBrush x:Key="AccentLightBrush"   Color="#CE80DA"/>
-    <SolidColorBrush x:Key="AccentDimBrush"     Color="#25B565C1"/>
-    <SolidColorBrush x:Key="AccentGlowBrush"    Color="#55B565C1"/>
+    <SolidColorBrush x:Key="AccentDimBrush"     Color="#1CB565C1"/>
+    <SolidColorBrush x:Key="AccentGlowBrush"    Color="#38B565C1"/>
     <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,0">
         <GradientStop Color="#8E3EA8" Offset="0"/>
         <GradientStop Color="#D07CE0" Offset="1"/>
@@ -50,13 +50,13 @@
         <GradientStop Color="#A050BC" Offset="0"/>
         <GradientStop Color="#7530A0" Offset="1"/>
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="BorderBrush"       Color="#1E2038"/>
-    <SolidColorBrush x:Key="BorderMedBrush"    Color="#2C2E4A"/>
-    <SolidColorBrush x:Key="BorderAccentBrush" Color="#55336A"/>
-    <DropShadowEffect x:Key="SubtleShadow"  BlurRadius="12" ShadowDepth="3" Color="#000000" Opacity="0.55"/>
-    <DropShadowEffect x:Key="CardShadow"    BlurRadius="24" ShadowDepth="6" Color="#000000" Opacity="0.65"/>
-    <DropShadowEffect x:Key="AccentGlow"    BlurRadius="18" ShadowDepth="0" Color="#B565C1"  Opacity="0.55"/>
-    <DropShadowEffect x:Key="SmallGlow"     BlurRadius="8"  ShadowDepth="0" Color="#B565C1"  Opacity="0.5"/><!-- updated by ApplyAccent -->
+    <SolidColorBrush x:Key="BorderBrush"       Color="#20223A"/>
+    <SolidColorBrush x:Key="BorderMedBrush"    Color="#2E3150"/>
+    <SolidColorBrush x:Key="BorderAccentBrush" Color="#33355480"/>
+    <DropShadowEffect x:Key="SubtleShadow"  BlurRadius="10" ShadowDepth="2" Color="#000000" Opacity="0.35"/>
+    <DropShadowEffect x:Key="CardShadow"    BlurRadius="18" ShadowDepth="4" Color="#000000" Opacity="0.45"/>
+    <DropShadowEffect x:Key="AccentGlow"    BlurRadius="14" ShadowDepth="0" Color="#B565C1"  Opacity="0.30"/>
+    <DropShadowEffect x:Key="SmallGlow"     BlurRadius="7"  ShadowDepth="0" Color="#B565C1"  Opacity="0.28"/><!-- updated by ApplyAccent -->
 
     <!-- Images -->
     <sys:String x:Key="IconExhaustionActive">\Images\block_active_dark.png</sys:String>
@@ -192,9 +192,10 @@
     <Style TargetType="Button">
         <Setter Property="Margin"          Value="5"/>
         <Setter Property="Padding"         Value="14,7"/>
-        <Setter Property="Background"      Value="{DynamicResource AccentGradientV}"/>
-        <Setter Property="Foreground"      Value="White"/>
-        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background"      Value="Transparent"/>
+        <Setter Property="Foreground"      Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush"     Value="{DynamicResource BorderMedBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Cursor"          Value="Hand"/>
         <Setter Property="MinHeight"       Value="32"/>
         <Setter Property="FontSize"        Value="13"/>
@@ -204,7 +205,9 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                               Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
                         </Border>
@@ -307,7 +310,7 @@
                                 CornerRadius="0,3,3,0" Opacity="0" IsHitTestVisible="False"
                                 Background="{DynamicResource AccentGradientV}"/>
                         <ContentPresenter Margin="{TemplateBinding Padding}"
-                                          HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -382,7 +385,7 @@
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="8" RenderTransformOrigin="0.5,0.5">
                         <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"
+                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                           Margin="{TemplateBinding Padding}"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -717,13 +720,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Border Grid.Row="0" CornerRadius="10,10,0,0" Padding="14,9">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#22B565C1" Offset="0"/>
-                                    <GradientStop Color="#0AB565C1" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border Grid.Row="0" CornerRadius="10,10,0,0" Padding="14,9"
+                                Background="{DynamicResource Surface2Brush}">
                             <ContentPresenter ContentSource="Header">
                                 <ContentPresenter.Resources>
                                     <Style TargetType="TextBlock">
@@ -731,19 +729,19 @@
         <Setter Property="FontSize"   Value="{DynamicResource AppFontSize}"/>
                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                         <Setter Property="FontSize"   Value="13.5"/>
-                                        <Setter Property="Foreground" Value="{DynamicResource AccentLightBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                                     </Style>
                                 </ContentPresenter.Resources>
                             </ContentPresenter>
                         </Border>
                         <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource BorderAccentBrush}"
+                                BorderBrush="{DynamicResource BorderMedBrush}"
                                 BorderThickness="1,0,1,1" CornerRadius="0,0,10,10"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter/>
                         </Border>
                         <Border Grid.Row="0" Grid.RowSpan="2"
-                                BorderBrush="{DynamicResource BorderAccentBrush}"
+                                BorderBrush="{DynamicResource BorderMedBrush}"
                                 BorderThickness="1" CornerRadius="10" IsHitTestVisible="False"/>
                     </Grid>
                 </ControlTemplate>
@@ -948,7 +946,7 @@
                             </Border.Effect>
                         </Border>
                         <ContentPresenter Margin="{TemplateBinding Padding}"
-                                          HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsPressed" Value="True">
@@ -1049,5 +1047,25 @@
         </Setter>
     </Style>
 
+
+    <!-- Главное действие на экране: одно на страницу. Строится на тех же
+         акцентных ключах, поэтому пользовательский цвет применяется как раньше -->
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background"      Value="{DynamicResource AccentGradientV}"/>
+        <Setter Property="Foreground"      Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <!-- Разрушающее действие: спокойное по умолчанию, краснеет только под курсором -->
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Foreground"  Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground"  Value="#E5647A"/>
+                <Setter Property="BorderBrush" Value="#66E5647A"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
 
 </ResourceDictionary>

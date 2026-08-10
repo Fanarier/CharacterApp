@@ -1,4 +1,4 @@
-<Page x:Class="CharacterApp.SettingsPage"
+﻿<Page x:Class="CharacterApp.SettingsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="Настройки">
@@ -27,7 +27,7 @@
                         <Border Width="130" Height="80" Margin="0,0,14,0"
                                 CornerRadius="10" Cursor="Hand"
                                 BorderThickness="2.5"
-                                BorderBrush="{DynamicResource AccentBrush}">
+                                BorderBrush="{DynamicResource BorderMedBrush}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                     <GradientStop Color="#FFF4F4F8" Offset="0"/>
@@ -54,7 +54,7 @@
                         <Border Width="130" Height="80"
                                 CornerRadius="10" Cursor="Hand"
                                 BorderThickness="2.5"
-                                BorderBrush="{DynamicResource AccentBrush}">
+                                BorderBrush="{DynamicResource BorderMedBrush}">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                     <GradientStop Color="#FF1E1E24" Offset="0"/>
@@ -146,6 +146,20 @@
             <GroupBox Header="Автосохранение" Margin="5" Padding="10">
                 <StackPanel>
                     <CheckBox x:Name="CbLoadLastOnStart" Content="Загружать последний используемый файл при запуске" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Пункты бокового меню" FontWeight="SemiBold" Margin="0,6,0,6"
+                               Foreground="{DynamicResource TextBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <RadioButton x:Name="RbMenuIconText" GroupName="MenuStyle"
+                                     Content="Иконка и название" Margin="0,0,16,0"
+                                     Checked="MenuStyle_Changed"/>
+                        <RadioButton x:Name="RbMenuText" GroupName="MenuStyle"
+                                     Content="Только название" Margin="0,0,16,0"
+                                     Checked="MenuStyle_Changed"/>
+                        <RadioButton x:Name="RbMenuIcon" GroupName="MenuStyle"
+                                     Content="Только иконка"
+                                     Checked="MenuStyle_Changed"/>
+                    </StackPanel>
                     <CheckBox x:Name="CbEnableAutoSave" Content="Включить автосохранение" Margin="0,0,0,10"/>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <TextBlock Text="Интервал (мин):" VerticalAlignment="Center" Width="120"/>
@@ -254,7 +268,7 @@
             </GroupBox>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="20,10,0,0">
-            <Button Content="Сохранить" Click="SaveSettings_Click" Margin="20" Width="100" HorizontalAlignment="Center"/>
+            <Button Content="Сохранить" Click="SaveSettings_Click" Margin="20" Width="100" HorizontalAlignment="Center" Style="{DynamicResource PrimaryButton}"/>
             <Button Content="Вернуться" Click="Back_Click" Margin="20" Width="100" HorizontalAlignment="Center"/>
             </StackPanel>
         </StackPanel>

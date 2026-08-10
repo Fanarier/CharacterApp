@@ -8,6 +8,14 @@ using CharacterApp.Models;
 
 namespace CharacterApp
 {
+    /// <summary>Допустимые значения AppSettings.MenuButtonStyle.</summary>
+    public static class MenuButtonStyles
+    {
+        public const string TextOnly    = "text";
+        public const string IconAndText = "iconText";
+        public const string IconOnly    = "icon";
+    }
+
     /// <summary>
     /// Единый класс настроек приложения.
     /// Сохраняется в %AppData%\CharacterApp\config.json
@@ -33,6 +41,10 @@ namespace CharacterApp
         // ── Шрифт ────────────────────────────────────────────────────────────
         public string AppFontFamily { get; set; } = "Segoe UI";
         public double AppFontSize   { get; set; } = 13.0;
+
+        // ── Вид пунктов бокового меню ─────────────────────────────────────────
+        /// <summary>text | iconText | icon — см. MenuButtonStyles.</summary>
+        public string MenuButtonStyle { get; set; } = MenuButtonStyles.IconAndText;
 
         // ── Видимость страниц ─────────────────────────────────────────────────
         public List<string> HiddenPages { get; set; } = new();

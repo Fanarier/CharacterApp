@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -174,18 +174,18 @@ namespace CharacterApp
                 {
                     ("AccentBrush",                  new SolidColorBrush(color)),
                     ("AccentLightBrush",             new SolidColorBrush(Lighten(color, 0.2f))),
-                    ("AccentDimBrush",               new SolidColorBrush(Color.FromArgb(45,  color.R, color.G, color.B))),
-                    ("AccentGlowBrush",              new SolidColorBrush(Color.FromArgb(90,  color.R, color.G, color.B))),
+                    ("AccentDimBrush",               new SolidColorBrush(Color.FromArgb(28,  color.R, color.G, color.B))),
+                    ("AccentGlowBrush",              new SolidColorBrush(Color.FromArgb(56,  color.R, color.G, color.B))),
                     ("AccentGradient",               new LinearGradientBrush(Darken(color, 0.2f),  Lighten(color, 0.2f), 0)),
                     ("AccentGradientV",              new LinearGradientBrush(Lighten(color, 0.1f), Darken(color, 0.1f), 90)),
-                    ("BorderAccentBrush",            new SolidColorBrush(Color.FromArgb(100, color.R, color.G, color.B))),
-                    ("AccentGlow",                   new DropShadowEffect { BlurRadius = 18, ShadowDepth = 0, Color = color, Opacity = 0.55 }),
-                    ("SmallGlow",                    new DropShadowEffect { BlurRadius = 8,  ShadowDepth = 0, Color = color, Opacity = 0.5  }),
+                    ("BorderAccentBrush",            new SolidColorBrush(Color.FromArgb(64,  color.R, color.G, color.B))),
+                    ("AccentGlow",                   new DropShadowEffect { BlurRadius = 14, ShadowDepth = 0, Color = color, Opacity = 0.30 }),
+                    ("SmallGlow",                    new DropShadowEffect { BlurRadius = 7,  ShadowDepth = 0, Color = color, Opacity = 0.28  }),
                     ("BurgerLineBrush",              new LinearGradientBrush(Lighten(color, 0.15f), color, 0)),
                     ("MenuTitleBrush",               new LinearGradientBrush(Lighten(color, 0.15f), color, 0)),
-                    ("SidebarSeparatorBrush",        new SolidColorBrush(Color.FromArgb(26,  color.R, color.G, color.B))),
-                    ("SidebarBottomSeparatorBrush",  new SolidColorBrush(Color.FromArgb(24,  color.R, color.G, color.B))),
-                    ("NavActiveBgBrush",             new SolidColorBrush(Color.FromArgb(48,  color.R, color.G, color.B))),
+                    ("SidebarSeparatorBrush",        new SolidColorBrush(Color.FromArgb(18,  color.R, color.G, color.B))),
+                    ("SidebarBottomSeparatorBrush",  new SolidColorBrush(Color.FromArgb(17,  color.R, color.G, color.B))),
+                    ("NavActiveBgBrush",             new SolidColorBrush(Color.FromArgb(42,  color.R, color.G, color.B))),
                     ("NavActiveBarBrush",            new SolidColorBrush(color)),
                     ("NavHoverBgBrush",              new SolidColorBrush(Color.FromArgb(18,  color.R, color.G, color.B))),
                 };

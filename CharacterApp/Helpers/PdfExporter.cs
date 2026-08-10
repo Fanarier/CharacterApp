@@ -66,6 +66,8 @@ namespace CharacterApp.Helpers
                     CoreStats(col);
                     RatingSection(col);
                     Attributes(col);
+                    SavingThrows(col);
+                    SkillTable(col);
                     RadarChart(col);
                     if (_c.Skills?.Count > 0)     Skills(col, "Активные навыки",   _c.Skills);
                     if (_c.PassiveSkills?.Count > 0) Skills(col, "Пассивные навыки", _c.PassiveSkills);
@@ -188,6 +190,138 @@ namespace CharacterApp.Helpers
         }
 
         // ── Attributes ────────────────────────────────────────────────────────
+        // ── Спасброски и навыки ──────────────────────────────────────────────
+        // Формулы повторяют StatsPage: там же считаются значения на экране.
+        // В файле хранятся только тренировка и точки владения, итог выводится.
+
+        private int Mastery()
+        {
+            var s = (_c.Mastery ?? "").Trim();
+            if (s.StartsWith("+")) s = s[1..];
+            return int.TryParse(s, out var v) ? v : 0;
+        }
+
+        private static int AttrMod(int baseVal) => (int)Math.Floor((baseVal - 10) / 2.0);
+
+        private static string Fmt(int v) => (v >= 0 ? "+" : "") + v;
+
+        /// <summary>Точки владения так же, как на экране: заполненные и пустые.</summary>
+        private static string Dots(int value, int max = 3)
+            => new string('◆', Math.Clamp(value, 0, max)) + new string('◇', max - Math.Clamp(value, 0, max));
+
+        void SavingThrows(ColumnDescriptor col)
+        {
+            var s  = _c.Stats;
+            int bm = Mastery();
+
+            var rows = new (string Name, int Base, bool Prof)[]
+            {
+                ("Сила",         s.StrBase, s.StrSaveProf),
+                ("Ловкость",     s.DexBase, s.DexSaveProf),
+                ("Телосложение", s.ConBase, s.ConSaveProf),
+                ("Интеллект",    s.IntBase, s.IntSaveProf),
+                ("Мудрость",     s.WisBase, s.WisSaveProf),
+                ("Харизма",      s.ChaBase, s.ChaSaveProf),
+            };
+
+            SH(col, "Спасброски", Blue);
+            col.Item().Table(t =>
+            {
+                t.ColumnsDefinition(cd =>
+                {
+                    cd.RelativeColumn(3); cd.ConstantColumn(60); cd.ConstantColumn(60);
+                    cd.RelativeColumn(3); cd.ConstantColumn(60); cd.ConstantColumn(60);
+                });
+                t.Header(h =>
+                {
+                    HC(h, "Атрибут"); HC(h, "Владение"); HC(h, "Итог");
+                    HC(h, "Атрибут"); HC(h, "Владение"); HC(h, "Итог");
+                });
+
+                bool alt = false;
+                for (int i = 0; i < rows.Length; i += 2)
+                {
+                    string bg = alt ? AltRow : "#FFFFFF";
+                    for (int k = 0; k < 2 && i + k < rows.Length; k++)
+                    {
+                        var r = rows[i + k];
+                        int total = AttrMod(r.Base) + (r.Prof ? bm : 0);
+                        DC(t, bg, r.Name);
+                        DC(t, bg, r.Prof ? "◆" : "◇");
+                        DC(t, bg, Fmt(total));
+                    }
+                    alt = !alt;
+                }
+            });
+        }
+
+        void SkillTable(ColumnDescriptor col)
+        {
+            var s     = _c.Stats;
+            int bm    = Mastery();
+            int level = _c.Level;
+
+            int Total(int training, int attrBase, int prof) => prof switch
+            {
+                1 => training + AttrMod(attrBase) + bm,
+                2 => training + AttrMod(attrBase) + bm * 2,
+                3 => (int)Math.Floor(training + AttrMod(attrBase) + bm * 2.0 + level / 4.0),
+                _ => training + AttrMod(attrBase),
+            };
+
+            var rows = new (string Group, string Name, int Train, int Prof, int AttrBase)[]
+            {
+                ("Сила",         "Атлетика",            s.AthT, s.AthP, s.StrBase),
+                ("Ловкость",     "Акробатика",          s.AcrT, s.AcrP, s.DexBase),
+                ("Ловкость",     "Ловкость рук",        s.SlhT, s.SlhP, s.DexBase),
+                ("Ловкость",     "Скрытность",          s.StlT, s.StlP, s.DexBase),
+                ("Телосложение", "Выдержка/Здоровье",   s.EndT, s.EndP, s.ConBase),
+                ("Интеллект",    "Анализ/Исследование", s.AnaT, s.AnaP, s.IntBase),
+                ("Интеллект",    "История/Память",      s.HisT, s.HisP, s.IntBase),
+                ("Интеллект",    "Магия/Мистика",       s.MagT, s.MagP, s.IntBase),
+                ("Интеллект",    "Природа/Фауна",       s.NatT, s.NatP, s.IntBase),
+                ("Интеллект",    "Религия/Оккультизм",  s.RelT, s.RelP, s.IntBase),
+                ("Интеллект",    "Технология/Наука",    s.TecT, s.TecP, s.IntBase),
+                ("Мудрость",     "Внимание",            s.AttT, s.AttP, s.WisBase),
+                ("Мудрость",     "Выживание",           s.SurT, s.SurP, s.WisBase),
+                ("Мудрость",     "Медицина",            s.MedT, s.MedP, s.WisBase),
+                ("Мудрость",     "Проницательность",    s.InsT, s.InsP, s.WisBase),
+                ("Мудрость",     "Уход за животными",   s.AniT, s.AniP, s.WisBase),
+                ("Мудрость",     "Наставничество",      s.MenT, s.MenP, s.WisBase),
+                ("Харизма",      "Выступление/Лидер",   s.PrfT, s.PrfP, s.ChaBase),
+                ("Харизма",      "Устрашение",          s.ItmT, s.ItmP, s.ChaBase),
+                ("Харизма",      "Обман",               s.DecT, s.DecP, s.ChaBase),
+                ("Харизма",      "Очарование",          s.ChrT, s.ChrP, s.ChaBase),
+                ("Харизма",      "Убеждение",           s.PrsT, s.PrsP, s.ChaBase),
+            };
+
+            SH(col, "Навыки", Blue);
+            col.Item().Table(t =>
+            {
+                t.ColumnsDefinition(cd =>
+                {
+                    cd.RelativeColumn(4); cd.RelativeColumn(3);
+                    cd.ConstantColumn(60); cd.ConstantColumn(70); cd.ConstantColumn(50);
+                });
+                t.Header(h =>
+                {
+                    HC(h, "Навык"); HC(h, "Атрибут"); HC(h, "Трен."); HC(h, "Владение"); HC(h, "Итог");
+                });
+
+                bool alt = false;
+                foreach (var r in rows)
+                {
+                    string bg = alt ? AltRow : "#FFFFFF";
+                    DC(t, bg, r.Name);
+                    DC(t, bg, r.Group);
+                    DC(t, bg, r.Train == 0 ? "—" : r.Train.ToString());
+                    DC(t, bg, Dots(r.Prof));
+                    DC(t, bg, Fmt(Total(r.Train, r.AttrBase, r.Prof)));
+                    alt = !alt;
+                }
+            });
+        }
+
         void Attributes(ColumnDescriptor col)
         {
             SH(col, "Атрибуты", Purple);

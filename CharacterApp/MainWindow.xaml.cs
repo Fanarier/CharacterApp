@@ -68,7 +68,7 @@ namespace CharacterApp
 
         private bool _sidebarOpen = true;
         private const double SidebarOpenWidth   = 250;
-        private const double SidebarClosedWidth = 60;
+        private const double SidebarClosedWidth = 56;
         private const int    AnimDurationMs     = 220;
 
         public MainWindow()
@@ -115,6 +115,8 @@ namespace CharacterApp
             // Дёргать настройки поверх нельзя — иначе в меню приедут листы
             // другого персонажа, оставшиеся там с прошлого раза.
             if (!sessionRestored) RestoreCustomSheetsFromSettings();
+
+            _ = ApplySidebarLayoutAsync(animate: false);
 
             // Загружаем последний файл если включена настройка.
             // Если сессия восстановлена — в ней уже актуальнее, не перетираем.
@@ -694,6 +696,46 @@ namespace CharacterApp
         private void Proficiencies_Click(object sender, RoutedEventArgs e) => NavigateTo(_profPage,     "builtin:Proficiencies");
         private void Attacks_Click     (object sender, RoutedEventArgs e) => NavigateTo(_attacksPage,   "builtin:Attacks");
 
+
+        /// <summary>
+        /// Кнопка бокового меню с иконкой и подписью. Собрана так же, как
+        /// встроенные пункты в XAML, иначе кастомные листы пропадали бы
+        /// в режиме «только иконки» и в свёрнутом сайдбаре.
+        /// </summary>
+        private Button CreateNavButton(string text, string tag, string iconKey)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Horizontal };
+
+            var icon = new System.Windows.Shapes.Path
+            {
+                Data              = (Geometry)FindResource(iconKey),
+                Width             = 24,
+                Height            = 24,
+                Stretch           = Stretch.None,
+                Margin            = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                StrokeThickness   = 1.5,
+                Fill              = Brushes.Transparent,
+            };
+            icon.SetBinding(System.Windows.Shapes.Shape.StrokeProperty,
+                new System.Windows.Data.Binding("Foreground")
+                {
+                    RelativeSource = new System.Windows.Data.RelativeSource(
+                        System.Windows.Data.RelativeSourceMode.FindAncestor, typeof(Button), 1)
+                });
+            panel.Children.Add(icon);
+            panel.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+
+            return new Button
+            {
+                Content = panel,
+                ToolTip = text,
+                Margin  = new Thickness(0, 4, 0, 4),
+                Tag     = tag,
+                Style   = (Style)FindResource("SidebarNavButton")
+            };
+        }
+
         // ── Пользовательские листы ──────────────────────────────────────────
 
         // Восстанавливает кастомные страницы из настроек (без загрузки JSON персонажа)
@@ -706,17 +748,12 @@ namespace CharacterApp
                 var page = new CustomSheetPage(sheet);
                 _customPages[sheet.Name] = page;
                 var name = sheet.Name;
-                var btn  = new Button
-                {
-                    Content = sheet.Name,
-                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
-                    Tag     = "custom:" + sheet.Name,
-                    Style   = (Style)FindResource("SidebarNavButton")
-                };
+                var btn  = CreateNavButton(sheet.Name, "custom:" + sheet.Name, "IcoTable");
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
+            ApplyMenuButtonStyle();
         }
 
         private void RebuildCustomPages(Character c)
@@ -744,18 +781,13 @@ namespace CharacterApp
                 page.ApplyCharacter(c);          // ← загружаем строки из JSON
                 _customPages[sheet.Name] = page;
                 var name = sheet.Name; // capture
-                var btn  = new Button
-                {
-                    Content = sheet.Name,
-                    Margin  = new System.Windows.Thickness(0, 4, 0, 4),
-                    Tag     = "custom:" + sheet.Name,
-                    Style   = (Style)FindResource("SidebarNavButton")
-                };
+                var btn  = CreateNavButton(sheet.Name, "custom:" + sheet.Name, "IcoTable");
                 btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
                 // Вставляем перед кнопкой Настройки
                 int idx = MenuStack.Children.Count - 1;
                 MenuStack.Children.Insert(idx, btn);
             }
+            ApplyMenuButtonStyle();
         }
 
         public void AddCustomSheet(CustomSheet sheet)
@@ -771,16 +803,11 @@ namespace CharacterApp
 
             // Кнопка в сайдбар
             var name = sheet.Name;
-            var btn  = new Button
-            {
-                Content = sheet.Name,
-                Margin  = new System.Windows.Thickness(0, 4, 0, 4),
-                Tag     = "custom:" + sheet.Name,
-                Style   = (Style)FindResource("SidebarNavButton")
-            };
+            var btn  = CreateNavButton(sheet.Name, "custom:" + sheet.Name, "IcoTable");
             btn.Click += (_, _) => { MainFrame.Navigate(_customPages[name]); HighlightActiveButton("custom:" + name); };
             int idx = MenuStack.Children.Count - 1;
             MenuStack.Children.Insert(idx, btn);
+            ApplyMenuButtonStyle();
 
             MarkUnsaved();
             // Кладём лист в сессию сразу: если приложение закроют, не сохранив
@@ -858,12 +885,7 @@ namespace CharacterApp
                     if (MenuStack.Children[i] is Button b && b.Tag?.ToString() == "custom:" + oldName)
                     {
                         var cap = newName;
-                        var nb  = new Button
-                        {
-                            Content = newName,
-                            Tag     = "custom:" + newName,
-                            Style   = (Style)FindResource("SidebarNavButton")
-                        };
+                        var nb  = CreateNavButton(newName, "custom:" + newName, "IcoTable");
                         nb.Click += (_, _) =>
                         {
                             MainFrame.Navigate(_customPages[cap]);
@@ -871,6 +893,7 @@ namespace CharacterApp
                         };
                         MenuStack.Children.RemoveAt(i);
                         MenuStack.Children.Insert(i, nb);
+                        ApplyMenuButtonStyle();
                         break;
                     }
                 }
@@ -925,84 +948,195 @@ namespace CharacterApp
 
         // ── Сайдбар ───────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Идёт ли сейчас анимация сворачивания. Без этого частые клики
+        /// запускали несколько перекрывающихся анимаций: одна успевала
+        /// спрятать список, другая — раскрыть панель, и сайдбар оставался
+        /// широким и пустым.
+        /// </summary>
+        private bool _sidebarAnimating;
+
         private async void BtnToggleMenu_Click(object sender, RoutedEventArgs e)
-            => await ToggleSidebarAsync(!_sidebarOpen);
-
-        private async Task ToggleSidebarAsync(bool open)
         {
-            if (open == _sidebarOpen) return;
-            _sidebarOpen = open;
+            if (_sidebarAnimating) return;
+            _sidebarOpen = !_sidebarOpen;
+            await ApplySidebarLayoutAsync(animate: true);
+        }
 
-            const int fadeMs   = 140;
-            const int fadeInMs = 160;
+        /// <summary>
+        /// Единственное место, которое решает, как выглядит сайдбар.
+        ///
+        /// Раньше это было размазано по трём методам: анимация сворачивания
+        /// ставила одну видимость, применение вида пунктов — другую, и они
+        /// спорили. В свёрнутом виде иконки исчезали, а нижние кнопки
+        /// оставались. Теперь состояние считается один раз и целиком.
+        /// </summary>
+        private async Task ApplySidebarLayoutAsync(bool animate)
+        {
+            var mode = _appSettings.MenuButtonStyle;
+            bool iconOnly = mode == MenuButtonStyles.IconOnly;
+            bool textOnly = mode == MenuButtonStyles.TextOnly;
 
-            if (!open)
+            // Подписи видны только в широкой панели и только если режим их не запрещает
+            bool wide       = _sidebarOpen && !iconOnly;
+            bool showLabels = wide;
+            bool showIcons  = !textOnly;
+
+            // В узкой полосе показывать нечего, кроме иконок: если их нет —
+            // и панели быть незачем, поэтому текстовый режим сворачивается пустым
+            double targetWidth = _sidebarOpen && !iconOnly ? SidebarOpenWidth : SidebarClosedWidth;
+
+            // ── содержимое пунктов ────────────────────────────────────────────
+            foreach (var child in MenuStack.Children)
             {
-                var tasks = new List<Task>
+                if (child is not Button btn)
                 {
-                    AnimateOpacityAsync(MenuStack,            MenuStack.Opacity,            0, fadeMs),
-                    AnimateOpacityAsync(BottomButtonsPanel,   BottomButtonsPanel.Opacity,   0, fadeMs),
-                    AnimateOpacityAsync(TbMenuSearch,         TbMenuSearch.Opacity,         0, fadeMs),
-                    AnimateOpacityAsync(CharacterTabsBorder,  CharacterTabsBorder.Opacity,  0, fadeMs),
-                };
-                foreach (var child in MenuStack.Children)
-                    if (child is Button btn && btn.Content is StackPanel sp)
-                        foreach (UIElement tbEl in sp.Children) if (tbEl is TextBlock tb)
-                        {
-                            if (tb.Visibility != Visibility.Visible) { tb.Visibility = Visibility.Visible; tb.Opacity = 1; }
-                            tasks.Add(AnimateOpacityAsync(tb, tb.Opacity, 0, fadeMs));
-                        }
+                    // Заголовок «Меню» и разделители в узкой полосе только мешают
+                    if (child is UIElement other) other.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
+                    continue;
+                }
+                if (btn.Content is not StackPanel sp) continue;
 
-                tasks.Add(AnimateWidthAsync(Sidebar, SidebarClosedWidth, AnimDurationMs));
-                await Task.WhenAll(tasks);
+                sp.HorizontalAlignment = showLabels ? HorizontalAlignment.Left : HorizontalAlignment.Center;
 
-                foreach (var child in MenuStack.Children)
-                    if (child is Button btn && btn.Content is StackPanel sp)
-                        foreach (UIElement tbEl in sp.Children) if (tbEl is TextBlock tb)
-                        { tb.Visibility = Visibility.Collapsed; tb.Opacity = 1; }
+                // Вот из-за чего иконки пропадали в узкой полосе: отступы по 12
+                // с каждой стороны плюс полоса прокрутки не оставляли места
+                // под иконку, и её срезало по краю панели
+                btn.Padding = showLabels ? new Thickness(12, 11, 12, 11)
+                                         : new Thickness(0, 11, 0, 11);
 
-                MenuStack.Visibility           = Visibility.Collapsed;
-                BottomButtonsPanel.Visibility  = Visibility.Collapsed;
-                TbMenuSearch.Visibility        = Visibility.Collapsed;
-                CharacterTabsBorder.Visibility = Visibility.Collapsed;
+                string label = "";
+                foreach (UIElement el in sp.Children)
+                {
+                    if (el is System.Windows.Shapes.Path icon)
+                    {
+                        icon.Visibility = showIcons ? Visibility.Visible : Visibility.Collapsed;
+                        icon.Margin     = showLabels ? new Thickness(0, 0, 8, 0) : new Thickness(0);
+                    }
+                    else if (el is TextBlock tb)
+                    {
+                        label = tb.Text;
+                        tb.Visibility = showLabels ? Visibility.Visible : Visibility.Collapsed;
+                        tb.Opacity    = 1;
+                    }
+                }
+                // Без подписи единственная подсказка — всплывающая
+                btn.ToolTip = showLabels ? null : (string.IsNullOrEmpty(label) ? null : label);
             }
-            else
+
+            // ── блоки панели ──────────────────────────────────────────────────
+            // Список пунктов скрываем только когда показывать в нём нечего
+            bool anyMenuContent = showIcons || wide;
+            MenuStack.Visibility = anyMenuContent ? Visibility.Visible : Visibility.Collapsed;
+            MenuStack.Opacity    = 1;
+            MenuStack.Margin     = showLabels ? new Thickness(4, 0, 4, 8) : new Thickness(0, 0, 0, 8);
+
+            // Полоса прокрутки в узкой панели отъедает половину места под иконку
+            MenuScroll.VerticalScrollBarVisibility = showLabels
+                ? ScrollBarVisibility.Auto : ScrollBarVisibility.Hidden;
+
+            TbMenuSearch.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
+            TbMenuSearch.Opacity    = 1;
+
+            // Выбор персонажа нужен в любом режиме — в узкой панели он
+            // сжимается до значка, иначе сменить персонажа было бы нечем
+            CharacterTabsBorder.Visibility = Visibility.Visible;
+            CharacterTabsBorder.Opacity    = 1;
+            TbCurrentCharacter.Visibility  = wide ? Visibility.Visible : Visibility.Collapsed;
+            TbSelectorArrow.Visibility     = wide ? Visibility.Visible : Visibility.Collapsed;
+            IconCurrentCharacter.Margin    = wide ? new Thickness(0, 0, 8, 0) : new Thickness(0);
+            BtnCharacterSelector.Padding   = wide ? new Thickness(10, 0, 10, 0) : new Thickness(0);
+            BtnCharacterSelector.HorizontalContentAlignment =
+                wide ? HorizontalAlignment.Stretch : HorizontalAlignment.Center;
+
+            // Бургер: слева при широкой панели, по центру при узкой
+            BtnToggleMenu.HorizontalAlignment = wide ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+            BtnToggleMenu.Margin = wide ? new Thickness(4, 0, 0, 6) : new Thickness(0, 0, 0, 6);
+            SidebarTopPanel.Margin = wide ? new Thickness(10, 10, 10, 4) : new Thickness(4, 10, 4, 4);
+
+            // Нижние кнопки со своими иконками читаемы и в узкой полосе — прятать их незачем
+            BottomButtonsPanel.Visibility = Visibility.Visible;
+            BottomButtonsPanel.Opacity    = 1;
+            ApplyActionButtonsLayout(showLabels);
+
+            // ── ширина ────────────────────────────────────────────────────────
+            if (Math.Abs(Sidebar.ActualWidth - targetWidth) < 0.5) return;
+
+            if (!animate)
             {
-                MenuStack.Visibility           = Visibility.Visible;
-                BottomButtonsPanel.Visibility  = Visibility.Visible;
-                TbMenuSearch.Visibility        = Visibility.Visible;
-                CharacterTabsBorder.Visibility = Visibility.Visible;
-                CharacterTabsBorder.Opacity    = 0;
+                Sidebar.BeginAnimation(WidthProperty, null);
+                Sidebar.Width = targetWidth;
+                return;
+            }
 
-                foreach (var child in MenuStack.Children)
-                    if (child is Button btn && btn.Content is StackPanel sp)
-                        foreach (UIElement tbEl in sp.Children) if (tbEl is TextBlock tb)
-                        { tb.Visibility = Visibility.Visible; tb.Opacity = 0; }
+            _sidebarAnimating = true;
+            try { await AnimateWidthAsync(Sidebar, targetWidth, AnimDurationMs); }
+            finally { _sidebarAnimating = false; }
+        }
 
-                MenuStack.Opacity = 0; BottomButtonsPanel.Opacity = 0; TbMenuSearch.Opacity = 0;
+        /// <summary>
+        /// Кнопки сохранения внизу панели. Их подпись — второй Run внутри
+        /// TextBlock, а Run нельзя просто спрятать: это не элемент интерфейса.
+        /// Поэтому в узкой полосе очищаем его текст, запомнив исходный, — иначе
+        /// подпись не влезает и выталкивает значок за край.
+        /// </summary>
+        private void ApplyActionButtonsLayout(bool showLabels)
+        {
+            foreach (var btn in FindActionButtons(BottomButtonsPanel))
+            {
+                if (btn.Content is not TextBlock tb || tb.Inlines.Count < 2) continue;
 
-                var tasks = new List<Task>
+                var runs = tb.Inlines.OfType<System.Windows.Documents.Run>().ToList();
+                if (runs.Count < 2) continue;
+
+                var iconRun  = runs[0];
+                var labelRun = runs[1];
+
+                // Исходную подпись держим в Tag кнопки: ресурс языка мог смениться
+                if (btn.Tag is not string saved || (showLabels && labelRun.Text.Length == 0))
                 {
-                    AnimateWidthAsync   (Sidebar,              SidebarOpenWidth, AnimDurationMs),
-                    AnimateOpacityAsync (MenuStack,            0, 1, fadeInMs),
-                    AnimateOpacityAsync (BottomButtonsPanel,   0, 1, fadeInMs),
-                    AnimateOpacityAsync (TbMenuSearch,         0, 1, fadeInMs),
-                    AnimateOpacityAsync (CharacterTabsBorder,  0, 1, fadeInMs),
-                };
-                foreach (var child in MenuStack.Children)
-                    if (child is Button btn && btn.Content is StackPanel sp)
-                        foreach (UIElement tbEl in sp.Children) if (tbEl is TextBlock tb)
-                            tasks.Add(AnimateOpacityAsync(tb, 0, 1, fadeInMs));
+                    saved = labelRun.Text.Length > 0 ? labelRun.Text : (btn.Tag as string ?? "");
+                    btn.Tag = saved;
+                }
 
-                await Task.WhenAll(tasks);
+                labelRun.Text = showLabels ? saved : "";
+                iconRun.Text  = showLabels ? iconRun.Text.TrimEnd() + "  " : iconRun.Text.Trim();
 
-                MenuStack.Opacity = 1; BottomButtonsPanel.Opacity = 1; TbMenuSearch.Opacity = 1;
-                foreach (var child in MenuStack.Children)
-                    if (child is Button btn && btn.Content is StackPanel sp)
-                        foreach (UIElement tbEl in sp.Children) if (tbEl is TextBlock tb)
-                            tb.Opacity = 1;
+                tb.TextAlignment      = showLabels ? TextAlignment.Left : TextAlignment.Center;
+                tb.HorizontalAlignment = showLabels ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+                btn.ToolTip           = showLabels ? null : saved;
+                btn.Padding           = showLabels ? new Thickness(12, 8, 12, 8)
+                                                   : new Thickness(0, 8, 0, 8);
             }
         }
+
+        /// <summary>
+        /// Обход по логическому дереву, а не визуальному: метод вызывается
+        /// в том числе из конструктора окна, когда визуальное дерево ещё
+        /// не построено и обход по нему вернул бы пусто.
+        /// </summary>
+        private static IEnumerable<Button> FindActionButtons(DependencyObject root)
+        {
+            switch (root)
+            {
+                case Button btn:
+                    yield return btn;
+                    break;
+                case Border border when border.Child != null:
+                    foreach (var x in FindActionButtons(border.Child)) yield return x;
+                    break;
+                case Panel panel:
+                    foreach (UIElement child in panel.Children)
+                        foreach (var x in FindActionButtons(child)) yield return x;
+                    break;
+                case ContentControl cc when cc.Content is DependencyObject inner:
+                    foreach (var x in FindActionButtons(inner)) yield return x;
+                    break;
+            }
+        }
+
+        /// <summary>Применяет выбранный в настройках вид пунктов меню.</summary>
+        public async void ApplyMenuButtonStyle() => await ApplySidebarLayoutAsync(animate: true);
 
         private static Task AnimateWidthAsync(FrameworkElement element, double to, int durationMs)
         {
@@ -1013,16 +1147,6 @@ namespace CharacterApp
             return tcs.Task;
         }
 
-        private static Task AnimateOpacityAsync(UIElement element, double from, double to, int durationMs)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            if (element == null) { tcs.SetResult(true); return tcs.Task; }
-            if (element.Visibility == Visibility.Collapsed && to > 0) element.Visibility = Visibility.Visible;
-            var anim = new DoubleAnimation { From = from, To = to, Duration = TimeSpan.FromMilliseconds(durationMs), AccelerationRatio = 0.2, DecelerationRatio = 0.2 };
-            anim.Completed += (s, e) => tcs.TrySetResult(true);
-            element.BeginAnimation(UIElement.OpacityProperty, anim);
-            return tcs.Task;
-        }
 
         /// <summary>
         /// Текст, по которому ищется кнопка меню.
@@ -1299,6 +1423,22 @@ namespace CharacterApp
             if (targetIdx == _activeSlotIndex) return;
             if (targetIdx < 0 || targetIdx >= _characterSlots.Count) return;
 
+            // Уходя от персонажа с правками, предлагаем записать их в его файл.
+            // Молча сохранять нельзя: случайную правку тогда не откатить.
+            if (_hasUnsavedChanges)
+            {
+                var name = _characterSlots[_activeSlotIndex].DisplayName;
+                var r = ConfirmYNC($"У персонажа «{name}» есть несохранённые изменения.\n" +
+                                   "Записать их в файл перед переходом?", "Переключение");
+                if (r == ConfirmDialog.ConfirmResult.Cancel) return;
+                if (r == ConfirmDialog.ConfirmResult.Yes)
+                {
+                    SaveAll();
+                    // Отменили выбор файла — остаёмся на месте, чтобы не потерять правки
+                    if (_hasUnsavedChanges) return;
+                }
+            }
+
             // Save current
             SyncActiveSlot();
 
@@ -1322,11 +1462,18 @@ namespace CharacterApp
         /// <summary>Добавляет новый пустой слот.</summary>
         public void AddCharacterSlot()
         {
-            SyncActiveSlot();
-
             int num = _characterSlots.Count + 1;
             _characterSlots.Add(new CharacterSlot { DisplayName = $"Персонаж {num}" });
-            SwitchToSlot(_characterSlots.Count - 1);
+
+            // SwitchToSlot сам спросит про несохранённые правки текущего.
+            // Если пользователь откажется от перехода, лишний слот убираем.
+            int target = _characterSlots.Count - 1;
+            SwitchToSlot(target);
+            if (_activeSlotIndex != target)
+            {
+                _characterSlots.RemoveAt(target);
+                RebuildCharacterTabs();
+            }
         }
 
         /// <summary>Удаляет активный слот.</summary>
@@ -1365,100 +1512,114 @@ namespace CharacterApp
             RebuildCharacterTabs();
         }
 
-        /// <summary>Перестраивает панель табов в сайдбаре.</summary>
+        /// <summary>
+        /// Перестраивает выбор персонажа: строку с текущим и выпадающий список.
+        /// Раньше здесь рисовался ряд табов — при десятке персонажей он
+        /// переносился на несколько строк и занимал пол-панели.
+        /// </summary>
         public void RebuildCharacterTabs()
         {
-            CharacterTabsPanel.Children.Clear();
-            for (int i = 0; i < _characterSlots.Count; i++)
+            if (_activeSlotIndex >= 0 && _activeSlotIndex < _characterSlots.Count)
             {
-                int idx    = i;
-                var slot   = _characterSlots[i];
-                bool active = i == _activeSlotIndex;
-
-                var tab = new Border
-                {
-                    MinWidth        = 0,
-                    MaxWidth        = 160,
-                    Padding         = new Thickness(8, 5, 8, 5),
-                    Margin          = new Thickness(2, 0, 2, 0),
-                    CornerRadius    = new CornerRadius(8, 8, 0, 0),
-                    Cursor          = System.Windows.Input.Cursors.Hand,
-                    ToolTip         = slot.DisplayName,
-                };
-                tab.Background = active
-                    ? (Brush)FindResource("AccentGradientV")
-                    : (Brush)FindResource("SurfaceBrush");
-                tab.BorderBrush = (Brush)FindResource("BorderAccentBrush");
-                tab.BorderThickness = new Thickness(1, 1, 1, active ? 0 : 1);
-
-                var lbl = new TextBlock
-                {
-                    // Звёздочка показывает несохранённые правки конкретного таба
-                    Text           = slot.DisplayName + (slot.HasChanges ? " *" : ""),
-                    FontSize       = 11.5,
-                    Foreground     = active ? Brushes.White : (Brush)FindResource("TextMutedBrush"),
-                    TextTrimming   = TextTrimming.CharacterEllipsis,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    MaxWidth       = 120,
-                };
-
-                // Крестик закрытия — только на активном табе и только если табов больше одного
-                if (active && _characterSlots.Count > 1)
-                {
-                    var row = new StackPanel { Orientation = Orientation.Horizontal };
-                    row.Children.Add(lbl);
-
-                    var closeBtn = new TextBlock
-                    {
-                        Text              = "✕",
-                        FontSize          = 10,
-                        Margin            = new Thickness(6, 0, 0, 0),
-                        Foreground        = Brushes.White,
-                        Opacity           = 0.7,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Cursor            = System.Windows.Input.Cursors.Hand,
-                        ToolTip           = "Закрыть персонажа",
-                    };
-                    closeBtn.MouseEnter += (_, _) => closeBtn.Opacity = 1.0;
-                    closeBtn.MouseLeave += (_, _) => closeBtn.Opacity = 0.7;
-                    closeBtn.MouseLeftButtonDown += (_, ev) =>
-                    {
-                        ev.Handled = true;          // не даём табу перехватить клик
-                        RemoveActiveSlot();
-                    };
-                    row.Children.Add(closeBtn);
-                    tab.Child = row;
-                }
-                else
-                {
-                    tab.Child = lbl;
-                }
-
-                tab.MouseLeftButtonDown += (_, _) => SwitchToSlot(idx);
-                CharacterTabsPanel.Children.Add(tab);
+                var active = _characterSlots[_activeSlotIndex];
+                TbCurrentCharacter.Text = active.DisplayName + (active.HasChanges ? " *" : "");
             }
 
-            // Add "+" button
-            var addBtn = new Border
+            CharacterListPanel.Children.Clear();
+
+            for (int i = 0; i < _characterSlots.Count; i++)
             {
-                Width = 28, Height = 28,
-                Margin = new Thickness(2, 0, 0, 0),
-                CornerRadius = new CornerRadius(7),
-                Background = (Brush)FindResource("AccentDimBrush"),
-                BorderBrush = (Brush)FindResource("BorderAccentBrush"),
-                BorderThickness = new Thickness(1),
-                Cursor = System.Windows.Input.Cursors.Hand,
-                ToolTip = "Добавить персонажа",
-                Child = new TextBlock
+                int idx     = i;
+                var slot    = _characterSlots[i];
+                bool active = i == _activeSlotIndex;
+
+                var row = new Grid { Margin = new Thickness(0, 1, 0, 1) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                var line = new StackPanel { Margin = new Thickness(10, 6, 6, 6) };
+                line.Children.Add(new TextBlock
                 {
-                    Text = "＋", FontSize = 14,
-                    Foreground = (Brush)FindResource("AccentLightBrush"),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment   = VerticalAlignment.Center,
+                    Text         = slot.DisplayName + (slot.HasChanges ? " *" : ""),
+                    FontWeight   = active ? FontWeights.SemiBold : FontWeights.Normal,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    MaxWidth     = 170,
+                });
+
+                // Вторая строка — чтобы отличать двух «Персонаж 1» друг от друга
+                var meta = DescribeSlot(slot);
+                if (!string.IsNullOrEmpty(meta))
+                    line.Children.Add(new TextBlock
+                    {
+                        Text       = meta,
+                        FontSize   = 11,
+                        Margin     = new Thickness(0, 2, 0, 0),
+                        Foreground = (Brush)FindResource("TextMutedBrush"),
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        MaxWidth   = 170,
+                    });
+
+                var pick = new Button
+                {
+                    Content = line,
+                    Style   = (Style)FindResource(active ? "SidebarNavButtonActive" : "SidebarNavButton"),
+                    Padding = new Thickness(0),
+                    HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    ToolTip = string.IsNullOrEmpty(slot.FilePath) ? "Ещё не сохранён в файл" : slot.FilePath,
+                };
+                pick.Click += (_, _) => { CharacterPopup.IsOpen = false; SwitchToSlot(idx); };
+                Grid.SetColumn(pick, 0);
+                row.Children.Add(pick);
+
+                if (_characterSlots.Count > 1)
+                {
+                    var close = new Button
+                    {
+                        Content = "✕",
+                        Width = 26, Height = 26, MinHeight = 0,
+                        Padding = new Thickness(0),
+                        Margin = new Thickness(2, 0, 4, 0),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        BorderThickness = new Thickness(0),
+                        Background = Brushes.Transparent,
+                        Foreground = (Brush)FindResource("TextMutedBrush"),
+                        ToolTip = "Закрыть персонажа",
+                    };
+                    close.Click += (_, _) =>
+                    {
+                        CharacterPopup.IsOpen = false;
+                        if (idx != _activeSlotIndex) SwitchToSlot(idx);
+                        RemoveActiveSlot();
+                    };
+                    Grid.SetColumn(close, 1);
+                    row.Children.Add(close);
                 }
-            };
-            addBtn.MouseLeftButtonDown += (_, _) => AddCharacterSlot();
-            CharacterTabsPanel.Children.Add(addBtn);
+
+                CharacterListPanel.Children.Add(row);
+            }
+        }
+
+        /// <summary>Класс и уровень персонажа — чтобы различать однофамильцев.</summary>
+        private static string DescribeSlot(CharacterSlot slot)
+        {
+            var c = slot.SavedCharacter;
+            if (c == null) return "";
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(c.Class)) parts.Add(c.Class.Trim());
+            if (c.Level > 0) parts.Add($"ур. {c.Level}");
+            return string.Join(" · ", parts);
+        }
+
+        private void CharacterSelector_Click(object sender, RoutedEventArgs e)
+        {
+            RebuildCharacterTabs();
+            CharacterPopup.IsOpen = !CharacterPopup.IsOpen;
+        }
+
+        private void AddCharacter_Click(object sender, RoutedEventArgs e)
+        {
+            CharacterPopup.IsOpen = false;
+            AddCharacterSlot();
         }
     }
 

@@ -124,6 +124,13 @@ namespace CharacterApp
             TbAutoSavePattern.Text      = _config.AutoSaveFilePattern;
             CbLoadLastOnStart.IsChecked = _config.LoadLastOnStart;
 
+            // Вид пунктов меню
+            _suppressMenuStyle = true;
+            RbMenuIconText.IsChecked = _config.MenuButtonStyle == MenuButtonStyles.IconAndText;
+            RbMenuText.IsChecked     = _config.MenuButtonStyle == MenuButtonStyles.TextOnly;
+            RbMenuIcon.IsChecked     = _config.MenuButtonStyle == MenuButtonStyles.IconOnly;
+            _suppressMenuStyle = false;
+
             // Восстанавливаем видимость страниц
             var mw = Application.Current.MainWindow as MainWindow;
             var hidden = _config.HiddenPages ?? new System.Collections.Generic.List<string>();
@@ -145,6 +152,21 @@ namespace CharacterApp
 
             // Восстанавливаем список кастомных листов из реального состояния MainWindow
             RefreshSheetList();
+        }
+
+        /// <summary>Чтобы установка галочек в ApplyToUI не сохраняла настройки.</summary>
+        private bool _suppressMenuStyle;
+
+        private void MenuStyle_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_suppressMenuStyle) return;
+
+            _config.MenuButtonStyle =
+                RbMenuText.IsChecked == true ? MenuButtonStyles.TextOnly :
+                RbMenuIcon.IsChecked == true ? MenuButtonStyles.IconOnly :
+                                               MenuButtonStyles.IconAndText;
+            SaveConfig();
+            MainWindow.Instance?.ApplyMenuButtonStyle();
         }
 
         private void BrowseFolder_Click(object sender, RoutedEventArgs e)
@@ -297,22 +319,22 @@ namespace CharacterApp
                     // Core accent brushes
                     ["AccentBrush"]       = new SolidColorBrush(color),
                     ["AccentLightBrush"]  = new SolidColorBrush(Lighten(color, 0.2f)),
-                    ["AccentDimBrush"]    = new SolidColorBrush(Color.FromArgb(45,  color.R, color.G, color.B)),
-                    ["AccentGlowBrush"]   = new SolidColorBrush(Color.FromArgb(90,  color.R, color.G, color.B)),
+                    ["AccentDimBrush"]    = new SolidColorBrush(Color.FromArgb(28,  color.R, color.G, color.B)),
+                    ["AccentGlowBrush"]   = new SolidColorBrush(Color.FromArgb(56,  color.R, color.G, color.B)),
                     ["AccentGradient"]    = new LinearGradientBrush(Darken(color, 0.2f),  Lighten(color, 0.2f), 0),
                     ["AccentGradientV"]   = new LinearGradientBrush(Lighten(color, 0.1f), Darken(color, 0.1f), 90),
-                    ["BorderAccentBrush"] = new SolidColorBrush(Color.FromArgb(100, color.R, color.G, color.B)),
+                    ["BorderAccentBrush"] = new SolidColorBrush(Color.FromArgb(64,  color.R, color.G, color.B)),
                     ["AccentGlow"]        = new System.Windows.Media.Effects.DropShadowEffect
-                                           { BlurRadius = 18, ShadowDepth = 0, Color = color, Opacity = 0.55 },
+                                           { BlurRadius = 14, ShadowDepth = 0, Color = color, Opacity = 0.30 },
                     ["SmallGlow"]         = new System.Windows.Media.Effects.DropShadowEffect
-                                           { BlurRadius = 8,  ShadowDepth = 0, Color = color, Opacity = 0.5  },
+                                           { BlurRadius = 7,  ShadowDepth = 0, Color = color, Opacity = 0.28  },
                     // Title bar + burger menu + sidebar separators
                     ["BurgerLineBrush"]              = new LinearGradientBrush(Lighten(color, 0.15f), color, 0),
                     ["MenuTitleBrush"]               = new LinearGradientBrush(Lighten(color, 0.15f), color, 0),
-                    ["SidebarSeparatorBrush"]        = new SolidColorBrush(Color.FromArgb(26,  color.R, color.G, color.B)),
-                    ["SidebarBottomSeparatorBrush"]  = new SolidColorBrush(Color.FromArgb(24,  color.R, color.G, color.B)),
+                    ["SidebarSeparatorBrush"]        = new SolidColorBrush(Color.FromArgb(18,  color.R, color.G, color.B)),
+                    ["SidebarBottomSeparatorBrush"]  = new SolidColorBrush(Color.FromArgb(17,  color.R, color.G, color.B)),
                     // Active nav item (SidebarNavButtonActive)
-                    ["NavActiveBgBrush"]  = new SolidColorBrush(Color.FromArgb(48,  color.R, color.G, color.B)),
+                    ["NavActiveBgBrush"]  = new SolidColorBrush(Color.FromArgb(42,  color.R, color.G, color.B)),
                     ["NavActiveBarBrush"] = new SolidColorBrush(color),
                     ["NavHoverBgBrush"]   = new SolidColorBrush(Color.FromArgb(18,  color.R, color.G, color.B)),
                 };

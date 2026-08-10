@@ -93,9 +93,9 @@
         <!-- Кнопки -->
         <StackPanel Grid.Row="3" Orientation="Horizontal"
                     HorizontalAlignment="Right">
-            <Button Content="{DynamicResource BtnAddSkill}"    Click="BtnAdd_Click"    Margin="6" Padding="12,7"/>
+            <Button Content="{DynamicResource BtnAddSkill}"    Click="BtnAdd_Click"    Margin="6" Padding="12,7" Style="{DynamicResource PrimaryButton}"/>
             <Button Content="{DynamicResource BtnRemoveSkill}" Click="BtnRemove_Click" Margin="6" Padding="12,7"/>
-            <Button Content="{DynamicResource BtnResetSkills}" Click="BtnReset_Click"  Margin="6" Padding="12,7"/>
+            <Button Content="{DynamicResource BtnResetSkills}" Click="BtnReset_Click"  Margin="6" Padding="12,7" Style="{DynamicResource DangerButton}"/>
         </StackPanel>
     </Grid>
 </Page>

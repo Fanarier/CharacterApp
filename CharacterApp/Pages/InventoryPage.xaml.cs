@@ -15,7 +15,10 @@ namespace CharacterApp.Pages
     public partial class InventoryPage : Page, IPageSearchable
     {
         // ── Rarity definitions ────────────────────────────────────────────────
-        private static readonly (string Name, string Hex, string TextHex, string? Note)[] Rarities =
+        // Цвета редкости подбирались под тёмный фон: на белом «Обычный» (#C8C8D0)
+        // и остальные светлые оттенки почти не читались. Держим два набора и
+        // выбираем по текущей теме.
+        private static readonly (string Name, string Hex, string TextHex, string? Note)[] RaritiesDark =
         {
             ("Обычный",    "#555560", "#C8C8D0", null),
             ("Необычный",  "#1E5C30", "#4CAF72", null),
@@ -24,6 +27,23 @@ namespace CharacterApp.Pages
             ("Легендарный","#703010", "#E08020", "Не продаётся"),
             ("Артефакт",   "#6E1020", "#E04060", "Копий не существует"),
         };
+
+        private static readonly (string Name, string Hex, string TextHex, string? Note)[] RaritiesLight =
+        {
+            ("Обычный",    "#E4E6EE", "#4A4E60", null),
+            ("Необычный",  "#DDF0E3", "#1E7A44", null),
+            ("Редкий",     "#DCE8FA", "#1C4FA0", null),
+            ("Эпический",  "#EBDFFA", "#6A2CB0", null),
+            ("Легендарный","#FAE7D6", "#9A4A08", "Не продаётся"),
+            ("Артефакт",   "#FADCE2", "#A81030", "Копий не существует"),
+        };
+
+        private static (string Name, string Hex, string TextHex, string? Note)[] Rarities =>
+            App.Settings.SelectedTheme == "Dark" ? RaritiesDark : RaritiesLight;
+
+        /// <summary>Насыщенность подложки метки редкости, зависит от темы.</summary>
+        private static string RarityFillAlpha =>
+            App.Settings.SelectedTheme == "Dark" ? "60" : "FF";
 
         private readonly ObservableCollection<InventoryItem> _items = new();
         private InventoryItem? _selected;
@@ -38,6 +58,16 @@ namespace CharacterApp.Pages
             _items.CollectionChanged += (_, _) => RefreshStats();
             BuildRarityFilter();
             BuildRarityPicker();
+
+            // Набор цветов редкости зависит от темы — при возврате на страницу
+            // пересобираем список и палитру, иначе останутся цвета прошлой темы
+            IsVisibleChanged += (_, e) =>
+            {
+                if (!(bool)e.NewValue) return;
+                BuildRarityFilter();
+                BuildRarityPicker();
+                RebuildList();
+            };
         }
 
         // ── ISaveLoad helpers ─────────────────────────────────────────────────
@@ -133,6 +163,10 @@ namespace CharacterApp.Pages
         // ── Rarity filter combobox ────────────────────────────────────────────
         private void BuildRarityFilter()
         {
+            // Очистка обязательна: метод вызывается и при каждом открытии
+            // страницы, иначе пункты копятся при каждом заходе
+            var previous = (CbRarityFilter.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
+            CbRarityFilter.Items.Clear();
             CbRarityFilter.Items.Add(new ComboBoxItem { Content = "Любая редкость", Tag = "" });
             foreach (var (name, _, textHex, _) in Rarities)
             {
@@ -140,7 +174,11 @@ namespace CharacterApp.Pages
                 item.Foreground = HexBrush(textHex);
                 CbRarityFilter.Items.Add(item);
             }
-            CbRarityFilter.SelectedIndex = 0;
+
+            // Восстанавливаем выбранный фильтр, чтобы пересборка его не сбрасывала
+            var restored = CbRarityFilter.Items.Cast<ComboBoxItem>()
+                .FirstOrDefault(i => (i.Tag?.ToString() ?? "") == previous);
+            CbRarityFilter.SelectedItem = restored ?? CbRarityFilter.Items[0];
         }
 
         private void RarityFilter_Changed(object s, SelectionChangedEventArgs e)
@@ -168,7 +206,7 @@ namespace CharacterApp.Pages
                     Margin = new Thickness(0, 0, 5, 5),
                     Padding = new Thickness(8, 4, 8, 4),
                     Cursor = System.Windows.Input.Cursors.Hand,
-                    Background = HexBrush(bgHex + "60"),
+                    Background = HexBrushAlpha(bgHex, RarityFillAlpha),
                     BorderBrush = HexBrush(textHex),
                     BorderThickness = new Thickness(1.5),
                     ToolTip = name
@@ -397,7 +435,7 @@ namespace CharacterApp.Pages
         private void UpdateDetailRarity(InventoryItem item)
         {
             var (_, bgHex, textHex, note) = GetRarityDef(item.Rarity);
-            DetailRarityBorder.Background = HexBrush(bgHex + "60");
+            DetailRarityBorder.Background = HexBrushAlpha(bgHex, RarityFillAlpha);
             DetailRarityBorder.BorderBrush = HexBrush(textHex);
             DetailRarityBorder.BorderThickness = new Thickness(1.5);
             TbDetailRarity.Text = item.Rarity;
@@ -564,6 +602,15 @@ namespace CharacterApp.Pages
                 if (r.Name == rarity) return r;
             return Rarities[0];
         }
+
+        /// <summary>
+        /// Полупрозрачный вариант цвета. В WPF формат #AARRGGBB — альфа идёт
+        /// ПЕРВОЙ. Раньше код дописывал её в конец ("#E4E6EE" + "60"), и WPF
+        /// читал результат со сдвигом: канал синего брался из альфы. На тёмных
+        /// цветах разница была незаметна, на светлых всё позеленело.
+        /// </summary>
+        private static SolidColorBrush HexBrushAlpha(string hex, string alpha)
+            => HexBrush("#" + alpha + hex.TrimStart('#'));
 
         private static SolidColorBrush HexBrush(string hex)
         {

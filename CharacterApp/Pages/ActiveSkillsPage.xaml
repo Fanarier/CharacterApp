@@ -16,8 +16,8 @@
 
         <Style TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="6,4"/>
         </Style>
 
@@ -136,9 +136,9 @@
         </DataGrid>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button x:Name="BtnAdd" Content="{DynamicResource BtnAddSkill}" Click="BtnAdd_Click" Margin="6" Padding="10,6" />
+            <Button x:Name="BtnAdd" Content="{DynamicResource BtnAddSkill}" Click="BtnAdd_Click" Margin="6" Padding="10,6" Style="{DynamicResource PrimaryButton}"/>
             <Button x:Name="BtnRemove" Content="{DynamicResource BtnRemoveSkill}" Click="BtnRemove_Click" Margin="6" Padding="10,6" />
-            <Button x:Name="BtnReset" Content="{DynamicResource BtnResetSkills}" Click="BtnReset_Click" Margin="6" Padding="10,6" />
+            <Button x:Name="BtnReset" Content="{DynamicResource BtnResetSkills}" Click="BtnReset_Click" Margin="6" Padding="10,6" Style="{DynamicResource DangerButton}"/>
         </StackPanel>
     </Grid>
   </ScrollViewer>
