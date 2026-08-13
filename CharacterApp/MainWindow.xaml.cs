@@ -1059,7 +1059,12 @@ namespace CharacterApp
             // ── ширина ────────────────────────────────────────────────────────
             if (Math.Abs(Sidebar.ActualWidth - targetWidth) < 0.5) return;
 
-            if (!animate)
+            // Пока окно не показано, анимация не доигрывает до конца: её событие
+            // завершения не приходит, ожидание зависает и флаг «идёт анимация»
+            // остаётся поднятым навсегда. После этого бургер переставал
+            // откликаться — ровно до первой смены режима в настройках,
+            // которая происходила уже на живом окне.
+            if (!animate || !IsLoaded)
             {
                 Sidebar.BeginAnimation(WidthProperty, null);
                 Sidebar.Width = targetWidth;
@@ -1067,7 +1072,17 @@ namespace CharacterApp
             }
 
             _sidebarAnimating = true;
-            try { await AnimateWidthAsync(Sidebar, targetWidth, AnimDurationMs); }
+            try
+            {
+                // Страховка на случай, если событие завершения всё-таки не придёт
+                var animation = AnimateWidthAsync(Sidebar, targetWidth, AnimDurationMs);
+                var timeout   = Task.Delay(AnimDurationMs + 400);
+                if (await Task.WhenAny(animation, timeout) == timeout)
+                {
+                    Sidebar.BeginAnimation(WidthProperty, null);
+                    Sidebar.Width = targetWidth;
+                }
+            }
             finally { _sidebarAnimating = false; }
         }
 

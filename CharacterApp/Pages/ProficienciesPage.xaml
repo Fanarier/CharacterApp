@@ -136,7 +136,7 @@
                                            FontWeight="SemiBold"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center" Padding="6,4"/>
+                                           VerticalAlignment="Top" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
@@ -154,7 +154,7 @@
                                 <TextBlock Text="{Binding Description}"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center" Padding="6,4"/>
+                                           VerticalAlignment="Top" LineHeight="17" Margin="0,2,0,2" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
@@ -213,7 +213,7 @@
                                 <TextBlock Text="{Binding TypeDisplay}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center" Padding="6,4"/>
+                                           VerticalAlignment="Top" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
@@ -233,7 +233,7 @@
                                 <TextBlock Text="{Binding Description}"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center" Padding="6,4"/>
+                                           VerticalAlignment="Top" LineHeight="17" Margin="0,2,0,2" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>

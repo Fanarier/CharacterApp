@@ -192,7 +192,10 @@
             <Setter Property="HorizontalGridLinesBrush" Value="Transparent"/>
             <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
-            <Setter Property="RowHeight" Value="34"/>
+            <!-- Именно МИНИМАЛЬНАЯ высота, а не фиксированная. С RowHeight="34"
+                 многострочные описания не помещались в строку и обрезались
+                 по середине текста — на экране получалась каша из обрывков -->
+            <Setter Property="MinRowHeight" Value="34"/>
             <Setter Property="ColumnHeaderHeight" Value="32"/>
         </Style>
 

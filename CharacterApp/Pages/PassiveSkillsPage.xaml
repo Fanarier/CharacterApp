@@ -62,7 +62,7 @@
                             <DataTemplate>
                                 <TextBlock Text="{Binding SkillName}"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center"
+                                           VerticalAlignment="Top"
                                            FontWeight="SemiBold" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -80,7 +80,7 @@
                             <DataTemplate>
                                 <TextBlock Text="{Binding CategoryDisplay}"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center" Padding="6,4"/>
+                                           VerticalAlignment="Top" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
@@ -100,7 +100,7 @@
                                 <TextBlock Text="{Binding Description}"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextBrush}"
-                                           VerticalAlignment="Center" Padding="6,4"/>
+                                           VerticalAlignment="Top" LineHeight="17" Margin="0,2,0,2" Padding="6,4"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>

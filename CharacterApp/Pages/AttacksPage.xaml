@@ -43,7 +43,7 @@
                             <TextBlock Text="{Binding AttackType}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextBrush}"
-                                       VerticalAlignment="Center" Padding="8,6"/>
+                                       VerticalAlignment="Top" Padding="8,6"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -61,7 +61,7 @@
                             <TextBlock Text="{Binding Description}"
                                        TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextBrush}"
-                                       VerticalAlignment="Center" Padding="8,6"/>
+                                       VerticalAlignment="Top" LineHeight="17" Margin="0,2,0,2" Padding="8,6"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>

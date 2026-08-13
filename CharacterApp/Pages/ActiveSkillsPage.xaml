@@ -66,7 +66,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding SkillName}" Foreground="{DynamicResource TextBrush}"
-                                       VerticalAlignment="Center" FontWeight="SemiBold" Padding="6,4"/>
+                                       VerticalAlignment="Top" FontWeight="SemiBold" Padding="6,4"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -81,7 +81,7 @@
                 <DataGridTemplateColumn Header="Категория" Width="180" SortMemberPath="CategoryDisplay">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding CategoryDisplay}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CategoryDisplay}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Top"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -98,7 +98,7 @@
                 <DataGridTemplateColumn Header="Описание" Width="*" MinWidth="240" SortMemberPath="Description">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Padding="6,4"/>
+                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Top" LineHeight="17" Margin="0,2,0,2" Padding="6,4"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
